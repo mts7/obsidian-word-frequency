@@ -4,7 +4,7 @@ const manifest = {
   id: 'word-frequency',
   name: 'Word Frequency',
   description: 'A plugin to count word frequency in the current note',
-  version: '1.0.9',
+  version: '1.0.11',
   author: 'Mike Rodarte',
   minAppVersion: '0.13.0',
 };
@@ -24,7 +24,7 @@ export default class WordFrequencyPlugin extends Plugin {
     this.addCommand({
       id: 'count-words',
       name: 'Count Word Frequency',
-      callback: () => this.updateWordCount(),
+      callback: () => this.countWordFrequency(),
     });
 
     this.addCommand({
@@ -44,7 +44,7 @@ export default class WordFrequencyPlugin extends Plugin {
     // Ensure that we only update if the note has gained focus and the view is a MarkdownView
     if (activeLeaf && activeLeaf.view instanceof MarkdownView) {
       console.log('Note focus obtained, updating word count...');
-      this.updateWordCount();
+      this.countWordFrequency();
     }
   }
 
@@ -130,7 +130,6 @@ export default class WordFrequencyPlugin extends Plugin {
     }
   }
 
-
   private toggleSidebar() {
     const sidebar = this.app.workspace.getLeavesOfType('word-frequency-sidebar')[0];
     if (sidebar) {
@@ -140,39 +139,5 @@ export default class WordFrequencyPlugin extends Plugin {
       console.log('should be counting word frequency');
       this.countWordFrequency(); // Show word counts if no sidebar
     }
-  }
-
-  // Update the sidebar with the word count
-  private updateWordCount() {
-    console.log('updating word count...');
-    return;
-    // const activeLeaf = this.app.workspace.getLeavesOfType('markdown')[0];
-    //
-    // // Check if there's an active leaf and an editor
-    // if (activeLeaf && activeLeaf.view) {
-    //   const view = activeLeaf.view;
-    //
-    //   let editor;
-    //
-    //   // Check if the current view is a MarkdownView and handle both source and preview modes
-    //   if (view instanceof MarkdownView) {
-    //     editor = view.editor; // Get the editor from the MarkdownView directly
-    //   }
-    //
-    //   if (editor) {
-    //     const content = editor.getValue(); // Get the content of the current note
-    //     const wordCount = this.calculateWordCount(content);
-    //
-    //     // Open or update the sidebar with the word count
-    //     this.openOrUpdateSidebar(wordCount);
-    //   } else {
-    //     console.warn('Could not find the editor!');
-    //   }
-    // }
-  }
-
-  private calculateWordCount(content: string): string {
-    const words = content.split(/\s+/).filter(Boolean);
-    return `Word Count: ${words.length}`;
   }
 }
