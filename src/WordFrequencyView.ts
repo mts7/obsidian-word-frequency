@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf } from 'obsidian';
 
 export const EVENT_UPDATE = 'word-frequency:update';
 export const PLUGIN_NAME = 'Word Frequency';
