@@ -1,7 +1,7 @@
 {
   "id": "word-frequency",
   "name": "Word Frequency",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "minAppVersion": "1.0.0",
   "description": "Counts the most frequently used words in a note and displays them in the sidebar with pagination.",
   "author": "Mike Rodarte",
