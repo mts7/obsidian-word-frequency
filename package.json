@@ -1,0 +1,37 @@
+{
+  "name": "obsidian-word-frequency",
+  "version": "1.0.9",
+  "type": "module",
+  "description": "Count word frequency in current note within Obsidian",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "npm run build && obsidian --dev",
+    "watch": "rollup -c --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mts7/obsidian-word-frequency.git"
+  },
+  "keywords": [],
+  "author": "Mike Rodarte",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mts7/obsidian-word-frequency/issues"
+  },
+  "homepage": "https://github.com/mts7/obsidian-word-frequency#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.13.9",
+    "obsidian": "^1.8.7",
+    "rollup": "^4.34.9",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.8.2"
+  }
+}
