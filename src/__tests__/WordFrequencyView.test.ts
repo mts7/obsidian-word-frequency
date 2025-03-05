@@ -20,7 +20,7 @@ describe('WordFrequencyView', () => {
         view = new WordFrequencyView(mockLeaf, mockPlugin);
 
         let innerHTMLValue = '';
-        let elements: HTMLElement[] = []; // Store created elements
+        let elements: HTMLElement[] = [];
 
         contentEl = {
             empty: jest.fn(() => {
