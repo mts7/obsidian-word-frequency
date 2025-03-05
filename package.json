@@ -1,6 +1,6 @@
 {
   "name": "obsidian-word-frequency",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "type": "module",
   "description": "Count word frequency in current note within Obsidian",
   "main": "main.js",
@@ -11,7 +11,7 @@
     "build": "rollup -c",
     "dev": "npm run build && obsidian --dev",
     "watch": "rollup -c --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -28,10 +28,16 @@
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@types/jest": "^29.5.14",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^22.13.9",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^26.0.0",
     "obsidian": "^1.8.7",
     "rollup": "^4.34.9",
     "rollup-plugin-typescript2": "^0.36.0",
+    "ts-jest": "^29.2.6",
     "typescript": "^5.8.2"
   }
 }

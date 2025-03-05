@@ -1,19 +1,12 @@
 import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
-import { EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE, WordFrequencyView } from './WordFrequencyView';
+import { WordFrequencyView } from './WordFrequencyView';
+import { WordFrequencySettings, DEFAULT_SETTINGS, EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
 import { debounce } from './utils';
 
-interface WordFrequencySettings {
-    blacklist: string;
-}
-
-const DEFAULT_SETTINGS: WordFrequencySettings = {
-    blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',
-};
-
 export default class WordFrequencyPlugin extends Plugin {
-    lastActiveEditor: Editor | undefined;
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
+    private lastActiveEditor: Editor | undefined;
 
     async onload() {
         console.log('Word Frequency Plugin loaded');
@@ -31,33 +24,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {
-                if (leaf === null) {
-                    return;
-                }
-
-                if (!(leaf.view instanceof MarkdownView)) {
-                    return;
-                }
-
-                const view = leaf.view;
-                const editor = view.editor;
-
-                const debouncedMethod = debounce(
-                    () => this.triggerUpdateContent(editor),
-                    3000
-                );
-
-                view.containerEl.addEventListener('keyup', () => {
-                    debouncedMethod();
-                });
-
-                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeView) {
-                    this.lastActiveEditor = activeView.editor;
-                }
-                if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
-                    this.triggerUpdateContent(this.lastActiveEditor);
-                }
+                this.handleActiveLeafChange(leaf);
             })
         );
 
@@ -95,7 +62,15 @@ export default class WordFrequencyPlugin extends Plugin {
         );
     }
 
-    calculateWordFrequencies(content: string): [string, number][] {
+    async saveSettings(): Promise<void> {
+        await this.saveData(this.settings);
+    }
+
+    private calculateWordFrequencies(content: string): [string, number][] {
+        if (content.length === 0) {
+            return [];
+        }
+
         const wordCounts = new Map<string, number>();
         const words = content
             .toLowerCase()
@@ -111,19 +86,50 @@ export default class WordFrequencyPlugin extends Plugin {
         return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
     }
 
-    async loadSettings(): Promise<void> {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    private handleActiveLeafChange(leaf: WorkspaceLeaf | null) {
+        if (leaf === null) {
+            return;
+        }
+
+        if (!(leaf.view instanceof MarkdownView)) {
+            return;
+        }
+
+        const view = leaf.view;
+        const editor = view.editor;
+
+        const debouncedMethod = debounce(
+            () => this.triggerUpdateContent(editor),
+            3000
+        );
+
+        view.containerEl.addEventListener('keyup', () => {
+            debouncedMethod();
+        });
+
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView) {
+            this.lastActiveEditor = activeView.editor;
+        }
+        if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
+            this.triggerUpdateContent(this.lastActiveEditor);
+        }
     }
 
-    async saveSettings(): Promise<void> {
-        await this.saveData(this.settings);
+    private async loadSettings(): Promise<void> {
+        const settings = await this.loadData();
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
     }
 
-    triggerUpdateContent(editor?: Editor) {
+    private triggerUpdateContent(editor?: Editor) {
         if (editor === undefined) {
             return;
         }
-        const wordCounts = this.calculateWordFrequencies(editor.getValue());
-        window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
+        try {
+            const wordCounts = this.calculateWordFrequencies(editor.getValue());
+            window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
+        } catch (error) {
+            console.error('error in triggerUpdateContent', error);
+        }
     }
 }

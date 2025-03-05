@@ -1,9 +1,6 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
 import WordFrequencyPlugin from './main';
-
-export const EVENT_UPDATE = 'word-frequency:update';
-export const PLUGIN_NAME = 'Word Frequency';
-export const VIEW_TYPE = 'word-frequency';
 
 export class WordFrequencyView extends ItemView {
     plugin: WordFrequencyPlugin;
