@@ -6,11 +6,13 @@ import { debounce } from './utils';
 interface WordFrequencySettings {
     blacklist: string;
 }
+
 const DEFAULT_SETTINGS: WordFrequencySettings = {
     blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',
-}
+};
 
 export default class WordFrequencyPlugin extends Plugin {
+    lastActiveEditor: Editor | undefined;
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
 
     async onload() {
@@ -48,6 +50,14 @@ export default class WordFrequencyPlugin extends Plugin {
                 view.containerEl.addEventListener('keyup', () => {
                     debouncedMethod();
                 });
+
+                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (activeView) {
+                    this.lastActiveEditor = activeView.editor;
+                }
+                if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
+                    this.triggerUpdateContent(this.lastActiveEditor);
+                }
             })
         );
 
@@ -79,6 +89,10 @@ export default class WordFrequencyPlugin extends Plugin {
         }
 
         await workspace.revealLeaf(leaf);
+
+        this.triggerUpdateContent(
+            this.lastActiveEditor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
+        );
     }
 
     calculateWordFrequencies(content: string): [string, number][] {
@@ -105,7 +119,10 @@ export default class WordFrequencyPlugin extends Plugin {
         await this.saveData(this.settings);
     }
 
-    triggerUpdateContent(editor: Editor) {
+    triggerUpdateContent(editor?: Editor) {
+        if (editor === undefined) {
+            return;
+        }
         const wordCounts = this.calculateWordFrequencies(editor.getValue());
         window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
     }
