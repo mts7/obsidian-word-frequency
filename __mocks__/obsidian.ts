@@ -13,6 +13,7 @@ class MockMarkdownView {
 }
 
 module.exports = {
+    setIcon: jest.fn(),
     App: jest.fn(),
     Plugin: jest.fn(),
     MarkdownView: MockMarkdownView,
