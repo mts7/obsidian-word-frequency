@@ -45,7 +45,12 @@ export class WordFrequencyView extends ItemView {
 
     updateContent() {
         this.contentEl.empty();
-        this.contentEl.createEl('h1', PLUGIN_NAME);
+
+        const headerContainer = this.contentEl.createEl('div');
+        const headerElement = headerContainer.createEl('h4');
+        headerElement.setText(PLUGIN_NAME);
+
+        const contentContainer = this.contentEl.createEl('div');
 
         const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
 
@@ -53,7 +58,7 @@ export class WordFrequencyView extends ItemView {
             if (blacklist.has(word)) {
                 return;
             }
-            const div = this.contentEl.createEl('div');
+            const div = contentContainer.createEl('div');
             div.setText(`${word}: ${count}`);
         });
     }
