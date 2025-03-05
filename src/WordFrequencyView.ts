@@ -42,15 +42,9 @@ export class WordFrequencyView extends ItemView {
 
     updateContent() {
         this.contentEl.empty();
-
-        const headerContainer = this.contentEl.createEl('div');
-        const headerElement = headerContainer.createEl('h4');
-        headerElement.setText(PLUGIN_NAME);
-
+        this.createHeader(); // Call new method.
         const contentContainer = this.contentEl.createEl('div');
-
         const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
-
         this.wordCountList.forEach(([word, count]) => {
             if (blacklist.has(word)) {
                 return;
@@ -59,4 +53,9 @@ export class WordFrequencyView extends ItemView {
             div.setText(`${word}: ${count}`);
         });
     }
-}
+
+    private createHeader() {
+        const headerContainer = this.contentEl.createEl('div');
+        const headerElement = headerContainer.createEl('h4');
+        headerElement.setText(PLUGIN_NAME);
+    }}
