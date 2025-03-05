@@ -1,19 +1,18 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
+import WordFrequencyPlugin from './main';
 
 export const EVENT_UPDATE = 'word-frequency:update';
 export const PLUGIN_NAME = 'Word Frequency';
 export const VIEW_TYPE = 'word-frequency';
 
 export class WordFrequencyView extends ItemView {
-    private blacklist: Set<string> = new Set([
-        'the', 'and', 'to', 'of', 'a', 'in', 'for', 'on', 'is', 'it', 'that', 'with', 'as', 'this', 'by', 'your', 'you',
-        'good', 'knowledge', 'general',
-    ]);
+    plugin: WordFrequencyPlugin;
     wordCountList: [string, number][] = [];
     private eventListener: (event: CustomEvent) => void = () => {};
 
-    constructor(leaf: WorkspaceLeaf) {
+    constructor(leaf: WorkspaceLeaf, plugin: WordFrequencyPlugin) {
         super(leaf);
+        this.plugin = plugin;
     }
 
     getViewType(): string {
@@ -40,12 +39,18 @@ export class WordFrequencyView extends ItemView {
         window.document.removeEventListener(EVENT_UPDATE, this.eventListener as EventListener);
     }
 
+    getPlugin(): WordFrequencyPlugin {
+        return this.plugin;
+    }
+
     updateContent() {
         this.contentEl.empty();
         this.contentEl.createEl('h1', PLUGIN_NAME);
 
+        const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
+
         this.wordCountList.forEach(([word, count]) => {
-            if (this.blacklist.has(word)) {
+            if (blacklist.has(word)) {
                 return;
             }
             const div = this.contentEl.createEl('div');
