@@ -1,0 +1,13 @@
+.setting-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.setting-item-info {
+    flex-shrink: 0;
+}
+
+.word-frequency-setting-blacklist {
+    min-height: 150px;
+    width: 100%;
+}

@@ -24,6 +24,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                         this.plugin.settings.blacklist = value;
                         await this.plugin.saveSettings();
                     })
+                    .inputEl.classList.add('word-frequency-setting-blacklist')
             );
     }
 }
