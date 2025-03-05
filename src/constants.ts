@@ -1,5 +1,3 @@
-// src/constants.ts
-
 export interface WordFrequencySettings {
     blacklist: string;
 }

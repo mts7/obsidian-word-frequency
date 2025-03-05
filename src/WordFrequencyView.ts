@@ -42,7 +42,7 @@ export class WordFrequencyView extends ItemView {
 
     updateContent() {
         this.contentEl.empty();
-        this.createHeader(); // Call new method.
+        this.createHeader();
         const contentContainer = this.contentEl.createEl('div');
         const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
         this.wordCountList.forEach(([word, count]) => {

@@ -283,7 +283,7 @@ describe('WordFrequencyPlugin', () => {
                 const leaf = { view: markdownView } as any as WorkspaceLeaf;
                 plugin['triggerUpdateContent'] = jest.fn();
                 mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView); // Add this line
+                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
                 plugin['handleActiveLeafChange'](leaf);
 
                 expect(markdownView.containerEl.addEventListener).toHaveBeenCalled();

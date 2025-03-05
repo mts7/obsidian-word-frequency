@@ -18,11 +18,11 @@ describe('WordFrequencyView', () => {
         } as any as WordFrequencyPlugin;
         view = new WordFrequencyView(mockLeaf, mockPlugin);
 
-        let innerHTMLValue = ''; // Track innerHTML separately.
+        let innerHTMLValue = '';
 
         contentEl = {
             empty: jest.fn(() => {
-                innerHTMLValue = ''; // Clear the tracked innerHTML.
+                innerHTMLValue = '';
             }),
             createEl: jest.fn((tagName: string) => {
                 const el = {
@@ -30,7 +30,7 @@ describe('WordFrequencyView', () => {
                         const innerEl = {
                             setText: jest.fn((text: string) => {
                                 innerEl.textContent = text;
-                                innerHTMLValue += `<${innerTagName}>${text}</${innerTagName}>`; // Update tracked innerHTML.
+                                innerHTMLValue += `<${innerTagName}>${text}</${innerTagName}>`;
                             }),
                             textContent: '',
                         };
