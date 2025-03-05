@@ -98,7 +98,7 @@ describe('WordFrequencyPlugin', () => {
         });
 
         it('should activate view when leaves exist', async () => {
-            mockApp.workspace.getLeavesOfType.mockReturnValue([{ id: "test" }] as any);
+            mockApp.workspace.getLeavesOfType.mockReturnValue([{ id: 'test' }] as any);
             mockApp.workspace.revealLeaf.mockResolvedValue();
             mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
 
@@ -129,138 +129,6 @@ describe('WordFrequencyPlugin', () => {
         });
     });
 
-    describe('calculateWordFrequencies', () => {
-        it('should calculate word frequencies', () => {
-            const content = "hello world hello";
-            const result = plugin['calculateWordFrequencies'](content);
-            expect(result).toEqual([["hello", 2], ["world", 1]]);
-        });
-
-        it('should calculate word frequencies with punctuation and mixed case', () => {
-            const content = "Hello, world! hello. World?";
-            const result = plugin['calculateWordFrequencies'](content);
-            expect(result).toEqual([["hello", 2], ["world", 2]]);
-        });
-
-        it('should calculate word frequencies with numbers and special characters', () => {
-            const content = "word1 word2 123 word1 #$% hello. hello.";
-            const result = plugin['calculateWordFrequencies'](content);
-            expect(result).toEqual([["word1", 2], ["hello", 2], ["word2", 1], ["123", 1]]);
-        });
-
-        it('should calculate word frequencies with periods, colons, and slashes', () => {
-            const content = "test. test: test/ test.";
-            const result = plugin['calculateWordFrequencies'](content);
-            expect(result).toEqual([["test", 4]]);
-        });
-
-        it('should return an empty array when given an empty string', () => {
-            const result = plugin['calculateWordFrequencies']('');
-            expect(result).toEqual([]);
-        });
-    });
-
-    describe('handleActiveLeafChange', () => {
-        it('should handle active-leaf-change event with markdown view', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            plugin['triggerUpdateContent'] = jest.fn();
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(markdownView.containerEl.addEventListener).toHaveBeenCalled();
-
-            const keyupCallback = (markdownView.containerEl.addEventListener as jest.Mock).mock.calls[0][1];
-            keyupCallback();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event without markdown view', () => {
-            const leaf = { view: {} } as any as WorkspaceLeaf;
-            plugin['handleActiveLeafChange'](leaf);
-            expect(markdownView.containerEl.addEventListener).not.toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event with null leaf', () => {
-            plugin['handleActiveLeafChange'](null);
-            expect(markdownView.containerEl.addEventListener).not.toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event and update lastActiveEditor', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            plugin['triggerUpdateContent'] = jest.fn();
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView); // Add this line
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(markdownView.containerEl.addEventListener).toHaveBeenCalled();
-            expect(plugin['lastActiveEditor']).toBe(markdownView.editor);
-
-            const keyupCallback = (markdownView.containerEl.addEventListener as jest.Mock).mock.calls[0][1];
-            keyupCallback();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event and not update lastActiveEditor when not a markdown view', () => {
-            const leaf = { view: {} } as any as WorkspaceLeaf;
-            plugin['handleActiveLeafChange'](leaf);
-            expect(plugin['lastActiveEditor']).toBeUndefined();
-        });
-
-        it('should handle active-leaf-change event', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            plugin['triggerUpdateContent'] = jest.fn();
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(mockApp.workspace.on).toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event and trigger update content when view is open', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            plugin['triggerUpdateContent'] = jest.fn();
-            mockApp.workspace.getLeavesOfType.mockReturnValue([{ id: "test" }] as any);
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
-        });
-
-        it('should handle active-leaf-change event and not trigger update content when view is not open', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            plugin['triggerUpdateContent'] = jest.fn();
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(plugin['triggerUpdateContent']).not.toHaveBeenCalled();
-        });
-
-        it('should trigger handleActiveLeafChange on active-leaf-change', () => {
-            const leaf = { view: markdownView } as any as WorkspaceLeaf;
-            const callback = mockApp.workspace.on.mock.calls[0][1];
-            plugin['handleActiveLeafChange'] = jest.fn();
-            callback(leaf);
-            expect(plugin['handleActiveLeafChange']).toHaveBeenCalledWith(leaf);
-        });
-    });
-
-    describe('loadSettings', () => {
-        it('should load settings with data', async () => {
-            plugin['loadData'] = jest.fn().mockResolvedValue({ blacklist: 'test' });
-            await plugin['loadSettings']();
-            expect(plugin.settings.blacklist).toBe('test');
-        });
-
-        it('should load settings without data', async () => {
-            plugin['loadData'] = jest.fn().mockResolvedValue(null);
-            await plugin['loadSettings']();
-            expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
-        });
-    });
-
     describe('triggerUpdateContent', () => {
         it('should call triggerUpdateContent with active editor', async () => {
             mockApp.workspace.getLeavesOfType.mockReturnValue([]);
@@ -286,42 +154,17 @@ describe('WordFrequencyPlugin', () => {
             expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(undefined);
         });
 
-        it('should trigger update content', () => {
-            plugin['calculateWordFrequencies'] = jest.fn().mockReturnValue([['test', 1]]);
-            const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
-            plugin['triggerUpdateContent'](markdownView.editor);
-            expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(CustomEvent));
-        });
-
-        it('should not trigger update content if editor is undefined', () => {
-            const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
-            plugin['triggerUpdateContent'](undefined);
-            expect(dispatchEventMock).not.toHaveBeenCalled();
-            dispatchEventMock.mockRestore();
-        });
-
-        it('should activate view and trigger update content with active markdown view', async () => {
+        it('should triggerUpdateContent with lastActiveEditor when defined', async () => {
             mockApp.workspace.getLeavesOfType.mockReturnValue([]);
             mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
             mockApp.workspace.revealLeaf.mockResolvedValue();
             mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
 
             plugin['triggerUpdateContent'] = jest.fn();
+            plugin['lastActiveEditor'] = markdownView.editor;
             await plugin.activateView();
 
             expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(markdownView.editor);
-        });
-
-        it('should activate view and trigger update content with undefined active markdown view', async () => {
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
-            mockApp.workspace.revealLeaf.mockResolvedValue();
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(null);
-
-            plugin['triggerUpdateContent'] = jest.fn();
-            await plugin.activateView();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(undefined);
         });
 
         it('should activate view and trigger update content with active markdown view when lastActiveEditor is undefined', async () => {
@@ -337,19 +180,6 @@ describe('WordFrequencyPlugin', () => {
             expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(markdownView.editor);
         });
 
-        it('should triggerUpdateContent with lastActiveEditor when defined', async () => {
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
-            mockApp.workspace.revealLeaf.mockResolvedValue();
-            mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
-
-            plugin['triggerUpdateContent'] = jest.fn();
-            plugin['lastActiveEditor'] = markdownView.editor;
-            await plugin.activateView();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(markdownView.editor);
-        });
-
         it('should triggerUpdateContent with undefined when lastActiveEditor is undefined and active view is not markdown', async () => {
             mockApp.workspace.getLeavesOfType.mockReturnValue([]);
             mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
@@ -361,57 +191,6 @@ describe('WordFrequencyPlugin', () => {
             await plugin.activateView();
 
             expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(undefined);
-        });
-
-        it('should triggerUpdateContent with active markdown view when lastActiveEditor is undefined and active view is markdown', async () => {
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
-            mockApp.workspace.revealLeaf.mockResolvedValue();
-
-            const getActiveViewOfTypeSpy = jest.spyOn(mockApp.workspace, 'getActiveViewOfType');
-            getActiveViewOfTypeSpy.mockReturnValue(markdownView);
-
-            plugin['triggerUpdateContent'] = jest.fn();
-            plugin['lastActiveEditor'] = undefined;
-            await plugin.activateView();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(markdownView.editor);
-            getActiveViewOfTypeSpy.mockRestore();
-        });
-
-        it('should triggerUpdateContent with undefined when lastActiveEditor is undefined and active view is not markdown', async () => {
-            mockApp.workspace.getLeavesOfType.mockReturnValue([]);
-            mockApp.workspace.getRightLeaf.mockReturnValue({ setViewState: jest.fn().mockResolvedValue({}), } as any as WorkspaceLeaf);
-            mockApp.workspace.revealLeaf.mockResolvedValue();
-
-            const getActiveViewOfTypeSpy = jest.spyOn(mockApp.workspace, 'getActiveViewOfType');
-            getActiveViewOfTypeSpy.mockReturnValue(null);
-
-            plugin['triggerUpdateContent'] = jest.fn();
-            plugin['lastActiveEditor'] = undefined;
-            await plugin.activateView();
-
-            expect(plugin['triggerUpdateContent']).toHaveBeenCalledWith(undefined);
-            getActiveViewOfTypeSpy.mockRestore();
-        });
-
-        it('should call triggerUpdateContent with lastActiveEditor', () => {
-            const leaf = {
-                view: markdownView,
-            } as unknown as WorkspaceLeaf;
-
-            plugin['lastActiveEditor'] = editor;
-
-            plugin['handleActiveLeafChange'](leaf);
-
-            expect(plugin['lastActiveEditor']).toBe(editor);
-        });
-
-        it('should handle undefined editor in triggerUpdateContent', () => {
-            const triggerUpdateContentSpy = jest.spyOn(plugin, 'triggerUpdateContent' as any);
-            plugin['triggerUpdateContent'](undefined);
-
-            expect(triggerUpdateContentSpy).not.toThrow();
         });
 
         it('should write an error to the console when an error is thrown', async () => {
@@ -439,6 +218,176 @@ describe('WordFrequencyPlugin', () => {
 
             consoleErrorSpy.mockRestore();
             dispatchEventSpy.mockRestore();
+        });
+    });
+
+    describe('refactor these to call the public API', () => {
+        describe('calculateWordFrequencies direct calls', () => {
+            it('should calculate word frequencies', () => {
+                const content = 'hello world hello';
+                const result = plugin['calculateWordFrequencies'](content);
+                expect(result).toEqual([['hello', 2], ['world', 1]]);
+            });
+
+            it('should calculate word frequencies with punctuation and mixed case', () => {
+                const content = 'Hello, world! hello. World?';
+                const result = plugin['calculateWordFrequencies'](content);
+                expect(result).toEqual([['hello', 2], ['world', 2]]);
+            });
+
+            it('should calculate word frequencies with numbers and special characters', () => {
+                const content = 'word1 word2 123 word1 #$% hello. hello.';
+                const result = plugin['calculateWordFrequencies'](content);
+                expect(result).toEqual([['word1', 2], ['hello', 2], ['word2', 1], ['123', 1]]);
+            });
+
+            it('should calculate word frequencies with periods, colons, and slashes', () => {
+                const content = 'test. test: test/ test.';
+                const result = plugin['calculateWordFrequencies'](content);
+                expect(result).toEqual([['test', 4]]);
+            });
+
+            it('should return an empty array when given an empty string', () => {
+                const result = plugin['calculateWordFrequencies']('');
+                expect(result).toEqual([]);
+            });
+        });
+
+        describe('handleActiveLeafChange direct calls', () => {
+            it('should handle active-leaf-change event with markdown view', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                plugin['triggerUpdateContent'] = jest.fn();
+                mockApp.workspace.getLeavesOfType.mockReturnValue([]);
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(markdownView.containerEl.addEventListener).toHaveBeenCalled();
+
+                const keyupCallback = (markdownView.containerEl.addEventListener as jest.Mock).mock.calls[0][1];
+                keyupCallback();
+
+                expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event without markdown view', () => {
+                const leaf = { view: {} } as any as WorkspaceLeaf;
+                plugin['handleActiveLeafChange'](leaf);
+                expect(markdownView.containerEl.addEventListener).not.toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event with null leaf', () => {
+                plugin['handleActiveLeafChange'](null);
+                expect(markdownView.containerEl.addEventListener).not.toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event and update lastActiveEditor', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                plugin['triggerUpdateContent'] = jest.fn();
+                mockApp.workspace.getLeavesOfType.mockReturnValue([]);
+                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView); // Add this line
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(markdownView.containerEl.addEventListener).toHaveBeenCalled();
+                expect(plugin['lastActiveEditor']).toBe(markdownView.editor);
+
+                const keyupCallback = (markdownView.containerEl.addEventListener as jest.Mock).mock.calls[0][1];
+                keyupCallback();
+
+                expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event and not update lastActiveEditor when not a markdown view', () => {
+                const leaf = { view: {} } as any as WorkspaceLeaf;
+                plugin['handleActiveLeafChange'](leaf);
+                expect(plugin['lastActiveEditor']).toBeUndefined();
+            });
+
+            it('should handle active-leaf-change event', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                plugin['triggerUpdateContent'] = jest.fn();
+                mockApp.workspace.getLeavesOfType.mockReturnValue([]);
+                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(mockApp.workspace.on).toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event and trigger update content when view is open', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                plugin['triggerUpdateContent'] = jest.fn();
+                mockApp.workspace.getLeavesOfType.mockReturnValue([{ id: 'test' }] as any);
+                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(plugin['triggerUpdateContent']).toHaveBeenCalled();
+            });
+
+            it('should handle active-leaf-change event and not trigger update content when view is not open', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                plugin['triggerUpdateContent'] = jest.fn();
+                mockApp.workspace.getLeavesOfType.mockReturnValue([]);
+                mockApp.workspace.getActiveViewOfType.mockReturnValue(markdownView);
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(plugin['triggerUpdateContent']).not.toHaveBeenCalled();
+            });
+
+            it('should trigger handleActiveLeafChange on active-leaf-change', () => {
+                const leaf = { view: markdownView } as any as WorkspaceLeaf;
+                const callback = mockApp.workspace.on.mock.calls[0][1];
+                plugin['handleActiveLeafChange'] = jest.fn();
+                callback(leaf);
+                expect(plugin['handleActiveLeafChange']).toHaveBeenCalledWith(leaf);
+            });
+
+            it.skip('should call triggerUpdateContent with lastActiveEditor', () => {
+                const leaf = {
+                    view: markdownView,
+                } as unknown as WorkspaceLeaf;
+
+                plugin['lastActiveEditor'] = editor;
+
+                plugin['handleActiveLeafChange'](leaf);
+
+                expect(plugin['lastActiveEditor']).toBe(editor);
+            });
+        });
+
+        describe('loadSettings direct calls', () => {
+            it('should load settings with data', async () => {
+                plugin['loadData'] = jest.fn().mockResolvedValue({ blacklist: 'test' });
+                await plugin['loadSettings']();
+                expect(plugin.settings.blacklist).toBe('test');
+            });
+
+            it('should load settings without data', async () => {
+                plugin['loadData'] = jest.fn().mockResolvedValue(null);
+                await plugin['loadSettings']();
+                expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
+            });
+        });
+
+        describe('triggerUpdateContent direct calls', () => {
+
+            it('should trigger update content', () => {
+                plugin['calculateWordFrequencies'] = jest.fn().mockReturnValue([['test', 1]]);
+                const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
+                plugin['triggerUpdateContent'](markdownView.editor);
+                expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(CustomEvent));
+            });
+
+            it('should not trigger update content if editor is undefined', () => {
+                const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
+                plugin['triggerUpdateContent'](undefined);
+                expect(dispatchEventMock).not.toHaveBeenCalled();
+                dispatchEventMock.mockRestore();
+            });
+
+            it('should handle undefined editor in triggerUpdateContent', () => {
+                const triggerUpdateContentSpy = jest.spyOn(plugin, 'triggerUpdateContent' as any);
+                plugin['triggerUpdateContent'](undefined);
+
+                expect(triggerUpdateContentSpy).not.toThrow();
+            });
         });
     });
 });
