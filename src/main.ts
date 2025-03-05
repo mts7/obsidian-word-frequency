@@ -9,7 +9,6 @@ export default class WordFrequencyPlugin extends Plugin {
     private lastActiveEditor: Editor | undefined;
 
     async onload() {
-        console.log('Word Frequency Plugin loaded');
         await this.loadSettings();
 
         this.registerView(
@@ -17,7 +16,6 @@ export default class WordFrequencyPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
         );
 
-        // TODO: the ribbon icon is on the left, and I want it on the right
         this.addRibbonIcon('case-lower', PLUGIN_NAME, () => {
             this.activateView();
         });
@@ -31,9 +29,7 @@ export default class WordFrequencyPlugin extends Plugin {
         this.addSettingTab(new WordFrequencySettingTab(this.app, this));
     }
 
-    onunload() {
-        console.log('Word Frequency Plugin unloaded');
-    }
+    onunload() {}
 
     async activateView() {
         const { workspace } = this.app;
@@ -74,7 +70,7 @@ export default class WordFrequencyPlugin extends Plugin {
         const wordCounts = new Map<string, number>();
         const words = content
             .toLowerCase()
-            .replace(/[^a-z0-9\s:\/.]/g, '')
+            .replace(/[^a-z0-9\s]/g, '')
             .split(/\s+/);
 
         words.forEach((word) => {
