@@ -82,7 +82,7 @@ describe('debounce', () => {
         expect(mockFunc2).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle a function that throws an error', async () => {
+    it('should handle a function that throws an error', () => {
         const mockFunc = jest.fn().mockImplementation(() => {
             throw new Error('Test Error');
         });
@@ -90,7 +90,7 @@ describe('debounce', () => {
 
         try {
             debouncedFunc();
-            await jest.advanceTimersByTime(100);
+            jest.advanceTimersByTime(100);
         } catch (error) {
             expect((error as Error).message).toBe('Test Error');
         }

@@ -44,8 +44,8 @@ describe('WordFrequencyView', () => {
                 };
                 return el;
             }),
-            get innerHTML() { return innerHTMLValue; }, // Expose the tracked innerHTML.
-            set innerHTML(value: string) { innerHTMLValue = value; }, // Add setter
+            get innerHTML() { return innerHTMLValue; },
+            set innerHTML(value: string) { innerHTMLValue = value; },
         } as any as HTMLElement;
         view.contentEl = contentEl;
     });
@@ -104,7 +104,6 @@ describe('WordFrequencyView', () => {
             contentEl.innerHTML = '<div>Old Content</div>';
             view.updateContent();
             expect(contentEl.empty).toHaveBeenCalled();
-            // Verify that the header is created and added to innerHTML
             expect(contentEl.innerHTML).toContain('<h4>Word Frequency</h4>');
         });
 
