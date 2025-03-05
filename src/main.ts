@@ -1,11 +1,26 @@
 import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
+import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE, WordFrequencyView } from './WordFrequencyView';
 import { debounce } from './utils';
 
+interface WordFrequencySettings {
+    blacklist: string;
+}
+const DEFAULT_SETTINGS: WordFrequencySettings = {
+    blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',
+}
+
 export default class WordFrequencyPlugin extends Plugin {
+    settings: WordFrequencySettings = DEFAULT_SETTINGS;
+
     async onload() {
         console.log('Word Frequency Plugin loaded');
-        this.registerView(VIEW_TYPE, (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf));
+        await this.loadSettings();
+
+        this.registerView(
+            VIEW_TYPE,
+            (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
+        );
 
         // TODO: the ribbon icon is on the left, and I want it on the right
         this.addRibbonIcon('case-lower', PLUGIN_NAME, () => {
@@ -35,6 +50,8 @@ export default class WordFrequencyPlugin extends Plugin {
                 });
             })
         );
+
+        this.addSettingTab(new WordFrequencySettingTab(this.app, this));
     }
 
     onunload() {
@@ -78,6 +95,14 @@ export default class WordFrequencyPlugin extends Plugin {
         });
 
         return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
+    }
+
+    async loadSettings(): Promise<void> {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings(): Promise<void> {
+        await this.saveData(this.settings);
     }
 
     triggerUpdateContent(editor: Editor) {
