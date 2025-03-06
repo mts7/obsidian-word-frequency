@@ -73,7 +73,7 @@ export class WordFrequencyView extends ItemView {
         });
 
         const thresholdDisplay = this.contentEl.createEl('div', { cls: 'threshold-display' });
-        thresholdDisplay.setText(`Current Frequency Threshold is ${this.plugin.settings.threshold}.`);
+        thresholdDisplay.setText(`Current Frequency Threshold is ${this.getPlugin().settings.threshold}.`);
         thresholdDisplay.setAttr('title', 'Configure settings for this plugin to update the frequency threshold.');
     }
 
