@@ -56,6 +56,7 @@ describe('WordFrequencyView', () => {
                         element.textContent = text;
                         innerHTMLValue += `<${tagName}>${text}</${tagName}>`;
                     }),
+                    setAttr: jest.fn(),
                     addEventListener: jest.fn(),
                     textContent: '',
                     className: ''
