@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
+import { Editor, MarkdownView, Plugin, setIcon, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 import { WordFrequencySettings, DEFAULT_SETTINGS, EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
