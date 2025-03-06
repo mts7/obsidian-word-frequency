@@ -16,7 +16,7 @@ export default class WordFrequencyPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
         );
 
-        this.addRibbonIcon('case-lower', PLUGIN_NAME, () => {
+        this.addRibbonIcon('file-chart-column-increasing', `Show ${PLUGIN_NAME} Sidebar`, () => {
             this.activateView();
         });
 
