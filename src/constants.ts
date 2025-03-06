@@ -1,9 +1,11 @@
 export interface WordFrequencySettings {
     blacklist: string;
+    threshold: number;
 }
 
 export const DEFAULT_SETTINGS: WordFrequencySettings = {
     blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',
+    threshold: 3,
 };
 
 export const PLUGIN_NAME = 'Word Frequency';

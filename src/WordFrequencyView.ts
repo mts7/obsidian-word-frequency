@@ -52,7 +52,7 @@ export class WordFrequencyView extends ItemView {
         const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
 
         this.wordCountList.forEach(([word, count]) => {
-            if (blacklist.has(word)) {
+            if (blacklist.has(word) || count < this.getPlugin().settings.threshold) {
                 return;
             }
 
@@ -71,6 +71,10 @@ export class WordFrequencyView extends ItemView {
                 this.updateContent();
             });
         });
+
+        const thresholdDisplay = this.contentEl.createEl('div', { cls: 'threshold-display' });
+        thresholdDisplay.setText(`Current Frequency Threshold is ${this.plugin.settings.threshold}.`);
+        thresholdDisplay.setAttr('title', 'Configure settings for this plugin to update the frequency threshold.');
     }
 
     private createHeader() {
