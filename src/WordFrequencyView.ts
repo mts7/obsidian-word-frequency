@@ -14,7 +14,7 @@ export class WordFrequencyView extends ItemView {
     }
 
     getIcon(): string {
-        return 'case-lower';
+        return 'file-chart-column-increasing';
     }
 
     getViewType(): string {
