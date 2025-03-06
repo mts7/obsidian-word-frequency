@@ -13,6 +13,10 @@ export class WordFrequencyView extends ItemView {
         this.plugin = plugin;
     }
 
+    getIcon(): string {
+        return 'case-lower';
+    }
+
     getViewType(): string {
         return VIEW_TYPE;
     }
