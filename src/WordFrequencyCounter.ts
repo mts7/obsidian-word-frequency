@@ -1,3 +1,6 @@
+import { Editor } from 'obsidian';
+import { EVENT_UPDATE } from './constants';
+
 export class WordFrequencyCounter {
     calculateWordFrequencies(content: string): [string, number][] {
         if (content.length === 0) {
@@ -17,5 +20,17 @@ export class WordFrequencyCounter {
         });
 
         return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
+    }
+
+    triggerUpdateContent(editor?: Editor) {
+        if (editor === undefined) {
+            return;
+        }
+        try {
+            const wordCounts = this.calculateWordFrequencies(editor.getValue());
+            window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
+        } catch (error) {
+            console.error('error in triggerUpdateContent', error);
+        }
     }
 }

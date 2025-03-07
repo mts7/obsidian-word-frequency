@@ -55,7 +55,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
         await workspace.revealLeaf(leaf);
 
-        this.triggerUpdateContent(
+        this.frequencyCounter.triggerUpdateContent(
             this.lastActiveEditor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
         );
     }
@@ -77,7 +77,7 @@ export default class WordFrequencyPlugin extends Plugin {
         const editor = view.editor;
 
         const debouncedMethod = debounce(
-            () => this.triggerUpdateContent(editor),
+            () => this.frequencyCounter.triggerUpdateContent(editor),
             3000
         );
 
@@ -90,24 +90,12 @@ export default class WordFrequencyPlugin extends Plugin {
             this.lastActiveEditor = activeView.editor;
         }
         if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
-            this.triggerUpdateContent(this.lastActiveEditor);
+            this.frequencyCounter.triggerUpdateContent(this.lastActiveEditor);
         }
     }
 
     private async loadSettings(): Promise<void> {
         const settings = await this.loadData();
         this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
-    }
-
-    private triggerUpdateContent(editor?: Editor) {
-        if (editor === undefined) {
-            return;
-        }
-        try {
-            const wordCounts = this.frequencyCounter.calculateWordFrequencies(editor.getValue());
-            window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
-        } catch (error) {
-            console.error('error in triggerUpdateContent', error);
-        }
     }
 }
