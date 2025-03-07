@@ -3,8 +3,10 @@ import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 import { WordFrequencySettings, DEFAULT_SETTINGS, EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
 import { debounce } from './utils';
+import { WordFrequencyCounter } from './WordFrequencyCounter';
 
 export default class WordFrequencyPlugin extends Plugin {
+    frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
     private lastActiveEditor: Editor | undefined;
 
@@ -62,26 +64,6 @@ export default class WordFrequencyPlugin extends Plugin {
         await this.saveData(this.settings);
     }
 
-    private calculateWordFrequencies(content: string): [string, number][] {
-        if (content.length === 0) {
-            return [];
-        }
-
-        const wordCounts = new Map<string, number>();
-        const words = content
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .split(/\s+/);
-
-        words.forEach((word) => {
-            if (word) {
-                wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
-            }
-        });
-
-        return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
-    }
-
     private handleActiveLeafChange(leaf: WorkspaceLeaf | null) {
         if (leaf === null) {
             return;
@@ -122,7 +104,7 @@ export default class WordFrequencyPlugin extends Plugin {
             return;
         }
         try {
-            const wordCounts = this.calculateWordFrequencies(editor.getValue());
+            const wordCounts = this.frequencyCounter.calculateWordFrequencies(editor.getValue());
             window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
         } catch (error) {
             console.error('error in triggerUpdateContent', error);
