@@ -1,14 +1,12 @@
-import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
-import { WordFrequencySettings, DEFAULT_SETTINGS, EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
-import { debounce } from './utils';
+import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE } from './constants';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
 
 export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
-    private lastActiveEditor: Editor | undefined;
 
     async onload() {
         await this.loadSettings();
@@ -24,7 +22,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {
-                this.handleActiveLeafChange(leaf);
+                this.frequencyCounter.handleActiveLeafChange(leaf, this.app.workspace);
             })
         );
 
@@ -55,43 +53,11 @@ export default class WordFrequencyPlugin extends Plugin {
 
         await workspace.revealLeaf(leaf);
 
-        this.frequencyCounter.triggerUpdateContent(
-            this.lastActiveEditor ?? this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
-        );
+        this.frequencyCounter.triggerUpdateContent(this.app.workspace.getActiveViewOfType(MarkdownView)?.editor);
     }
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
-    }
-
-    private handleActiveLeafChange(leaf: WorkspaceLeaf | null) {
-        if (leaf === null) {
-            return;
-        }
-
-        if (!(leaf.view instanceof MarkdownView)) {
-            return;
-        }
-
-        const view = leaf.view;
-        const editor = view.editor;
-
-        const debouncedMethod = debounce(
-            () => this.frequencyCounter.triggerUpdateContent(editor),
-            3000
-        );
-
-        view.containerEl.addEventListener('keyup', () => {
-            debouncedMethod();
-        });
-
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (activeView) {
-            this.lastActiveEditor = activeView.editor;
-        }
-        if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
-            this.frequencyCounter.triggerUpdateContent(this.lastActiveEditor);
-        }
     }
 
     private async loadSettings(): Promise<void> {

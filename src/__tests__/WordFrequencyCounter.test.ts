@@ -1,6 +1,7 @@
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
-import { Editor } from 'obsidian';
+import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
+import { debounce } from '../utils';
 
 const counter = new WordFrequencyCounter();
 
@@ -37,6 +38,72 @@ describe('WordFrequencyCounter tests', () => {
         it('should return an empty array when given an empty string', () => {
             const result = counter.calculateWordFrequencies('');
             expect(result).toEqual([]);
+        });
+    });
+
+    describe('handleActiveLeafChange', () => {
+        it('should not call triggerUpdateContent when leaf is null', () => {
+            const counterMock = {
+                handleActiveLeafChange: counter.handleActiveLeafChange,
+                triggerUpdateContent: jest.fn(),
+            };
+            const workspace: Workspace = {} as unknown as Workspace;
+
+            counterMock.handleActiveLeafChange(null, workspace);
+
+            expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
+        });
+
+        it('should return when leaf view is not an instance of MarkdownView', () => {
+            const counterMock = {
+                handleActiveLeafChange: counter.handleActiveLeafChange,
+                triggerUpdateContent: jest.fn(),
+            };
+            const workspace: Workspace = {} as unknown as Workspace;
+            const leafMock = {
+                view: null
+            } as unknown as WorkspaceLeaf;
+
+            counterMock.handleActiveLeafChange(leafMock, workspace);
+
+            expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
+        });
+
+        it.skip('should call the debounce method to call triggerUpdateContent', () => {
+            const workspace: Workspace = {} as unknown as Workspace;
+            const containerElMock = {
+                addEventListener: jest.fn().mockImplementation(() => {
+                    console.log('called addEventListener');
+                }),
+            } as unknown as HTMLElement;
+            const markdownViewMock = {
+                editor: jest.fn(),
+                containerEl: containerElMock,
+            } as unknown as MarkdownView;
+            const leafMock = {
+                view: markdownViewMock,
+            } as unknown as WorkspaceLeaf;
+
+            counter.handleActiveLeafChange(leafMock, workspace);
+
+            expect(containerElMock.addEventListener).toHaveBeenCalled();
+            //expect(containerElMock.addEventListener).toHaveBeenCalledWith('keyup', expect.any(Function));
+        });
+
+        it('should set lastActiveEditor with a valid MarkdownView', () => {
+
+        });
+
+        it('should not set lastActiveEditor with an invalid MarkdownView', () => {
+
+        });
+
+        it('should trigger update content when there are workspace leaves', () => {
+
+        });
+
+        it('should not trigger update content when there are no workspace leaves', () => {
+
         });
     });
 
