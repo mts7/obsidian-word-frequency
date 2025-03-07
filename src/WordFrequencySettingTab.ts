@@ -13,6 +13,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
     display(): void {
         const { containerEl } = this;
+        console.log('display with containerEl', containerEl);
 
         containerEl.empty();
 

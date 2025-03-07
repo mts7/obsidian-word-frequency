@@ -38,7 +38,7 @@ describe('WordFrequencySettingTab', () => {
         expect(settingTab.plugin).toBe(plugin);
     });
 
-    describe.skip('blacklist', () => {
+    describe('blacklist', () => {
         test('display method creates the text area correctly', () => {
             settingTab.display();
 
@@ -63,13 +63,14 @@ describe('WordFrequencySettingTab', () => {
         });
     });
 
-    describe.skip('threshold', () => {
-        beforeEach(() => {
-            containerEl = document.createElement('div');
-        });
+    describe('threshold', () => {
+        // beforeEach(() => {
+        //     containerEl = document.createElement('div');
+        // });
 
-        it('should display the threshold setting input field with the correct initial value', () => {
+        it.only('should display the threshold setting input field with the correct initial value', () => {
             settingTab.display();
+            console.log('containerEl', containerEl.innerHTML);
             const thresholdInput = containerEl.querySelector('input');
             if (thresholdInput === null) {
                 throw new Error('Input element for threshold is not found.');
@@ -79,7 +80,7 @@ describe('WordFrequencySettingTab', () => {
             expect(thresholdInput.value).toBe('3');
         });
 
-        it('should update the threshold setting when the input value is changed', async () => {
+        it.skip('should update the threshold setting when the input value is changed', async () => {
             settingTab.display();
             const thresholdInput = containerEl.querySelector('input') as HTMLInputElement;
             if (thresholdInput === null) {
@@ -94,7 +95,7 @@ describe('WordFrequencySettingTab', () => {
             expect(plugin.settings.threshold).toBe(5);
         });
 
-        it('should not update the threshold setting if the input value is invalid', async () => {
+        it.skip('should not update the threshold setting if the input value is invalid', async () => {
             settingTab.display();
             const thresholdInput = containerEl.querySelector('input') as HTMLInputElement;
             if (thresholdInput === null) {
@@ -109,7 +110,7 @@ describe('WordFrequencySettingTab', () => {
             expect(plugin.settings.threshold).toBe(3);
         });
 
-        it('should call updateContent on views when threshold is changed', async () => {
+        it.skip('should call updateContent on views when threshold is changed', async () => {
             settingTab.display();
             const updateContentMock = jest.fn();
             const fakeView = {

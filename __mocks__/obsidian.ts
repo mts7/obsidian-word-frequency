@@ -1,3 +1,5 @@
+import { TextComponent } from 'obsidian';
+
 class MockMarkdownView {
     editor = {
         getValue: jest.fn(),
@@ -24,31 +26,42 @@ module.exports = {
     CustomEvent: jest.fn(),
     Setting: jest.fn().mockImplementation((containerEl: HTMLElement) => {
         const settingEl = document.createElement('div');
-        const textArea = document.createElement('textarea');
-        textArea.classList.add('word-frequency-setting-blacklist');
-        settingEl.appendChild(textArea);
+        const blacklistTextArea = document.createElement('textarea');
+        const thresholdInput = document.createElement('input');
         containerEl.appendChild(settingEl);
 
         return {
             setName: jest.fn().mockReturnThis(),
             setDesc: jest.fn().mockReturnThis(),
-            addTextArea: jest.fn().mockImplementation((callback) => {
+            addText: jest.fn().mockImplementation((callback: any) => {
+                console.log('implementing addText', this);
+                callback({
+                    setPlaceholder: jest.fn(),
+                    setValue: function (value: string) {
+                        console.log('setting value to input', value);
+                        settingEl.appendChild(thresholdInput);
+                        thresholdInput.value = value;
+                        return this;
+                    },
+                    onChange: jest.fn(),
+                });
+            }),
+            addTextArea: jest.fn().mockImplementation((callback: any) => {
                 callback({
                     setValue: function (value: string) {
-                        textArea.value = value;
+                        blacklistTextArea.classList.add('word-frequency-setting-blacklist');
+                        settingEl.appendChild(blacklistTextArea);
+                        blacklistTextArea.value = value;
                         return this;
                     },
                     onChange: function (handler: (value: string) => void) {
-                        textArea.addEventListener('change', (event) => {
+                        blacklistTextArea.addEventListener('change', (event) => {
                             handler((event.target as HTMLTextAreaElement).value);
                         });
                         return this;
                     },
-                    inputEl: textArea,
+                    inputEl: blacklistTextArea,
                 });
-                return {
-                    inputEl: textArea,
-                };
             }),
         };
     }),
