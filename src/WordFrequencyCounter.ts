@@ -46,7 +46,13 @@ export class WordFrequencyCounter {
             debouncedMethod();
         });
 
-        this.updateOnChange(workspace);
+        const activeView = workspace.getActiveViewOfType(MarkdownView);
+        if (activeView) {
+            this.lastActiveEditor = activeView.editor;
+        }
+        if (workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
+            this.triggerUpdateContent(this.lastActiveEditor);
+        }
     }
 
     triggerUpdateContent(editor?: Editor) {
@@ -61,16 +67,6 @@ export class WordFrequencyCounter {
             window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
         } catch (error) {
             console.error('error in triggerUpdateContent', error);
-        }
-    }
-
-    private updateOnChange(workspace: Workspace) {
-        const activeView = workspace.getActiveViewOfType(MarkdownView);
-        if (activeView) {
-            this.lastActiveEditor = activeView.editor;
-        }
-        if (workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
-            this.triggerUpdateContent(this.lastActiveEditor);
         }
     }
 }
