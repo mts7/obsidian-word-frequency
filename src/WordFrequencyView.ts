@@ -1,28 +1,34 @@
-import { ItemView, setIcon, WorkspaceLeaf } from 'obsidian';
-import { EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from './constants';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { EVENT_UPDATE, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from './constants';
 import WordFrequencyPlugin from './main';
+import { WordFrequencyDisplay } from './WordFrequencyDisplay';
 
 export class WordFrequencyView extends ItemView {
-    plugin: WordFrequencyPlugin;
-    wordCountList: [string, number][] = [];
-    private eventListener: (event: CustomEvent) => void = () => {
-    };
+    private display: WordFrequencyDisplay;
+    private eventListener: (event: CustomEvent) => void = () => {};
+    private readonly plugin: WordFrequencyPlugin;
+    private wordCountList: [string, number][] = [];
 
-    constructor(leaf: WorkspaceLeaf, plugin: WordFrequencyPlugin) {
+    constructor(leaf: WorkspaceLeaf, plugin: WordFrequencyPlugin, display?: WordFrequencyDisplay) {
         super(leaf);
         this.plugin = plugin;
-    }
-
-    getIcon(): string {
-        return 'file-chart-column-increasing';
-    }
-
-    getViewType(): string {
-        return VIEW_TYPE;
+        this.display = display ?? new WordFrequencyDisplay(plugin, this);
     }
 
     getDisplayText(): string {
         return PLUGIN_NAME;
+    }
+
+    getIcon(): string {
+        return FREQUENCY_ICON;
+    }
+
+    getPlugin(): WordFrequencyPlugin {
+        return this.plugin;
+    }
+
+    getViewType(): string {
+        return VIEW_TYPE;
     }
 
     async onOpen() {
@@ -41,45 +47,15 @@ export class WordFrequencyView extends ItemView {
         window.document.removeEventListener(EVENT_UPDATE, this.eventListener as EventListener);
     }
 
-    getPlugin(): WordFrequencyPlugin {
-        return this.plugin;
-    }
-
     updateContent() {
         this.contentEl.empty();
-        this.createHeader();
+        this.display.createHeader();
         const contentContainer = this.contentEl.createEl('div');
         const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
 
         this.wordCountList.forEach(([word, count]) => {
-            if (blacklist.has(word) || count < this.getPlugin().settings.threshold) {
-                return;
-            }
-
-            const row = contentContainer.createEl('div', { cls: 'word-row' });
-            const wordCountContainer = row.createEl('div', { cls: 'word-count-container' });
-            wordCountContainer.createEl('span', { text: word });
-            wordCountContainer.createEl('span', { text: count.toString() });
-
-            const buttonContainer = row.createEl('div', { cls: 'button-container' });
-            const button = buttonContainer.createEl('button');
-            setIcon(button, 'trash-2');
-            button.addEventListener('click', () => {
-                const settings = this.getPlugin().settings;
-                settings.blacklist += `,${word}`;
-                this.getPlugin().saveData(settings);
-                this.updateContent();
-            });
+            this.display.addWordToSidebar(blacklist, word, count, contentContainer);
         });
-
-        const thresholdDisplay = this.contentEl.createEl('div', { cls: 'threshold-display' });
-        thresholdDisplay.setText(`Current Frequency Threshold is ${this.getPlugin().settings.threshold}.`);
-        thresholdDisplay.setAttr('title', 'Configure settings for this plugin to update the frequency threshold.');
-    }
-
-    private createHeader() {
-        const headerContainer = this.contentEl.createEl('div');
-        const headerElement = headerContainer.createEl('h4');
-        headerElement.setText(PLUGIN_NAME);
+        this.display.createThresholdDisplay();
     }
 }

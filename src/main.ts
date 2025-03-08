@@ -1,7 +1,7 @@
 import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
-import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE } from './constants';
+import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
 
 export default class WordFrequencyPlugin extends Plugin {
@@ -16,7 +16,7 @@ export default class WordFrequencyPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
         );
 
-        this.addRibbonIcon('file-chart-column-increasing', `Show ${PLUGIN_NAME} Sidebar`, () => {
+        this.addRibbonIcon(FREQUENCY_ICON, `Show ${PLUGIN_NAME} Sidebar`, () => {
             this.activateView();
         });
 
