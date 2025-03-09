@@ -4,16 +4,18 @@ import WordFrequencyPlugin from './main';
 import { WordFrequencyView } from './WordFrequencyView';
 
 export class WordFrequencyDisplay {
+    private blacklist: Set<string>;
     private plugin: WordFrequencyPlugin;
     private view: WordFrequencyView;
 
-    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView) {
+    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView, blacklist?: Set<string>) {
         this.plugin = plugin;
         this.view = view;
+        this.blacklist = blacklist ?? new Set(plugin.settings.blacklist.split(',').map(word => word.trim()));
     }
 
-    addWordToSidebar(blacklist: Set<string>, word: string, count: number, contentContainer: HTMLDivElement) {
-        if (blacklist.has(word) || count < this.plugin.settings.threshold) {
+    addWordToSidebar(word: string, count: number, contentContainer: HTMLDivElement) {
+        if (this.blacklist.has(word) || count < this.plugin.settings.threshold) {
             return;
         }
 
@@ -27,10 +29,7 @@ export class WordFrequencyDisplay {
         const button = buttonContainer.createEl('button');
         setIcon(button, 'trash-2');
         button.addEventListener('click', () => {
-            const settings = this.plugin.settings;
-            settings.blacklist += `,${word}`;
-            this.plugin.saveData(settings);
-            this.view.updateContent();
+            this.saveWordToBlacklist(word);
         });
     }
 
@@ -44,5 +43,12 @@ export class WordFrequencyDisplay {
         const thresholdDisplay = contentEl.createEl('div', { cls: 'threshold-display' });
         thresholdDisplay.setText(`Current Frequency Threshold is ${this.plugin.settings.threshold}.`);
         thresholdDisplay.setAttr('title', 'Configure settings for this plugin to update the frequency threshold.');
+    }
+
+    saveWordToBlacklist(word: string) {
+        const settings = this.plugin.settings;
+        settings.blacklist += `,${word}`;
+        this.plugin.saveData(settings);
+        this.view.updateContent();
     }
 }

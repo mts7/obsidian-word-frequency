@@ -5,7 +5,8 @@ import { WordFrequencyDisplay } from './WordFrequencyDisplay';
 
 export class WordFrequencyView extends ItemView {
     private display: WordFrequencyDisplay;
-    private eventListener: (event: CustomEvent) => void = () => {};
+    private eventListener: (event: CustomEvent) => void = () => {
+    };
     private readonly plugin: WordFrequencyPlugin;
     private wordCountList: [string, number][] = [];
 
@@ -51,10 +52,9 @@ export class WordFrequencyView extends ItemView {
         this.contentEl.empty();
         this.display.createHeader(this.contentEl);
         const contentContainer = this.contentEl.createEl('div');
-        const blacklist = new Set(this.getPlugin().settings.blacklist.split(',').map(word => word.trim()));
 
         this.wordCountList.forEach(([word, count]) => {
-            this.display.addWordToSidebar(blacklist, word, count, contentContainer);
+            this.display.addWordToSidebar(word, count, contentContainer);
         });
         this.display.createThresholdDisplay(this.contentEl);
     }

@@ -4,6 +4,7 @@ import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
 
 describe('WordFrequencyDisplay', () => {
+    let blacklist: Set<string>;
     let display: WordFrequencyDisplay;
     let contentEl: HTMLElement;
     let mockPlugin: WordFrequencyPlugin;
@@ -14,6 +15,7 @@ describe('WordFrequencyDisplay', () => {
             activateView: jest.fn(),
             onload: jest.fn(),
             onunload: jest.fn(),
+            saveData: jest.fn(),
             saveSettings: jest.fn(),
             settings: {
                 blacklist: 'the, and, to',
@@ -37,8 +39,9 @@ describe('WordFrequencyDisplay', () => {
                 setText: jest.fn(),
             }),
         } as any as HTMLElement;
+        blacklist = new Set(mockPlugin.settings.blacklist.split(',').map(word => word.trim()));
 
-        display = new WordFrequencyDisplay(mockPlugin, mockView);
+        display = new WordFrequencyDisplay(mockPlugin, mockView, blacklist);
     });
 
     describe('addWordToSidebar', () => {
@@ -46,11 +49,10 @@ describe('WordFrequencyDisplay', () => {
             const contentContainer = {
                 createEl: jest.fn(),
             } as any as HTMLDivElement;
-            const blacklist = new Set(mockPlugin.settings.blacklist.split(',').map(word => word.trim()));
             const word = 'the';
             const count = 17;
 
-            display.addWordToSidebar(blacklist, word, count, contentContainer);
+            display.addWordToSidebar(word, count, contentContainer);
 
             expect(contentContainer.createEl).not.toHaveBeenCalled();
         });
@@ -59,26 +61,55 @@ describe('WordFrequencyDisplay', () => {
             const contentContainer = {
                 createEl: jest.fn(),
             } as any as HTMLDivElement;
-            const blacklist = new Set(mockPlugin.settings.blacklist.split(',').map(word => word.trim()));
             const word = 'banana';
             const count = 1;
 
-            display.addWordToSidebar(blacklist, word, count, contentContainer);
+            display.addWordToSidebar(word, count, contentContainer);
 
             expect(contentContainer.createEl).not.toHaveBeenCalled();
         });
 
-        it('should add the word and count to the row', () => {
+        it('should add the word with count and button to the row', () => {
+            const spanElement = {
+                setText: jest.fn(),
+            } as any as HTMLSpanElement;
+            const buttonElement = {
+                addEventListener: jest.fn(),
+            } as any as HTMLButtonElement;
+            const innerElement = {
+                createEl: jest.fn()
+                    .mockReturnValueOnce(spanElement)
+                    .mockReturnValueOnce(spanElement)
+                    .mockReturnValueOnce(buttonElement),
+            } as any as HTMLDivElement;
+            const rowElement = {
+                createEl: jest.fn().mockReturnValue(innerElement),
+            } as any as HTMLDivElement;
+            const contentContainer = {
+                createEl: jest.fn().mockReturnValue(rowElement),
+            } as any as HTMLDivElement;
+            const word = 'banana';
+            const count = 13;
 
+            display.addWordToSidebar(word, count, contentContainer);
+
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(1, 'span', { text: word });
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', { text: count.toString() });
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button');
         });
 
-        it('should add a button to the row', () => {
+        it('should update blacklist and call saveData and updateContent', () => {
+            const word = 'banana';
+            const originalBlacklist = mockPlugin.settings.blacklist;
 
+            display.saveWordToBlacklist(word);
+
+            expect(mockPlugin.settings.blacklist).toBe(`${originalBlacklist},${word}`);
+            expect(mockPlugin.saveData).toHaveBeenCalledWith(mockPlugin.settings);
+            expect(mockView.updateContent).toHaveBeenCalled();
         });
 
-        it('should have an event listener on the button', () => {
-
-        });
+        it.todo('should verify the button click event handles the word');
     });
 
     describe('createHeader', () => {
