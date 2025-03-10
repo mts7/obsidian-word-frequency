@@ -40,9 +40,16 @@ const mockManifest: PluginManifest = {
 
 describe('WordFrequencyPlugin', () => {
     let plugin: WordFrequencyPlugin;
+    let mockViewManager: ViewManager;
 
     beforeEach(async () => {
-        plugin = new WordFrequencyPlugin(mockApp, mockManifest);
+        mockViewManager = {
+            getOrCreateLeaf: jest.fn().mockReturnValue(null),
+            setViewState: jest.fn(),
+            updateContent: jest.fn(),
+        } as unknown as ViewManager;
+
+        plugin = new WordFrequencyPlugin(mockApp, mockManifest, mockViewManager);
         plugin['app'] = mockApp;
         plugin['loadData'] = jest.fn().mockResolvedValue(DEFAULT_SETTINGS);
         plugin['saveData'] = jest.fn().mockResolvedValue(undefined);
@@ -74,19 +81,31 @@ describe('WordFrequencyPlugin', () => {
     });
 
     describe('activateView', () => {
-        it.todo('should set the view state and show the leaf with content');
-
-        it.skip('should not set view state or reveal leaf when there is no leaf', async() => {
-            // TODO: mock viewManager.getOrCreateLeaf to return null
-            const mockViewManager = {
-                getOrCreateLeaf: jest.fn().mockReturnValue(null),
+        it('should set the view state and show the leaf with content', async() => {
+            const mockLeaf = jest.fn() as unknown as WorkspaceLeaf;
+            mockViewManager = {
+                getOrCreateLeaf: jest.fn().mockReturnValue(mockLeaf),
                 setViewState: jest.fn(),
                 updateContent: jest.fn(),
             } as unknown as ViewManager;
+            plugin = new WordFrequencyPlugin(mockApp, mockManifest, mockViewManager);
+            plugin['app'] = mockApp;
 
-            const newPlugin = new WordFrequencyPlugin(mockApp, mockManifest, mockViewManager);
+            await plugin.activateView();
 
-            await newPlugin.activateView();
+            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(plugin.app.workspace, VIEW_TYPE);
+            expect(mockViewManager.setViewState).toHaveBeenCalledWith(mockLeaf, VIEW_TYPE);
+            expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledWith(mockLeaf);
+            expect(mockViewManager.updateContent).toHaveBeenCalled();
+        });
+
+        it('should not set view state or reveal leaf when there is no leaf', async() => {
+            await plugin.activateView();
+
+            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(plugin.app.workspace, VIEW_TYPE);
+            expect(mockViewManager.setViewState).not.toHaveBeenCalled();
+            expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
+            expect(mockViewManager.updateContent).not.toHaveBeenCalled();
         });
     });
 
