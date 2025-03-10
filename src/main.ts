@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin, Workspace, WorkspaceLeaf } from 'obsidian';
+import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
@@ -40,6 +40,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
     async activateView() {
         const { workspace } = this.app;
+        // TODO: use dependency injection
         const viewManager = new ViewManager(this);
 
         const leaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
@@ -48,14 +49,7 @@ export default class WordFrequencyPlugin extends Plugin {
             return;
         }
 
-        if (!leaf.view) {
-            await viewManager.setViewState(leaf, VIEW_TYPE);
-        }
-
-        await leaf.setViewState({
-            type: VIEW_TYPE,
-            active: true
-        });
+        await viewManager.setViewState(leaf, VIEW_TYPE);
 
         await workspace.revealLeaf(leaf);
 
