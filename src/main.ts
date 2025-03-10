@@ -42,7 +42,7 @@ export default class WordFrequencyPlugin extends Plugin {
         const { workspace } = this.app;
         const viewManager = new ViewManager(this);
 
-        const leaf = this.getOrCreateLeaf(workspace, VIEW_TYPE);
+        const leaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
         if (leaf === null) {
             return;
@@ -64,15 +64,6 @@ export default class WordFrequencyPlugin extends Plugin {
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
-    }
-
-    private getOrCreateLeaf(workspace: Workspace, viewType: string): WorkspaceLeaf | null {
-        const leaves = workspace.getLeavesOfType(viewType);
-        if (leaves.length > 0) {
-            return leaves[0];
-        } else {
-            return workspace.getRightLeaf(false);
-        }
     }
 
     private async loadSettings(): Promise<void> {
