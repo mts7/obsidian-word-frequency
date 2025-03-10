@@ -23,8 +23,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                 text
                     .setValue(this.plugin.settings.blacklist)
                     .onChange(async (value) => {
-                        this.plugin.settings.blacklist = value;
-                        await this.plugin.saveSettings();
+                        await this.saveBlacklistValue(value);
                     })
                     .inputEl.classList.add('word-frequency-setting-blacklist')
             });
@@ -36,14 +35,25 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                 .setPlaceholder('3')
                 .setValue(this.plugin.settings.threshold.toString())
                 .onChange(async (value) => {
-                    const num = parseInt(value, 10);
-                    if (!isNaN(num)) {
-                        this.plugin.settings.threshold = num;
-                        await this.plugin.saveSettings();
-                        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
-                            (leaf.view as WordFrequencyView).updateContent();
-                        });
-                    }
+                    await this.updateThreshold(value);
                 }));
+    }
+
+    async saveBlacklistValue(value: string) {
+        this.plugin.settings.blacklist = value;
+        await this.plugin.saveSettings();
+    }
+
+    async updateThreshold(value: string) {
+        const num = parseInt(value, 10);
+        if (isNaN(num)) {
+            return;
+        }
+
+        this.plugin.settings.threshold = num;
+        await this.plugin.saveSettings();
+        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
+            (leaf.view as WordFrequencyView).updateContent();
+        });
     }
 }
