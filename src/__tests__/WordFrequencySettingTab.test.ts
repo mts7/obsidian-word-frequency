@@ -1,4 +1,3 @@
-import { App, Setting } from 'obsidian';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { VIEW_TYPE } from '../constants';
@@ -16,13 +15,11 @@ const createMockContainerEl = () => {
 };
 
 describe('WordFrequencySettingTab', () => {
-    let app: App;
     let plugin: WordFrequencyPlugin;
     let settingTab: WordFrequencySettingTab;
     let containerEl: HTMLElement;
 
     beforeEach(() => {
-        app = {} as App;
         plugin = {
             settings: {
                 blacklist: '',
@@ -44,6 +41,8 @@ describe('WordFrequencySettingTab', () => {
     it('should initialize the constructor correctly', () => {
         expect(settingTab.plugin).toBe(plugin);
     });
+
+    it.todo('should create new settings');
 
     it('should save blacklist', async () => {
         const value = 'word1,word2';

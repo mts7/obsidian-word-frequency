@@ -26,7 +26,8 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                         await this.saveBlacklistValue(value);
                     })
                     .inputEl.classList.add('word-frequency-setting-blacklist')
-            });
+            }
+        );
 
         new Setting(containerEl)
             .setName('Word Frequency Threshold')
@@ -36,7 +37,9 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.threshold.toString())
                 .onChange(async (value) => {
                     await this.updateThreshold(value);
-                }));
+                }
+            )
+        );
     }
 
     async saveBlacklistValue(value: string) {
