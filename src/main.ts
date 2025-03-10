@@ -49,7 +49,7 @@ export default class WordFrequencyPlugin extends Plugin {
         }
 
         if (!leaf.view) {
-            await this.setViewState(leaf, VIEW_TYPE);
+            await viewManager.setViewState(leaf, VIEW_TYPE);
         }
 
         await leaf.setViewState({
@@ -69,12 +69,5 @@ export default class WordFrequencyPlugin extends Plugin {
     private async loadSettings(): Promise<void> {
         const settings = await this.loadData();
         this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
-    }
-
-    private async setViewState(leaf: WorkspaceLeaf, viewType: string): Promise<void> {
-        await leaf.setViewState({
-            type: viewType,
-            active: true
-        });
     }
 }
