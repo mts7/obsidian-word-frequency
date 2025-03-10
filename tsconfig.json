@@ -1,23 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib":  ["ESNext", "dom"],
-    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
     "esModuleInterop": true,
+    "jsx": "react",
+    "lib":  ["ESNext", "dom"],
+    "module": "ESNext",
     "moduleResolution": "Node",
     "outDir": "./dist",
-    "baseUrl": ".",
-    "types": ["obsidian", "node"],
-    "skipLibCheck": true,
-    "jsx": "react",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "types": ["obsidian", "node", "jest"],
   },
   "include": [
     "src/**/*",
     "node_modules/@types/jest/index.d.ts",
-    "node_modules/@types/jest/index.d.ts",
-    "node_modules/@types/jest/index.d.ts"
   ]
 }

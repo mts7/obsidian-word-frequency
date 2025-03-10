@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: WordFrequencySettings = {
     threshold: 3,
 };
 
+export const EVENT_UPDATE = 'word-frequency-update';
+export const FREQUENCY_ICON = 'file-chart-column-increasing';
 export const PLUGIN_NAME = 'Word Frequency';
 export const VIEW_TYPE = 'word-frequency-view';
-export const EVENT_UPDATE = 'word-frequency-update';

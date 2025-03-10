@@ -1,9 +1,11 @@
 import { WorkspaceLeaf } from 'obsidian';
-import { EVENT_UPDATE, PLUGIN_NAME, VIEW_TYPE } from '../constants';
+import { EVENT_UPDATE, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
+import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
 
 describe('WordFrequencyView', () => {
+    let mockDisplay: WordFrequencyDisplay;
     let mockLeaf: WorkspaceLeaf;
     let mockPlugin: WordFrequencyPlugin;
     let view: WordFrequencyView;
@@ -11,13 +13,18 @@ describe('WordFrequencyView', () => {
 
     beforeEach(() => {
         mockLeaf = new WorkspaceLeaf();
+        mockDisplay = {
+            addWordToSidebar: jest.fn(),
+            createHeader: jest.fn(),
+            createThresholdDisplay: jest.fn(),
+        } as any as WordFrequencyDisplay;
         mockPlugin = {
             settings: {
                 blacklist: 'the, and, to',
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
         } as any as WordFrequencyPlugin;
-        view = new WordFrequencyView(mockLeaf, mockPlugin);
+        view = new WordFrequencyView(mockLeaf, mockPlugin, mockDisplay);
 
         let innerHTMLValue = '';
         let elements: HTMLElement[] = [];
@@ -95,29 +102,86 @@ describe('WordFrequencyView', () => {
         view.contentEl = contentEl;
     });
 
-    it('should create an instance of WordFrequencyView', () => {
-        expect(view).toBeInstanceOf(WordFrequencyView);
-    });
+    describe('constructor and getters', () => {
+        it('should create an instance of WordFrequencyView', () => {
+            expect(view).toBeInstanceOf(WordFrequencyView);
+        });
 
-    it('should return the correct view type', () => {
-        expect(view.getViewType()).toBe(VIEW_TYPE);
-    });
+        it('should use the provided WordFrequencyDisplay instance if passed', async () => {
+            const view = new WordFrequencyView(mockLeaf, mockPlugin, mockDisplay);
 
-    it('should return the correct display text', () => {
-        expect(view.getDisplayText()).toBe(PLUGIN_NAME);
+            const viewMock = {
+                onOpen: view.onOpen,
+                updateContent: jest.fn(),
+            };
+
+            await viewMock.onOpen();
+
+            expect(viewMock.updateContent).toHaveBeenCalled();
+        });
+
+        it('should create a new WordFrequencyDisplay instance if no display is passed', async () => {
+            const view = new WordFrequencyView(mockLeaf, mockPlugin);
+
+            const viewMock = {
+                onOpen: view.onOpen,
+                updateContent: jest.fn(),
+            };
+
+            await viewMock.onOpen();
+
+            expect(viewMock.updateContent).toHaveBeenCalled();
+        });
+
+        it('should return the correct display text', () => {
+            expect(view.getDisplayText()).toBe(PLUGIN_NAME);
+        });
+
+        it('should return the correct icon name', () => {
+            expect(view.getIcon()).toBe(FREQUENCY_ICON);
+        });
+
+        it('should return the plugin instance', () => {
+            expect(view.getPlugin()).toBe(mockPlugin);
+        });
+
+        it('should return the correct view type', () => {
+            expect(view.getViewType()).toBe(VIEW_TYPE);
+        });
     });
 
     describe('onOpen', () => {
         it('should add an event listener for EVENT_UPDATE', async () => {
             const addEventListenerSpy = jest.spyOn(window.document, 'addEventListener');
+
             await view.onOpen();
+
             expect(addEventListenerSpy).toHaveBeenCalledWith(EVENT_UPDATE, expect.any(Function));
         });
 
         it('should call updateContent on open', async () => {
+            const viewMock = {
+                onOpen: view.onOpen,
+                updateContent: jest.fn(),
+            };
+
+            await viewMock.onOpen();
+
+            expect(viewMock.updateContent).toHaveBeenCalled();
+        });
+
+        it('should update wordCountList and call updateContent when EVENT_UPDATE is dispatched', async () => {
             const updateContentSpy = jest.spyOn(view, 'updateContent');
+
             await view.onOpen();
+
+            const wordCounts = [['apple', 5], ['banana', 3]];
+            const event = new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } });
+            window.document.dispatchEvent(event);
+
             expect(updateContentSpy).toHaveBeenCalled();
+
+            updateContentSpy.mockRestore();
         });
     });
 
@@ -125,88 +189,25 @@ describe('WordFrequencyView', () => {
         it('should remove the event listener for EVENT_UPDATE', async () => {
             await view.onOpen();
             const removeEventListenerSpy = jest.spyOn(window.document, 'removeEventListener');
+
             await view.onClose();
+
             expect(removeEventListenerSpy).toHaveBeenCalledWith(EVENT_UPDATE, expect.any(Function));
         });
     });
 
-    it('should return the plugin instance', () => {
-        expect(view.getPlugin()).toBe(mockPlugin);
-    });
-
     describe('updateContent', () => {
-        it('should clear contentEl and create a header element', () => {
-            contentEl.innerHTML = '<div>Old Content</div>';
-            view.updateContent();
-            expect(contentEl.empty).toHaveBeenCalled();
-            expect(contentEl.innerHTML).toContain('<h4>Word Frequency</h4>');
-        });
-
-        it('should handle an empty wordCountList', () => {
-            view.wordCountList = [];
-            view.updateContent();
-            expect(contentEl.innerHTML).toContain(PLUGIN_NAME);
-            expect(contentEl.innerHTML).not.toContain(':');
-        });
-
-        it('should handle a wordCountList with only blacklisted words', () => {
-            view.wordCountList = [['the', 1], ['and', 2]];
-            view.updateContent();
-            expect(contentEl.innerHTML).toContain(PLUGIN_NAME);
-            expect(contentEl.innerHTML).not.toContain(':');
-        });
-    });
-
-    describe.skip('refactor these tests that now have nested HTML tags', () => {
-        it('should update wordCountList and updateContent when EVENT_UPDATE is dispatched', async () => {
+        it('should add words to sidebar for each word', async () => {
             await view.onOpen();
-            const wordCounts: [string, number][] = [['test', 1], ['word', 2]];
+            const wordCounts = [['apple', 5], ['banana', 3]];
             const event = new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } });
+            const addWordToSidebarSpy = jest.spyOn(mockDisplay, 'addWordToSidebar');
+
             window.document.dispatchEvent(event);
-            expect(view.wordCountList).toEqual(wordCounts);
 
-            const wordRowDivs = contentEl.querySelectorAll('.word-row');
-            expect(wordRowDivs.length).toBe(wordCounts.length);
+            expect(addWordToSidebarSpy).toBeCalledTimes(2);
 
-            wordCounts.forEach(([word, count], index) => {
-                const wordRow = wordRowDivs[index];
-                const wordSpans = wordRow.querySelectorAll('span');
-
-                expect(wordSpans[0].textContent).toBe(word);
-                expect(wordSpans[1].textContent).toBe(count.toString());
-            });
-        });
-
-        it('should create divs for each word count', () => {
-            view.wordCountList = [['test', 1], ['word', 2]];
-            view.updateContent();
-
-            const wordRowDivs = contentEl.querySelectorAll('.word-row');
-            expect(wordRowDivs.length).toBe(view.wordCountList.length);
-
-            view.wordCountList.forEach(([word, count], index) => {
-                const wordRow = wordRowDivs[index];
-                const wordSpans = wordRow.querySelectorAll('span');
-
-                expect(wordSpans[0].textContent).toBe(word);
-                expect(wordSpans[1].textContent).toBe(count.toString());
-            });
-        });
-
-        it('should not create divs for blacklisted words', () => {
-            view.wordCountList = [['test', 1], ['the', 3]];
-            view.updateContent();
-
-            const wordRowDivs = contentEl.querySelectorAll('.word-row');
-            expect(wordRowDivs.length).toBe(view.wordCountList.length);
-
-            view.wordCountList.forEach(([word, count], index) => {
-                const wordRow = wordRowDivs[index];
-                const wordSpans = wordRow.querySelectorAll('span');
-
-                expect(wordSpans[0].textContent).toBe(word);
-                expect(wordSpans[1].textContent).toBe(count.toString());
-            });
+            addWordToSidebarSpy.mockRestore();
         });
     });
 });

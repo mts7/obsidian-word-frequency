@@ -1,6 +1,6 @@
 {
-  "name": "obsidian-word-frequency",
-  "version": "1.1.9",
+  "name": "word-frequency",
+  "version": "1.2.0",
   "type": "module",
   "description": "Count word frequency in current note within Obsidian",
   "main": "main.js",
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/mts7/obsidian-word-frequency#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/jest": "^29.5.14",
