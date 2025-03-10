@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { App, Plugin, PluginManifest, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
@@ -8,6 +8,14 @@ import { ViewManager } from './ViewManager';
 export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
+    settingTab: WordFrequencySettingTab;
+    viewManager: ViewManager;
+
+    constructor(app: App, manifest: PluginManifest, viewManager?: ViewManager, settingTab?: WordFrequencySettingTab) {
+        super(app, manifest);
+        this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
+        this.viewManager = viewManager ?? new ViewManager(this);
+    }
 
     async onload() {
         await this.loadSettings();
@@ -31,8 +39,7 @@ export default class WordFrequencyPlugin extends Plugin {
             )
         );
 
-        // TODO: use dependency injection
-        this.addSettingTab(new WordFrequencySettingTab(this));
+        this.addSettingTab(this.settingTab);
     }
 
     onunload() {
@@ -40,20 +47,18 @@ export default class WordFrequencyPlugin extends Plugin {
 
     async activateView() {
         const { workspace } = this.app;
-        // TODO: use dependency injection
-        const viewManager = new ViewManager(this);
 
-        const leaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
+        const leaf = this.viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
         if (leaf === null) {
             return;
         }
 
-        await viewManager.setViewState(leaf, VIEW_TYPE);
+        await this.viewManager.setViewState(leaf, VIEW_TYPE);
 
         await workspace.revealLeaf(leaf);
 
-        viewManager.updateContent();
+        this.viewManager.updateContent();
     }
 
     async saveSettings(): Promise<void> {
