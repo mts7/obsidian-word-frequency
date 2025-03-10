@@ -27,6 +27,16 @@ const mockApp: MockApp = {
     },
 } as MockApp;
 
+const mockManifest: PluginManifest = {
+    id: 'word-frequency',
+    name: 'Word Frequency',
+    version: '1.2.0',
+    minAppVersion: '0.15.0',
+    description: 'A plugin to count word frequencies.',
+    author: 'Mike Rodarte',
+    authorUrl: 'https://example.com',
+};
+
 describe('WordFrequencyPlugin', () => {
     let counter = new WordFrequencyCounter();
     let markdownView: MarkdownView;
@@ -34,7 +44,7 @@ describe('WordFrequencyPlugin', () => {
     let editor: Editor;
 
     beforeEach(async () => {
-        plugin = new WordFrequencyPlugin(mockApp);
+        plugin = new WordFrequencyPlugin(mockApp, mockManifest);
         plugin['app'] = mockApp;
         plugin['loadData'] = jest.fn().mockResolvedValue(DEFAULT_SETTINGS);
         plugin['saveData'] = jest.fn().mockResolvedValue(undefined);

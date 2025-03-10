@@ -1,21 +1,12 @@
-import manifest from '../manifest.json';
-import { App, Plugin, WorkspaceLeaf } from 'obsidian';
-import { ViewManager } from './ViewManager';
+import { MarkdownView, Plugin, Workspace, WorkspaceLeaf } from 'obsidian';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
-import { WordFrequencyCounter } from './WordFrequencyCounter';
-import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
 import { WordFrequencyView } from './WordFrequencyView';
+import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
+import { WordFrequencyCounter } from './WordFrequencyCounter';
 
 export default class WordFrequencyPlugin extends Plugin {
-    frequencyCounter: WordFrequencyCounter;
+    frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
-    viewManager: ViewManager;
-
-    constructor(app: App, frequencyCounter?: WordFrequencyCounter, viewManager?: ViewManager) {
-        super(app, manifest);
-        this.frequencyCounter = frequencyCounter ?? new WordFrequencyCounter();
-        this.viewManager = viewManager ?? new ViewManager(this);
-    }
 
     async onload() {
         await this.loadSettings();
@@ -49,27 +40,53 @@ export default class WordFrequencyPlugin extends Plugin {
     async activateView() {
         const { workspace } = this.app;
 
-        const leaf = this.viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
+        const leaf = this.getOrCreateLeaf(workspace, VIEW_TYPE);
 
-        if (!leaf) {
+        if (leaf === null) {
             return;
         }
 
         if (!leaf.view) {
-            await this.viewManager.setViewState(leaf, VIEW_TYPE);
+            await this.setViewState(leaf, VIEW_TYPE);
         }
+
+        await leaf.setViewState({
+            type: VIEW_TYPE,
+            active: true
+        });
 
         await workspace.revealLeaf(leaf);
 
-        this.viewManager.updateContent();
+        this.updateContent();
     }
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
     }
 
+    private getOrCreateLeaf(workspace: Workspace, viewType: string): WorkspaceLeaf | null {
+        const leaves = workspace.getLeavesOfType(viewType);
+        if (leaves.length > 0) {
+            return leaves[0];
+        } else {
+            return workspace.getRightLeaf(false);
+        }
+    }
+
     private async loadSettings(): Promise<void> {
         const settings = await this.loadData();
         this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
+    }
+
+    private async setViewState(leaf: WorkspaceLeaf, viewType: string): Promise<void> {
+        await leaf.setViewState({
+            type: viewType,
+            active: true
+        });
+    }
+
+    private updateContent(): void {
+        const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+        this.frequencyCounter.triggerUpdateContent(editor);
     }
 }
