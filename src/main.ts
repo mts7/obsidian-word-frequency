@@ -3,6 +3,7 @@ import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
+import { ViewManager } from './ViewManager';
 
 export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
@@ -39,6 +40,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
     async activateView() {
         const { workspace } = this.app;
+        const viewManager = new ViewManager(this);
 
         const leaf = this.getOrCreateLeaf(workspace, VIEW_TYPE);
 
@@ -57,7 +59,7 @@ export default class WordFrequencyPlugin extends Plugin {
 
         await workspace.revealLeaf(leaf);
 
-        this.updateContent();
+        viewManager.updateContent();
     }
 
     async saveSettings(): Promise<void> {
@@ -83,10 +85,5 @@ export default class WordFrequencyPlugin extends Plugin {
             type: viewType,
             active: true
         });
-    }
-
-    private updateContent(): void {
-        const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
-        this.frequencyCounter.triggerUpdateContent(editor);
     }
 }
