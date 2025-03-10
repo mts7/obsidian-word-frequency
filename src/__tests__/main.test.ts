@@ -1,9 +1,8 @@
-import WordFrequencyPlugin from '../main';
-import { App, WorkspaceLeaf, PluginManifest, MarkdownView, Editor, EventRef } from 'obsidian';
 import { DEFAULT_SETTINGS, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
-import { WordFrequencyCounter } from '../WordFrequencyCounter';
-import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
+import WordFrequencyPlugin from '../main';
+import { App, WorkspaceLeaf, PluginManifest } from 'obsidian';
 import { ViewManager } from '../ViewManager';
+import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 
 jest.mock('../utils', () => ({
     debounce: jest.fn((func) => func),
