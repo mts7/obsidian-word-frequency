@@ -52,7 +52,7 @@ describe('WordFrequencyDisplay', () => {
             const word = 'the';
             const count = 17;
 
-            display.addWordToSidebar(word, count, contentContainer);
+            display.addWordToSidebar(blacklist, word, count, contentContainer);
 
             expect(contentContainer.createEl).not.toHaveBeenCalled();
         });
@@ -64,7 +64,7 @@ describe('WordFrequencyDisplay', () => {
             const word = 'banana';
             const count = 1;
 
-            display.addWordToSidebar(word, count, contentContainer);
+            display.addWordToSidebar(blacklist, word, count, contentContainer);
 
             expect(contentContainer.createEl).not.toHaveBeenCalled();
         });
@@ -91,7 +91,7 @@ describe('WordFrequencyDisplay', () => {
             const word = 'banana';
             const count = 13;
 
-            display.addWordToSidebar(word, count, contentContainer);
+            display.addWordToSidebar(blacklist, word, count, contentContainer);
 
             expect(innerElement.createEl).toHaveBeenNthCalledWith(1, 'span', { text: word });
             expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', { text: count.toString() });

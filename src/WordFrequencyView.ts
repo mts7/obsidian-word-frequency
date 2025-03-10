@@ -52,9 +52,10 @@ export class WordFrequencyView extends ItemView {
         this.contentEl.empty();
         this.display.createHeader(this.contentEl);
         const contentContainer = this.contentEl.createEl('div');
+        const blacklist = new Set(this.plugin.settings.blacklist.split(',').map(word => word.trim()));
 
         this.wordCountList.forEach(([word, count]) => {
-            this.display.addWordToSidebar(word, count, contentContainer);
+            this.display.addWordToSidebar(blacklist, word, count, contentContainer);
         });
         this.display.createThresholdDisplay(this.contentEl);
     }

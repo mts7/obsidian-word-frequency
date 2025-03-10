@@ -4,18 +4,16 @@ import WordFrequencyPlugin from './main';
 import { WordFrequencyView } from './WordFrequencyView';
 
 export class WordFrequencyDisplay {
-    private blacklist: Set<string>;
     private plugin: WordFrequencyPlugin;
     private view: WordFrequencyView;
 
     constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView, blacklist?: Set<string>) {
         this.plugin = plugin;
         this.view = view;
-        this.blacklist = blacklist ?? new Set(plugin.settings.blacklist.split(',').map(word => word.trim()));
     }
 
-    addWordToSidebar(word: string, count: number, contentContainer: HTMLDivElement) {
-        if (this.blacklist.has(word) || count < this.plugin.settings.threshold) {
+    addWordToSidebar(blacklist: Set<string>, word: string, count: number, contentContainer: HTMLDivElement) {
+        if (blacklist.has(word) || count < this.plugin.settings.threshold) {
             return;
         }
 
