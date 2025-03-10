@@ -1,6 +1,6 @@
-import { WordFrequencyCounter } from '../WordFrequencyCounter';
 import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
+import { WordFrequencyCounter } from '../WordFrequencyCounter';
 
 const counter = new WordFrequencyCounter();
 

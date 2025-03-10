@@ -1,5 +1,5 @@
-import WordFrequencyPlugin from './main';
 import { MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import WordFrequencyPlugin from './main';
 
 export class ViewManager {
     private plugin: WordFrequencyPlugin;

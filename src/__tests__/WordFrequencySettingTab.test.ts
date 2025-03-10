@@ -1,6 +1,6 @@
+import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
-import { VIEW_TYPE } from '../constants';
 import { WordFrequencyView } from '../WordFrequencyView';
 
 const createMockContainerEl = () => {

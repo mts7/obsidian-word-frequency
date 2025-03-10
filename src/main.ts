@@ -1,9 +1,9 @@
 import { App, Plugin, PluginManifest, WorkspaceLeaf } from 'obsidian';
+import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
+import { ViewManager } from './ViewManager';
+import { WordFrequencyCounter } from './WordFrequencyCounter';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
-import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
-import { WordFrequencyCounter } from './WordFrequencyCounter';
-import { ViewManager } from './ViewManager';
 
 export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();

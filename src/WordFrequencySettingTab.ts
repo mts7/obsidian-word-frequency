@@ -1,7 +1,7 @@
-import WordFrequencyPlugin from './main';
 import { PluginSettingTab, Setting } from 'obsidian';
-import { WordFrequencyView } from './WordFrequencyView';
 import { VIEW_TYPE } from './constants';
+import WordFrequencyPlugin from './main';
+import { WordFrequencyView } from './WordFrequencyView';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;

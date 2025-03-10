@@ -1,6 +1,6 @@
+import { App, WorkspaceLeaf, PluginManifest } from 'obsidian';
 import { DEFAULT_SETTINGS, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
-import { App, WorkspaceLeaf, PluginManifest } from 'obsidian';
 import { ViewManager } from '../ViewManager';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 

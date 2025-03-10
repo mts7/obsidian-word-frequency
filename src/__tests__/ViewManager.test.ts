@@ -1,7 +1,7 @@
-import { VIEW_TYPE } from '../constants';
 import { Workspace, WorkspaceLeaf } from 'obsidian';
-import { ViewManager } from '../ViewManager';
+import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
+import { ViewManager } from '../ViewManager';
 
 describe('ViewManager', () => {
     let viewManager: ViewManager;

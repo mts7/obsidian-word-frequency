@@ -1,8 +1,8 @@
+import { WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
-import { WorkspaceLeaf } from 'obsidian';
-import { WordFrequencyView } from '../WordFrequencyView';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
+import { WordFrequencyView } from '../WordFrequencyView';
 
 describe('WordFrequencyView', () => {
     let mockDisplay: WordFrequencyDisplay;
