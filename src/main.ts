@@ -1,16 +1,26 @@
-import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
+import manifest from '../manifest.json';
+import { App, Plugin, WorkspaceLeaf } from 'obsidian';
+import { ViewManager } from './ViewManager';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
-import { WordFrequencyView } from './WordFrequencyView';
-import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
+import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
+import { WordFrequencyView } from './WordFrequencyView';
 
 export default class WordFrequencyPlugin extends Plugin {
-    frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
+    frequencyCounter: WordFrequencyCounter;
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
+    viewManager: ViewManager;
+
+    constructor(app: App, frequencyCounter?: WordFrequencyCounter, viewManager?: ViewManager) {
+        super(app, manifest);
+        this.frequencyCounter = frequencyCounter ?? new WordFrequencyCounter();
+        this.viewManager = viewManager ?? new ViewManager(this);
+    }
 
     async onload() {
         await this.loadSettings();
 
+        // TODO: use dependency injection
         this.registerView(
             VIEW_TYPE,
             (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
@@ -21,39 +31,37 @@ export default class WordFrequencyPlugin extends Plugin {
         });
 
         this.registerEvent(
-            this.app.workspace.on('active-leaf-change', (leaf) => {
-                this.frequencyCounter.handleActiveLeafChange(leaf, this.app.workspace);
-            })
+            this.app.workspace.on(
+                'active-leaf-change',
+                (leaf) => {
+                    this.frequencyCounter.handleActiveLeafChange(leaf, this.app.workspace);
+                }
+            )
         );
 
-        this.addSettingTab(new WordFrequencySettingTab(this.app, this));
+        // TODO: use dependency injection
+        this.addSettingTab(new WordFrequencySettingTab(this));
     }
 
-    onunload() {}
+    onunload() {
+    }
 
     async activateView() {
         const { workspace } = this.app;
 
-        let leaf: WorkspaceLeaf | null;
-        const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+        const leaf = this.viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
-        if (leaves.length > 0) {
-            leaf = leaves[0];
-        } else {
-            leaf = workspace.getRightLeaf(false);
-            if (leaf === null) {
-                return;
-            }
+        if (!leaf) {
+            return;
+        }
 
-            await leaf.setViewState({
-                type: VIEW_TYPE,
-                active: true
-            });
+        if (!leaf.view) {
+            await this.viewManager.setViewState(leaf, VIEW_TYPE);
         }
 
         await workspace.revealLeaf(leaf);
 
-        this.frequencyCounter.triggerUpdateContent(this.app.workspace.getActiveViewOfType(MarkdownView)?.editor);
+        this.viewManager.updateContent();
     }
 
     async saveSettings(): Promise<void> {

@@ -37,7 +37,7 @@ describe('WordFrequencySettingTab', () => {
         } as unknown as WordFrequencyPlugin;
 
         containerEl = createMockContainerEl();
-        settingTab = new WordFrequencySettingTab(app, plugin);
+        settingTab = new WordFrequencySettingTab(plugin);
         settingTab.containerEl = containerEl;
     });
 

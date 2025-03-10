@@ -1,13 +1,13 @@
 import WordFrequencyPlugin from './main';
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import { WordFrequencyView } from './WordFrequencyView';
 import { VIEW_TYPE } from './constants';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;
 
-    constructor(app: App, plugin: WordFrequencyPlugin) {
-        super(app, plugin);
+    constructor(plugin: WordFrequencyPlugin) {
+        super(plugin.app, plugin);
         this.plugin = plugin;
     }
 
