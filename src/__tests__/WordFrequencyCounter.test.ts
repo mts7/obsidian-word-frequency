@@ -202,6 +202,10 @@ describe('WordFrequencyCounter tests', () => {
 
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
+
+        it.todo('should trigger keyup event to call callback');
+
+        it.todo('should verify call to triggerUpdateContent after 3 seconds');
     });
 
     describe('triggerUpdateContent', () => {

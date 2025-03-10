@@ -12,9 +12,9 @@ export class ViewManager {
         const leaves = workspace.getLeavesOfType(viewType);
         if (leaves.length > 0) {
             return leaves[0];
-        } else {
-            return workspace.getRightLeaf(false);
         }
+
+        return workspace.getRightLeaf(false);
     }
 
     async setViewState(leaf: WorkspaceLeaf, viewType: string): Promise<void> {
