@@ -37,7 +37,7 @@ jobs:
         run: cp manifest.json styles.css dist/
 
       - name: List dist directory for debugging
-        run: ls -la dist  # Add this step to list the contents of the dist directory
+        run: ls -la dist
 
       - name: Run tests
         run: npm test
@@ -84,8 +84,8 @@ jobs:
         run: |
           mkdir assets
           cp dist/main.js assets/main.js
-          cp style.css assets/styles.css
-          cp manifest.json assets/manifest.json
+          cp dist/style.css assets/styles.css
+          cp dist/manifest.json assets/manifest.json
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
