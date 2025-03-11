@@ -11,8 +11,9 @@
     "build": "rollup -c",
     "dev": "npm run build && obsidian --dev",
     "watch": "rollup -c --watch",
+    "prettier": "npx prettier --check \"src/**/*.{js,ts,jsx,tsx}\"",
     "pretty-fix": "npx prettier src --write",
-    "lint": "eslint . --ext .js,.ts",
+    "lint": "eslint . --ext \"src/**/*.{js,ts,jsx,tsx}\"",
     "lint-fix": "eslint . --ext .js,.ts --fix",
     "test": "jest",
     "coverage": "npx jest --coverage"
