@@ -25,7 +25,10 @@ export class WordFrequencyCounter {
         return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
     }
 
-    handleActiveLeafChange(leaf: WorkspaceLeaf | null, workspace: Workspace): void  {
+    handleActiveLeafChange(
+        leaf: WorkspaceLeaf | null,
+        workspace: Workspace
+    ): void {
         if (leaf === null) {
             return;
         }
@@ -64,7 +67,9 @@ export class WordFrequencyCounter {
         }
         try {
             const wordCounts = this.calculateWordFrequencies(editor.getValue());
-            window.document.dispatchEvent(new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } }));
+            window.document.dispatchEvent(
+                new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } })
+            );
         } catch (error) {
             console.error('error in triggerUpdateContent', error);
         }

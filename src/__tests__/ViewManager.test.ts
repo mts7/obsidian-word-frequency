@@ -20,7 +20,7 @@ describe('ViewManager', () => {
             frequencyCounter: {
                 triggerUpdateContent: jest.fn(),
             },
-        } as any;
+        } as unknown as WordFrequencyPlugin;
 
         workspace = plugin.app.workspace;
         viewManager = new ViewManager(plugin);
@@ -29,7 +29,9 @@ describe('ViewManager', () => {
     it('should get or create a leaf', () => {
         const mockLeaf = {} as WorkspaceLeaf;
 
-        (workspace.getLeavesOfType as jest.Mock).mockReturnValueOnce([mockLeaf]);
+        (workspace.getLeavesOfType as jest.Mock).mockReturnValueOnce([
+            mockLeaf,
+        ]);
         const leaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
         expect(leaf).toBe(mockLeaf);
@@ -44,7 +46,7 @@ describe('ViewManager', () => {
     it('should set view state', async () => {
         const mockLeaf = {
             setViewState: jest.fn().mockResolvedValue(undefined),
-        } as any as WorkspaceLeaf;
+        } as unknown as WorkspaceLeaf;
 
         await viewManager.setViewState(mockLeaf, VIEW_TYPE);
 
@@ -62,6 +64,8 @@ describe('ViewManager', () => {
 
         viewManager.updateContent();
 
-        expect(plugin.frequencyCounter.triggerUpdateContent).toHaveBeenCalledWith(mockEditor);
+        expect(
+            plugin.frequencyCounter.triggerUpdateContent
+        ).toHaveBeenCalledWith(mockEditor);
     });
 });

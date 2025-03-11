@@ -22,7 +22,7 @@ describe('WordFrequencyDisplay', () => {
                 threshold: 3,
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
-        } as any as WordFrequencyPlugin;
+        } as unknown as WordFrequencyPlugin;
         mockView = {
             getDisplayText: jest.fn(),
             getIcon: jest.fn(),
@@ -31,24 +31,26 @@ describe('WordFrequencyDisplay', () => {
             onOpen: jest.fn(),
             onClose: jest.fn(),
             updateContent: jest.fn(),
-        } as any as WordFrequencyView;
+        } as unknown as WordFrequencyView;
         contentEl = {
             createEl: jest.fn().mockReturnValue({
                 createEl: jest.fn().mockReturnThis(),
                 setAttr: jest.fn(),
                 setText: jest.fn(),
             }),
-        } as any as HTMLElement;
-        blacklist = new Set(mockPlugin.settings.blacklist.split(',').map(word => word.trim()));
+        } as unknown as HTMLElement;
+        blacklist = new Set(
+            mockPlugin.settings.blacklist.split(',').map((word) => word.trim())
+        );
 
-        display = new WordFrequencyDisplay(mockPlugin, mockView, blacklist);
+        display = new WordFrequencyDisplay(mockPlugin, mockView);
     });
 
     describe('addWordToSidebar', () => {
         it('should return early when the word is in the blacklist', () => {
             const contentContainer = {
                 createEl: jest.fn(),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'the';
             const count = 17;
 
@@ -60,7 +62,7 @@ describe('WordFrequencyDisplay', () => {
         it('should return early when the word count is less than the threshold setting', () => {
             const contentContainer = {
                 createEl: jest.fn(),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 1;
 
@@ -72,29 +74,34 @@ describe('WordFrequencyDisplay', () => {
         it('should add the word with count and button to the row', () => {
             const spanElement = {
                 setText: jest.fn(),
-            } as any as HTMLSpanElement;
+            } as unknown as HTMLSpanElement;
             const buttonElement = {
                 addEventListener: jest.fn(),
-            } as any as HTMLButtonElement;
+            } as unknown as HTMLButtonElement;
             const innerElement = {
-                createEl: jest.fn()
+                createEl: jest
+                    .fn()
                     .mockReturnValueOnce(spanElement)
                     .mockReturnValueOnce(spanElement)
                     .mockReturnValueOnce(buttonElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const rowElement = {
                 createEl: jest.fn().mockReturnValue(innerElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const contentContainer = {
                 createEl: jest.fn().mockReturnValue(rowElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 13;
 
             display.addWordToSidebar(blacklist, word, count, contentContainer);
 
-            expect(innerElement.createEl).toHaveBeenNthCalledWith(1, 'span', { text: word });
-            expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', { text: count.toString() });
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(1, 'span', {
+                text: word,
+            });
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', {
+                text: count.toString(),
+            });
             expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button');
         });
 
@@ -104,8 +111,12 @@ describe('WordFrequencyDisplay', () => {
 
             display.saveWordToBlacklist(word);
 
-            expect(mockPlugin.settings.blacklist).toBe(`${originalBlacklist},${word}`);
-            expect(mockPlugin.saveData).toHaveBeenCalledWith(mockPlugin.settings);
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},${word}`
+            );
+            expect(mockPlugin.saveData).toHaveBeenCalledWith(
+                mockPlugin.settings
+            );
             expect(mockView.updateContent).toHaveBeenCalled();
         });
 
@@ -129,11 +140,20 @@ describe('WordFrequencyDisplay', () => {
         it('should set text and attribute in the content', () => {
             display.createThresholdDisplay(contentEl);
 
-            const thresholdDisplay = contentEl.createEl('div', { cls: 'threshold-display' });
+            const thresholdDisplay = contentEl.createEl('div', {
+                cls: 'threshold-display',
+            });
 
-            expect(contentEl.createEl).toHaveBeenCalledWith('div', { cls: 'threshold-display' });
-            expect(thresholdDisplay.setText).toHaveBeenCalledWith(`Current Frequency Threshold is ${mockPlugin.settings.threshold}.`);
-            expect(thresholdDisplay.setAttr).toHaveBeenCalledWith('title', 'Configure settings for this plugin to update the frequency threshold.');
+            expect(contentEl.createEl).toHaveBeenCalledWith('div', {
+                cls: 'threshold-display',
+            });
+            expect(thresholdDisplay.setText).toHaveBeenCalledWith(
+                `Current Frequency Threshold is ${mockPlugin.settings.threshold}.`
+            );
+            expect(thresholdDisplay.setAttr).toHaveBeenCalledWith(
+                'title',
+                'Configure settings for this plugin to update the frequency threshold.'
+            );
         });
     });
 });

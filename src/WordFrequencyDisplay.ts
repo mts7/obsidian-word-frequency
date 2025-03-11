@@ -7,23 +7,32 @@ export class WordFrequencyDisplay {
     private plugin: WordFrequencyPlugin;
     private view: WordFrequencyView;
 
-    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView, blacklist?: Set<string>) {
+    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView) {
         this.plugin = plugin;
         this.view = view;
     }
 
-    addWordToSidebar(blacklist: Set<string>, word: string, count: number, contentContainer: HTMLDivElement) {
+    addWordToSidebar(
+        blacklist: Set<string>,
+        word: string,
+        count: number,
+        contentContainer: HTMLDivElement
+    ) {
         if (blacklist.has(word) || count < this.plugin.settings.threshold) {
             return;
         }
 
         const row = contentContainer.createEl('div', { cls: 'word-row' });
 
-        const wordCountContainer = row.createEl('div', { cls: 'word-count-container' });
+        const wordCountContainer = row.createEl('div', {
+            cls: 'word-count-container',
+        });
         wordCountContainer.createEl('span', { text: word });
         wordCountContainer.createEl('span', { text: count.toString() });
 
-        const buttonContainer = row.createEl('div', { cls: 'button-container' });
+        const buttonContainer = row.createEl('div', {
+            cls: 'button-container',
+        });
         const button = buttonContainer.createEl('button');
         setIcon(button, 'trash-2');
         button.addEventListener('click', () => {
@@ -38,9 +47,16 @@ export class WordFrequencyDisplay {
     }
 
     createThresholdDisplay(contentEl: HTMLElement) {
-        const thresholdDisplay = contentEl.createEl('div', { cls: 'threshold-display' });
-        thresholdDisplay.setText(`Current Frequency Threshold is ${this.plugin.settings.threshold}.`);
-        thresholdDisplay.setAttr('title', 'Configure settings for this plugin to update the frequency threshold.');
+        const thresholdDisplay = contentEl.createEl('div', {
+            cls: 'threshold-display',
+        });
+        thresholdDisplay.setText(
+            `Current Frequency Threshold is ${this.plugin.settings.threshold}.`
+        );
+        thresholdDisplay.setAttr(
+            'title',
+            'Configure settings for this plugin to update the frequency threshold.'
+        );
     }
 
     saveWordToBlacklist(word: string) {

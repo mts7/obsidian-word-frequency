@@ -8,7 +8,10 @@ export class ViewManager {
         this.plugin = plugin;
     }
 
-    getOrCreateLeaf(workspace: Workspace, viewType: string): WorkspaceLeaf | null {
+    getOrCreateLeaf(
+        workspace: Workspace,
+        viewType: string
+    ): WorkspaceLeaf | null {
         const leaves = workspace.getLeavesOfType(viewType);
         if (leaves.length > 0) {
             return leaves[0];
@@ -20,12 +23,13 @@ export class ViewManager {
     async setViewState(leaf: WorkspaceLeaf, viewType: string): Promise<void> {
         await leaf.setViewState({
             type: viewType,
-            active: true
+            active: true,
         });
     }
 
     updateContent(): void {
-        const editor = this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+        const editor =
+            this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
         this.plugin.frequencyCounter.triggerUpdateContent(editor);
     }
 }
