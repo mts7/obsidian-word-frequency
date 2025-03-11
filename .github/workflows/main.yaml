@@ -34,7 +34,10 @@ jobs:
         run: npm run build
 
       - name: Copy files to dist
-        run: cp manifest.json style.css dist/
+        run: |
+          pwd
+          ls -la
+          cp manifest.json style.css dist/
 
       - name: List dist directory for debugging
         run: ls -la dist  # Add this step to list the contents of the dist directory
