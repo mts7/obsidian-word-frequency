@@ -36,9 +36,6 @@ jobs:
       - name: Copy files to dist
         run: cp manifest.json styles.css dist/
 
-      - name: List dist directory for debugging
-        run: ls -la dist
-
       - name: Run tests
         run: npm test
 
@@ -59,7 +56,7 @@ jobs:
 
   release:
     needs: build_test
-    #if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     steps:
