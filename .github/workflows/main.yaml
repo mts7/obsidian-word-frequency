@@ -35,8 +35,10 @@ jobs:
 
       - name: Copy files to dist
         run: |
-          cp manifest.json dist/
-          cp style.css dist/
+          pwd
+          ls -la
+          cp ${{ github.workspace }}/manifest.json ${{ github.workspace }}/dist/
+          cp ${{ github.workspace }}/style.css ${{ github.workspace }}/dist/
 
       - name: List dist directory for debugging
         run: ls -la dist  # Add this step to list the contents of the dist directory
