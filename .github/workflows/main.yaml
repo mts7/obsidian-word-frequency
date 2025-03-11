@@ -53,9 +53,9 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            dist/main.js
-            style.css
-            manifest.json
+            ${{ github.workspace }}/dist/main.js
+            ${{ github.workspace }}/style.css
+            ${{ github.workspace }}/manifest.json
 
   release:
     needs: build_test
