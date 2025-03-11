@@ -1,5 +1,10 @@
 import { WorkspaceLeaf } from 'obsidian';
-import { EVENT_UPDATE, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
+import {
+    EVENT_UPDATE,
+    FREQUENCY_ICON,
+    PLUGIN_NAME,
+    VIEW_TYPE,
+} from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
@@ -37,7 +42,11 @@ describe('WordFrequencyView', () => {
         });
 
         it('should use the provided WordFrequencyDisplay instance if passed', async () => {
-            const view = new WordFrequencyView(mockLeaf, mockPlugin, mockDisplay);
+            const view = new WordFrequencyView(
+                mockLeaf,
+                mockPlugin,
+                mockDisplay
+            );
 
             const viewMock = {
                 onOpen: view.onOpen,
@@ -81,11 +90,17 @@ describe('WordFrequencyView', () => {
 
     describe('onOpen', () => {
         it('should add an event listener for EVENT_UPDATE', async () => {
-            const addEventListenerSpy = jest.spyOn(window.document, 'addEventListener');
+            const addEventListenerSpy = jest.spyOn(
+                window.document,
+                'addEventListener'
+            );
 
             await view.onOpen();
 
-            expect(addEventListenerSpy).toHaveBeenCalledWith(EVENT_UPDATE, expect.any(Function));
+            expect(addEventListenerSpy).toHaveBeenCalledWith(
+                EVENT_UPDATE,
+                expect.any(Function)
+            );
         });
 
         it('should call updateContent on open', async () => {
@@ -104,8 +119,13 @@ describe('WordFrequencyView', () => {
 
             await view.onOpen();
 
-            const wordCounts = [['apple', 5], ['banana', 3]];
-            const event = new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } });
+            const wordCounts = [
+                ['apple', 5],
+                ['banana', 3],
+            ];
+            const event = new CustomEvent(EVENT_UPDATE, {
+                detail: { wordCounts },
+            });
             window.document.dispatchEvent(event);
 
             expect(updateContentSpy).toHaveBeenCalled();
@@ -117,20 +137,34 @@ describe('WordFrequencyView', () => {
     describe('onClose', () => {
         it('should remove the event listener for EVENT_UPDATE', async () => {
             await view.onOpen();
-            const removeEventListenerSpy = jest.spyOn(window.document, 'removeEventListener');
+            const removeEventListenerSpy = jest.spyOn(
+                window.document,
+                'removeEventListener'
+            );
 
             await view.onClose();
 
-            expect(removeEventListenerSpy).toHaveBeenCalledWith(EVENT_UPDATE, expect.any(Function));
+            expect(removeEventListenerSpy).toHaveBeenCalledWith(
+                EVENT_UPDATE,
+                expect.any(Function)
+            );
         });
     });
 
     describe('updateContent', () => {
         it('should add words to sidebar for each word', async () => {
             await view.onOpen();
-            const wordCounts = [['apple', 5], ['banana', 3]];
-            const event = new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } });
-            const addWordToSidebarSpy = jest.spyOn(mockDisplay, 'addWordToSidebar');
+            const wordCounts = [
+                ['apple', 5],
+                ['banana', 3],
+            ];
+            const event = new CustomEvent(EVENT_UPDATE, {
+                detail: { wordCounts },
+            });
+            const addWordToSidebarSpy = jest.spyOn(
+                mockDisplay,
+                'addWordToSidebar'
+            );
 
             window.document.dispatchEvent(event);
 

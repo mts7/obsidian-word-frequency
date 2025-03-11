@@ -1,5 +1,10 @@
 import { App, WorkspaceLeaf, PluginManifest, Workspace } from 'obsidian';
-import { DEFAULT_SETTINGS, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
+import {
+    DEFAULT_SETTINGS,
+    FREQUENCY_ICON,
+    PLUGIN_NAME,
+    VIEW_TYPE,
+} from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
@@ -48,7 +53,11 @@ describe('WordFrequencyPlugin', () => {
             updateContent: jest.fn(),
         } as unknown as ViewManager;
 
-        plugin = new WordFrequencyPlugin(mockApp, mockManifest, mockViewManager);
+        plugin = new WordFrequencyPlugin(
+            mockApp,
+            mockManifest,
+            mockViewManager
+        );
         plugin['app'] = mockApp;
         plugin['loadData'] = jest.fn().mockResolvedValue(DEFAULT_SETTINGS);
         plugin['saveData'] = jest.fn().mockResolvedValue(undefined);
@@ -68,40 +77,61 @@ describe('WordFrequencyPlugin', () => {
 
             await plugin.onload();
 
-            expect(plugin.registerView).toHaveBeenCalledWith(VIEW_TYPE, expect.any(Function));
+            expect(plugin.registerView).toHaveBeenCalledWith(
+                VIEW_TYPE,
+                expect.any(Function)
+            );
             expect(plugin.addRibbonIcon).toHaveBeenCalledWith(
                 FREQUENCY_ICON,
                 `Show ${PLUGIN_NAME} Sidebar`,
                 expect.any(Function)
             );
-            expect(plugin.app.workspace.on).toHaveBeenCalledWith('active-leaf-change', expect.any(Function));
+            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
+                'active-leaf-change',
+                expect.any(Function)
+            );
             expect(plugin.addSettingTab).toHaveBeenCalledWith(settingTab);
         });
     });
 
     describe('activateView', () => {
-        it('should set the view state and show the leaf with content', async() => {
+        it('should set the view state and show the leaf with content', async () => {
             const mockLeaf = jest.fn() as unknown as WorkspaceLeaf;
             mockViewManager = {
                 getOrCreateLeaf: jest.fn().mockReturnValue(mockLeaf),
                 setViewState: jest.fn(),
                 updateContent: jest.fn(),
             } as unknown as ViewManager;
-            plugin = new WordFrequencyPlugin(mockApp, mockManifest, mockViewManager);
+            plugin = new WordFrequencyPlugin(
+                mockApp,
+                mockManifest,
+                mockViewManager
+            );
             plugin['app'] = mockApp;
 
             await plugin.activateView();
 
-            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(plugin.app.workspace, VIEW_TYPE);
-            expect(mockViewManager.setViewState).toHaveBeenCalledWith(mockLeaf, VIEW_TYPE);
-            expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledWith(mockLeaf);
+            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(
+                plugin.app.workspace,
+                VIEW_TYPE
+            );
+            expect(mockViewManager.setViewState).toHaveBeenCalledWith(
+                mockLeaf,
+                VIEW_TYPE
+            );
+            expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledWith(
+                mockLeaf
+            );
             expect(mockViewManager.updateContent).toHaveBeenCalled();
         });
 
-        it('should not set view state or reveal leaf when there is no leaf', async() => {
+        it('should not set view state or reveal leaf when there is no leaf', async () => {
             await plugin.activateView();
 
-            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(plugin.app.workspace, VIEW_TYPE);
+            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(
+                plugin.app.workspace,
+                VIEW_TYPE
+            );
             expect(mockViewManager.setViewState).not.toHaveBeenCalled();
             expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
             expect(mockViewManager.updateContent).not.toHaveBeenCalled();

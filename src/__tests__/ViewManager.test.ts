@@ -29,7 +29,9 @@ describe('ViewManager', () => {
     it('should get or create a leaf', () => {
         const mockLeaf = {} as WorkspaceLeaf;
 
-        (workspace.getLeavesOfType as jest.Mock).mockReturnValueOnce([mockLeaf]);
+        (workspace.getLeavesOfType as jest.Mock).mockReturnValueOnce([
+            mockLeaf,
+        ]);
         const leaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
         expect(leaf).toBe(mockLeaf);
@@ -62,6 +64,8 @@ describe('ViewManager', () => {
 
         viewManager.updateContent();
 
-        expect(plugin.frequencyCounter.triggerUpdateContent).toHaveBeenCalledWith(mockEditor);
+        expect(
+            plugin.frequencyCounter.triggerUpdateContent
+        ).toHaveBeenCalledWith(mockEditor);
     });
 });

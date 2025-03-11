@@ -20,26 +20,24 @@ export class WordFrequencySettingTab extends PluginSettingTab {
             .setName('Blacklist')
             .setDesc('Comma-separated list of words to exclude.')
             .addTextArea((text) => {
-                text
-                    .setValue(this.plugin.settings.blacklist)
+                text.setValue(this.plugin.settings.blacklist)
                     .onChange(async (value) => {
                         await this.saveBlacklistValue(value);
                     })
-                    .inputEl.classList.add('word-frequency-setting-blacklist')
-            }
-        );
+                    .inputEl.classList.add('word-frequency-setting-blacklist');
+            });
 
         new Setting(containerEl)
             .setName('Word Frequency Threshold')
             .setDesc('Only show words that appear at least this many times.')
-            .addText(text => text
-                .setPlaceholder('3')
-                .setValue(this.plugin.settings.threshold.toString())
-                .onChange(async (value) => {
-                    await this.updateThreshold(value);
-                }
-            )
-        );
+            .addText((text) =>
+                text
+                    .setPlaceholder('3')
+                    .setValue(this.plugin.settings.threshold.toString())
+                    .onChange(async (value) => {
+                        await this.updateThreshold(value);
+                    })
+            );
     }
 
     async saveBlacklistValue(value: string) {
@@ -55,7 +53,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         this.plugin.settings.threshold = num;
         await this.plugin.saveSettings();
-        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
+        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
             (leaf.view as WordFrequencyView).updateContent();
         });
     }

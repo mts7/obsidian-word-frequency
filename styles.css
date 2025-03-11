@@ -1,41 +1,41 @@
 .setting-item {
-    display: flex;
-    align-items: flex-start;
+  display: flex;
+  align-items: flex-start;
 }
 
 .setting-item-info {
-    flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .word-frequency-setting-blacklist {
-    min-height: 150px;
-    width: 100%;
+  min-height: 150px;
+  width: 100%;
 }
 
 .word-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .word-count-container {
-    display: flex;
-    justify-content: space-between;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .word-count-container span {
-    flex-shrink: 1;
-    max-width: 80%;
-    overflow: hidden;
-    padding-right: 10px;
+  flex-shrink: 1;
+  max-width: 80%;
+  overflow: hidden;
+  padding-right: 10px;
 }
 
 .button-container {
-    margin-left: 10px;
-    margin-top: 0;
+  margin-left: 10px;
+  margin-top: 0;
 }

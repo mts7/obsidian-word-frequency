@@ -1,5 +1,11 @@
 import { App, Plugin, PluginManifest, WorkspaceLeaf } from 'obsidian';
-import { WordFrequencySettings, DEFAULT_SETTINGS, PLUGIN_NAME, VIEW_TYPE, FREQUENCY_ICON } from './constants';
+import {
+    WordFrequencySettings,
+    DEFAULT_SETTINGS,
+    PLUGIN_NAME,
+    VIEW_TYPE,
+    FREQUENCY_ICON,
+} from './constants';
 import { ViewManager } from './ViewManager';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
@@ -11,7 +17,12 @@ export default class WordFrequencyPlugin extends Plugin {
     settingTab: WordFrequencySettingTab;
     viewManager: ViewManager;
 
-    constructor(app: App, manifest: PluginManifest, viewManager?: ViewManager, settingTab?: WordFrequencySettingTab) {
+    constructor(
+        app: App,
+        manifest: PluginManifest,
+        viewManager?: ViewManager,
+        settingTab?: WordFrequencySettingTab
+    ) {
         super(app, manifest);
         this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
         this.viewManager = viewManager ?? new ViewManager(this);
@@ -26,24 +37,27 @@ export default class WordFrequencyPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
         );
 
-        this.addRibbonIcon(FREQUENCY_ICON, `Show ${PLUGIN_NAME} Sidebar`, () => {
-            this.activateView();
-        });
+        this.addRibbonIcon(
+            FREQUENCY_ICON,
+            `Show ${PLUGIN_NAME} Sidebar`,
+            () => {
+                this.activateView();
+            }
+        );
 
         this.registerEvent(
-            this.app.workspace.on(
-                'active-leaf-change',
-                (leaf) => {
-                    this.frequencyCounter.handleActiveLeafChange(leaf, this.app.workspace);
-                }
-            )
+            this.app.workspace.on('active-leaf-change', (leaf) => {
+                this.frequencyCounter.handleActiveLeafChange(
+                    leaf,
+                    this.app.workspace
+                );
+            })
         );
 
         this.addSettingTab(this.settingTab);
     }
 
-    onunload() {
-    }
+    onunload() {}
 
     async activateView() {
         const { workspace } = this.app;

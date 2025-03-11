@@ -15,7 +15,10 @@ describe('WordFrequencyCounter tests', () => {
 
             const result = counter.calculateWordFrequencies(content);
 
-            expect(result).toEqual([['hello', 2], ['world', 1]]);
+            expect(result).toEqual([
+                ['hello', 2],
+                ['world', 1],
+            ]);
         });
 
         it('should calculate word frequencies with punctuation and mixed case', () => {
@@ -23,7 +26,10 @@ describe('WordFrequencyCounter tests', () => {
 
             const result = counter.calculateWordFrequencies(content);
 
-            expect(result).toEqual([['hello', 2], ['world', 2]]);
+            expect(result).toEqual([
+                ['hello', 2],
+                ['world', 2],
+            ]);
         });
 
         it('should calculate word frequencies with numbers and special characters', () => {
@@ -31,7 +37,12 @@ describe('WordFrequencyCounter tests', () => {
 
             const result = counter.calculateWordFrequencies(content);
 
-            expect(result).toEqual([['word1', 2], ['hello', 2], ['word2', 1], ['123', 1]]);
+            expect(result).toEqual([
+                ['word1', 2],
+                ['hello', 2],
+                ['word2', 1],
+                ['123', 1],
+            ]);
         });
 
         it('should calculate word frequencies with periods, colons, and slashes', () => {
@@ -69,7 +80,7 @@ describe('WordFrequencyCounter tests', () => {
             };
             const workspace: Workspace = {} as unknown as Workspace;
             const leafMock = {
-                view: null
+                view: null,
             } as unknown as WorkspaceLeaf;
 
             counterMock.handleActiveLeafChange(leafMock, workspace);
@@ -96,7 +107,10 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.handleActiveLeafChange(leafMock, workspace);
 
-            expect(containerElMock.addEventListener).toHaveBeenCalledWith('keyup', expect.any(Function));
+            expect(containerElMock.addEventListener).toHaveBeenCalledWith(
+                'keyup',
+                expect.any(Function)
+            );
         });
 
         it('should set lastActiveEditor with a valid MarkdownView', () => {
@@ -108,7 +122,9 @@ describe('WordFrequencyCounter tests', () => {
                 containerEl: containerElMock,
             } as unknown as MarkdownView;
             const workspace: Workspace = {
-                getActiveViewOfType: jest.fn().mockReturnValue(markdownViewMock),
+                getActiveViewOfType: jest
+                    .fn()
+                    .mockReturnValue(markdownViewMock),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
             } as unknown as Workspace;
             const leafMock = {
@@ -212,7 +228,10 @@ describe('WordFrequencyCounter tests', () => {
         it('should not dispatch an event or calculate word frequencies', () => {
             const editor = undefined;
             const counterMock = jest.spyOn(counter, 'calculateWordFrequencies');
-            const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
+            const dispatchEventMock = jest.spyOn(
+                window.document,
+                'dispatchEvent'
+            );
 
             counter.triggerUpdateContent(editor);
 
@@ -225,12 +244,17 @@ describe('WordFrequencyCounter tests', () => {
 
         it('should dispatch an event after calculating word frequencies', () => {
             const counterMock = jest.spyOn(counter, 'calculateWordFrequencies');
-            const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
-            const expectedValue = 'hello world hello';
-            const expectedEvent = new CustomEvent(
-                EVENT_UPDATE,
-                { detail: [['hello', 2], ['world', 1]] }
+            const dispatchEventMock = jest.spyOn(
+                window.document,
+                'dispatchEvent'
             );
+            const expectedValue = 'hello world hello';
+            const expectedEvent = new CustomEvent(EVENT_UPDATE, {
+                detail: [
+                    ['hello', 2],
+                    ['world', 1],
+                ],
+            });
             const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;
@@ -256,23 +280,33 @@ describe('WordFrequencyCounter tests', () => {
             const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const consoleErrorSpy = jest
+                .spyOn(console, 'error')
+                .mockImplementation(() => {});
 
             counterMock.triggerUpdateContent(editor);
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith('error in triggerUpdateContent', expectedError);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'error in triggerUpdateContent',
+                expectedError
+            );
 
             consoleErrorSpy.mockRestore();
         });
 
         it('should dispatch an event with last active editor when editor is undefined', () => {
             const counterMock = jest.spyOn(counter, 'calculateWordFrequencies');
-            const dispatchEventMock = jest.spyOn(window.document, 'dispatchEvent');
-            const expectedValue = 'hello world hello';
-            const expectedEvent = new CustomEvent(
-                EVENT_UPDATE,
-                { detail: [['hello', 2], ['world', 1]] }
+            const dispatchEventMock = jest.spyOn(
+                window.document,
+                'dispatchEvent'
             );
+            const expectedValue = 'hello world hello';
+            const expectedEvent = new CustomEvent(EVENT_UPDATE, {
+                detail: [
+                    ['hello', 2],
+                    ['world', 1],
+                ],
+            });
             const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;

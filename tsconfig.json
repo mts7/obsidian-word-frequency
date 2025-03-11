@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "esModuleInterop": true,
     "jsx": "react",
-    "lib":  ["ESNext", "dom"],
+    "lib": ["ESNext", "dom"],
     "module": "ESNext",
     "moduleResolution": "Node",
     "outDir": "./dist",
@@ -13,10 +13,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "types": ["obsidian", "node", "jest"],
+    "types": ["obsidian", "node", "jest"]
   },
-  "include": [
-    "src/**/*",
-    "node_modules/@types/jest/index.d.ts",
-  ]
+  "include": ["src/**/*", "node_modules/@types/jest/index.d.ts"]
 }

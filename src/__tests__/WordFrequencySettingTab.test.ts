@@ -23,14 +23,18 @@ describe('WordFrequencySettingTab', () => {
         plugin = {
             settings: {
                 blacklist: '',
-                threshold: 0
+                threshold: 0,
             },
             saveSettings: jest.fn().mockResolvedValue(undefined),
             app: {
                 workspace: {
-                    getLeavesOfType: jest.fn().mockReturnValue([{ view: { updateContent: jest.fn() } }])
-                }
-            }
+                    getLeavesOfType: jest
+                        .fn()
+                        .mockReturnValue([
+                            { view: { updateContent: jest.fn() } },
+                        ]),
+                },
+            },
         } as unknown as WordFrequencyPlugin;
 
         containerEl = createMockContainerEl();
@@ -58,13 +62,17 @@ describe('WordFrequencySettingTab', () => {
 
         await settingTab.updateThreshold(value);
 
-        const view = plugin.app.workspace.getLeavesOfType(VIEW_TYPE)[0] as unknown as {
-            view: WordFrequencyView
+        const view = plugin.app.workspace.getLeavesOfType(
+            VIEW_TYPE
+        )[0] as unknown as {
+            view: WordFrequencyView;
         };
 
         expect(plugin.settings.threshold).toBe(5);
         expect(plugin.saveSettings).toHaveBeenCalled();
-        expect(plugin.app.workspace.getLeavesOfType).toHaveBeenCalledWith(VIEW_TYPE);
+        expect(plugin.app.workspace.getLeavesOfType).toHaveBeenCalledWith(
+            VIEW_TYPE
+        );
         expect(view.view.updateContent).toHaveBeenCalled();
     });
 
