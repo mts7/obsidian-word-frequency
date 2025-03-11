@@ -4,13 +4,15 @@ on:
   push:
     branches:
       - "*"
-  pull_request:
+  pull_request_target:
     branches:
       - "*"
 
 jobs:
   build_test:
     runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request_target' && github.base_ref == 'master') }}
 
     steps:
       - name: Checkout code
@@ -45,6 +47,12 @@ jobs:
           name: coverage-reports
           path: coverage/
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
   release:
     needs: build_test
     if: github.ref == 'refs/heads/master'
@@ -62,11 +70,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
       - name: Create release assets
         run: |
           mkdir assets
           cp dist/main.js assets/main.js
-          cp style.css assets/styles.css
+          cp styles.css assets/styles.css
           cp manifest.json assets/manifest.json
 
       - name: Upload release assets
