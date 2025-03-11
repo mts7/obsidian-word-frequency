@@ -84,7 +84,7 @@ jobs:
         run: |
           mkdir assets
           cp dist/main.js assets/main.js
-          cp dist/style.css assets/styles.css
+          cp dist/styles.css assets/styles.css
           cp dist/manifest.json assets/manifest.json
 
       - name: Upload release assets
