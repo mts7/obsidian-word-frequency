@@ -53,7 +53,7 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            dist/
+            dist/main.js
             style.css
             manifest.json
 
