@@ -36,6 +36,12 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Create assets directory
+        run: mkdir -p assets
+
+      - name: Copy main.js to assets
+        run: cp dist/main.js assets/
+
       - name: Generate coverage
         run: npm run coverage
 
@@ -47,7 +53,7 @@ jobs:
 
   release:
     needs: build_test
-    if: github.ref == 'refs/heads/master'
+    #if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     steps:
