@@ -231,8 +231,7 @@ describe('WordFrequencyCounter tests', () => {
                 EVENT_UPDATE,
                 { detail: [['hello', 2], ['world', 1]] }
             );
-            let editor: Editor;
-            editor = {
+            const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;
 
@@ -254,8 +253,7 @@ describe('WordFrequencyCounter tests', () => {
                 }),
                 triggerUpdateContent: counter.triggerUpdateContent,
             };
-            let editor: Editor;
-            editor = {
+            const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -275,8 +273,7 @@ describe('WordFrequencyCounter tests', () => {
                 EVENT_UPDATE,
                 { detail: [['hello', 2], ['world', 1]] }
             );
-            let editor: Editor;
-            editor = {
+            const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
             } as unknown as Editor;
             const editorSpy = jest.spyOn(editor, 'getValue');

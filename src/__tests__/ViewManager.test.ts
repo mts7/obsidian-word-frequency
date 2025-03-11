@@ -20,7 +20,7 @@ describe('ViewManager', () => {
             frequencyCounter: {
                 triggerUpdateContent: jest.fn(),
             },
-        } as any;
+        } as unknown as WordFrequencyPlugin;
 
         workspace = plugin.app.workspace;
         viewManager = new ViewManager(plugin);
@@ -44,7 +44,7 @@ describe('ViewManager', () => {
     it('should set view state', async () => {
         const mockLeaf = {
             setViewState: jest.fn().mockResolvedValue(undefined),
-        } as any as WorkspaceLeaf;
+        } as unknown as WorkspaceLeaf;
 
         await viewManager.setViewState(mockLeaf, VIEW_TYPE);
 

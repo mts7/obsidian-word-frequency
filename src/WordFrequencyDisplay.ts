@@ -7,7 +7,7 @@ export class WordFrequencyDisplay {
     private plugin: WordFrequencyPlugin;
     private view: WordFrequencyView;
 
-    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView, blacklist?: Set<string>) {
+    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView) {
         this.plugin = plugin;
         this.view = view;
     }

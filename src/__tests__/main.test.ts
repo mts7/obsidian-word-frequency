@@ -1,4 +1,4 @@
-import { App, WorkspaceLeaf, PluginManifest } from 'obsidian';
+import { App, WorkspaceLeaf, PluginManifest, Workspace } from 'obsidian';
 import { DEFAULT_SETTINGS, FREQUENCY_ICON, PLUGIN_NAME, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
@@ -9,7 +9,7 @@ jest.mock('../utils', () => ({
 }));
 
 interface MockApp extends App {
-    workspace: any;
+    workspace: Workspace;
     loadData: jest.Mock;
     saveData: jest.Mock;
 }
@@ -24,7 +24,7 @@ const mockApp: MockApp = {
         revealLeaf: jest.fn(),
         getActiveViewOfType: jest.fn(),
         setViewState: jest.fn(),
-    },
+    } as unknown as Workspace,
 } as MockApp;
 
 const mockManifest: PluginManifest = {

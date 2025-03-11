@@ -22,7 +22,7 @@ describe('WordFrequencyDisplay', () => {
                 threshold: 3,
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
-        } as any as WordFrequencyPlugin;
+        } as unknown as WordFrequencyPlugin;
         mockView = {
             getDisplayText: jest.fn(),
             getIcon: jest.fn(),
@@ -31,24 +31,24 @@ describe('WordFrequencyDisplay', () => {
             onOpen: jest.fn(),
             onClose: jest.fn(),
             updateContent: jest.fn(),
-        } as any as WordFrequencyView;
+        } as unknown as WordFrequencyView;
         contentEl = {
             createEl: jest.fn().mockReturnValue({
                 createEl: jest.fn().mockReturnThis(),
                 setAttr: jest.fn(),
                 setText: jest.fn(),
             }),
-        } as any as HTMLElement;
+        } as unknown as HTMLElement;
         blacklist = new Set(mockPlugin.settings.blacklist.split(',').map(word => word.trim()));
 
-        display = new WordFrequencyDisplay(mockPlugin, mockView, blacklist);
+        display = new WordFrequencyDisplay(mockPlugin, mockView);
     });
 
     describe('addWordToSidebar', () => {
         it('should return early when the word is in the blacklist', () => {
             const contentContainer = {
                 createEl: jest.fn(),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'the';
             const count = 17;
 
@@ -60,7 +60,7 @@ describe('WordFrequencyDisplay', () => {
         it('should return early when the word count is less than the threshold setting', () => {
             const contentContainer = {
                 createEl: jest.fn(),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 1;
 
@@ -72,22 +72,22 @@ describe('WordFrequencyDisplay', () => {
         it('should add the word with count and button to the row', () => {
             const spanElement = {
                 setText: jest.fn(),
-            } as any as HTMLSpanElement;
+            } as unknown as HTMLSpanElement;
             const buttonElement = {
                 addEventListener: jest.fn(),
-            } as any as HTMLButtonElement;
+            } as unknown as HTMLButtonElement;
             const innerElement = {
                 createEl: jest.fn()
                     .mockReturnValueOnce(spanElement)
                     .mockReturnValueOnce(spanElement)
                     .mockReturnValueOnce(buttonElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const rowElement = {
                 createEl: jest.fn().mockReturnValue(innerElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const contentContainer = {
                 createEl: jest.fn().mockReturnValue(rowElement),
-            } as any as HTMLDivElement;
+            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 13;
 

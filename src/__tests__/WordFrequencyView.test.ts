@@ -9,7 +9,6 @@ describe('WordFrequencyView', () => {
     let mockLeaf: WorkspaceLeaf;
     let mockPlugin: WordFrequencyPlugin;
     let view: WordFrequencyView;
-    let contentEl: HTMLElement;
 
     beforeEach(() => {
         mockLeaf = new WorkspaceLeaf();
@@ -17,89 +16,19 @@ describe('WordFrequencyView', () => {
             addWordToSidebar: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
-        } as any as WordFrequencyDisplay;
+        } as unknown as WordFrequencyDisplay;
         mockPlugin = {
             settings: {
                 blacklist: 'the, and, to',
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
-        } as any as WordFrequencyPlugin;
+        } as unknown as WordFrequencyPlugin;
         view = new WordFrequencyView(mockLeaf, mockPlugin, mockDisplay);
 
-        let innerHTMLValue = '';
-        let elements: HTMLElement[] = [];
-
-        contentEl = {
-            empty: jest.fn(() => {
-                innerHTMLValue = '';
-                elements = [];
-            }),
-            createEl: jest.fn((tagName: string, options?: { cls?: string, text?: string }) => {
-                const element = {
-                    createEl: jest.fn((innerTagName: string, innerOptions?: { cls?: string, text?: string }) => {
-                        const innerElement: any = {
-                            createEl: jest.fn(() => innerElement),
-                            setText: jest.fn((text: string) => {
-                                innerElement.textContent = text;
-                                innerHTMLValue += `<${innerTagName}>${text}</${innerTagName}>`;
-                            }),
-                            addEventListener: jest.fn(),
-                            textContent: '',
-                            className: ''
-                        };
-                        if (innerOptions) {
-                            if (innerOptions.text) {
-                                innerElement.textContent = innerOptions.text;
-                                innerHTMLValue += `<${innerTagName}>${innerOptions.text}</${innerTagName}>`;
-                            }
-                            if (innerOptions.cls) {
-                                innerElement.className = innerOptions.cls;
-                            }
-                        }
-                        elements.push(innerElement);
-                        return innerElement;
-                    }),
-                    setText: jest.fn((text: string) => {
-                        element.textContent = text;
-                        innerHTMLValue += `<${tagName}>${text}</${tagName}>`;
-                    }),
-                    setAttr: jest.fn(),
-                    addEventListener: jest.fn(),
-                    textContent: '',
-                    className: ''
-                };
-                if (options) {
-                    if (options.text) {
-                        element.textContent = options.text;
-                        innerHTMLValue += `<${tagName}>${options.text}</${tagName}>`;
-                    }
-                    if (options.cls) {
-                        element.className = options.cls;
-                    }
-                }
-                elements.push(element as unknown as HTMLElement);
-                return element;
-            }),
-            get innerHTML() {
-                return innerHTMLValue;
-            },
-            set innerHTML(value: string) {
-                innerHTMLValue = value;
-            },
-            querySelectorAll: jest.fn((selector: string) => {
-                return elements.filter(el => {
-                    if (selector.startsWith('.')) {
-                        const className = selector.substring(1);
-                        return el.className === className;
-                    }
-                    if (selector.startsWith('span')) {
-                        return el.tagName === 'SPAN';
-                    }
-                    return false;
-                });
-            })
-        } as any as HTMLElement;
-        view.contentEl = contentEl;
+        view.contentEl = {
+            empty: jest.fn(),
+            createEl: jest.fn(),
+        } as unknown as HTMLElement;
     });
 
     describe('constructor and getters', () => {
@@ -205,7 +134,7 @@ describe('WordFrequencyView', () => {
 
             window.document.dispatchEvent(event);
 
-            expect(addWordToSidebarSpy).toBeCalledTimes(2);
+            expect(addWordToSidebarSpy).toHaveBeenCalledTimes(2);
 
             addWordToSidebarSpy.mockRestore();
         });
