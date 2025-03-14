@@ -94,7 +94,7 @@ consider supporting my development through a donation. Every little bit helps.
 
 [![Become a GitHub Sponsor](https://img.shields.io/github/sponsors/mts7?label=Sponsor&logo=GitHub%20Sponsors&style=for-the-badge)](https://github.com/sponsors/mts7)
 
-[![Buy Me a Coffee](assets/bmc-button.png)](https://www.buymeacoffee.com/mts7)
+[![Buy Me a Coffee](__assets__/bmc-button.png)](https://www.buymeacoffee.com/mts7)
 
 ## Origin Story
 
