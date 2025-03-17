@@ -1,6 +1,6 @@
 {
   "name": "word-frequency",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "type": "module",
   "description": "Count word frequency in current note within Obsidian",
   "main": "main.js",
