@@ -1,10 +1,14 @@
 {
   "id": "word-frequency",
   "name": "Word Frequency",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "minAppVersion": "1.0.0",
   "description": "Counts the most frequently used words in a note and displays them in the sidebar with pagination.",
   "author": "Mike Rodarte",
   "authorUrl": "https://github.com/mts7",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "fundingUrl": {
+    "GitHub Sponsor": "https://github.com/sponsors/mts7",
+    "Buy Me a Coffee": "https://www.buymeacoffee.com/mts7"
+  }
 }
