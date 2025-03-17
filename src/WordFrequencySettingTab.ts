@@ -28,7 +28,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName('Word Frequency Threshold')
+            .setName('Word frequency threshold')
             .setDesc('Only show words that appear at least this many times.')
             .addText((text) =>
                 text

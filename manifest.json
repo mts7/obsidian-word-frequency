@@ -6,5 +6,9 @@
   "description": "Counts the most frequently used words in a note and displays them in the sidebar with pagination.",
   "author": "Mike Rodarte",
   "authorUrl": "https://github.com/mts7",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "fundingUrl": {
+    "GitHub Sponsor": "https://github.com/sponsors/mts7",
+    "Buy Me a Coffee": "https://www.buymeacoffee.com/mts7"
+  }
 }
