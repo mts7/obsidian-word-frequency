@@ -1,6 +1,11 @@
-import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import {
+    debounce,
+    Editor,
+    MarkdownView,
+    Workspace,
+    WorkspaceLeaf,
+} from 'obsidian';
 import { EVENT_UPDATE, VIEW_TYPE } from './constants';
-import { debounce } from './utils';
 
 export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;

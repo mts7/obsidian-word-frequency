@@ -148,7 +148,7 @@ describe('WordFrequencyDisplay', () => {
                 cls: 'threshold-display',
             });
             expect(thresholdDisplay.setText).toHaveBeenCalledWith(
-                `Current Frequency Threshold is ${mockPlugin.settings.threshold}.`
+                `Current frequency threshold is ${mockPlugin.settings.threshold}.`
             );
             expect(thresholdDisplay.setAttr).toHaveBeenCalledWith(
                 'title',
