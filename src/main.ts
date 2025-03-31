@@ -12,7 +12,7 @@ import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 
 export default class WordFrequencyPlugin extends Plugin {
-    frequencyCounter: WordFrequencyCounter = new WordFrequencyCounter();
+    frequencyCounter: WordFrequencyCounter;
     settings: WordFrequencySettings = DEFAULT_SETTINGS;
     settingTab: WordFrequencySettingTab;
     viewManager: ViewManager;
@@ -21,11 +21,14 @@ export default class WordFrequencyPlugin extends Plugin {
         app: App,
         manifest: PluginManifest,
         viewManager?: ViewManager,
-        settingTab?: WordFrequencySettingTab
+        settingTab?: WordFrequencySettingTab,
+        frequencyCounter?: WordFrequencyCounter
     ) {
         super(app, manifest);
         this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
         this.viewManager = viewManager ?? new ViewManager(this);
+        this.frequencyCounter =
+            frequencyCounter ?? new WordFrequencyCounter(this);
     }
 
     async onload() {

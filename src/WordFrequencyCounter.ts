@@ -6,9 +6,15 @@ import {
     WorkspaceLeaf,
 } from 'obsidian';
 import { EVENT_UPDATE, VIEW_TYPE } from './constants';
+import WordFrequencyPlugin from './main';
 
 export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;
+    plugin: WordFrequencyPlugin;
+
+    constructor(plugin: WordFrequencyPlugin) {
+        this.plugin = plugin;
+    }
 
     calculateWordFrequencies(content: string): [string, number][] {
         if (content.length === 0) {
@@ -50,7 +56,7 @@ export class WordFrequencyCounter {
             3000
         );
 
-        view.containerEl.addEventListener('keyup', () => {
+        this.plugin.registerDomEvent(view.containerEl, 'keyup', () => {
             debouncedMethod();
         });
 

@@ -15,6 +15,7 @@ describe('WordFrequencyDisplay', () => {
             activateView: jest.fn(),
             onload: jest.fn(),
             onunload: jest.fn(),
+            registerDomEvent: jest.fn(),
             saveData: jest.fn(),
             saveSettings: jest.fn(),
             settings: {

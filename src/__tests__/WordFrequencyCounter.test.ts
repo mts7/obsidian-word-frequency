@@ -1,8 +1,13 @@
 import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
+import WordFrequencyPlugin from '../main';
 
-const counter = new WordFrequencyCounter();
+const mockPlugin = {
+    registerDomEvent: jest.fn(),
+} as unknown as WordFrequencyPlugin;
+
+const counter = new WordFrequencyCounter(mockPlugin);
 
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
@@ -107,7 +112,8 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.handleActiveLeafChange(leafMock, workspace);
 
-            expect(containerElMock.addEventListener).toHaveBeenCalledWith(
+            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
+                containerElMock,
                 'keyup',
                 expect.any(Function)
             );
@@ -169,6 +175,7 @@ describe('WordFrequencyCounter tests', () => {
             const counterMock = {
                 calculateWordFrequencies: counter.calculateWordFrequencies,
                 handleActiveLeafChange: counter.handleActiveLeafChange,
+                plugin: counter.plugin,
                 triggerUpdateContent: jest.fn(),
             };
             const containerElMock = {
@@ -196,6 +203,7 @@ describe('WordFrequencyCounter tests', () => {
             const counterMock = {
                 calculateWordFrequencies: counter.calculateWordFrequencies,
                 handleActiveLeafChange: counter.handleActiveLeafChange,
+                plugin: counter.plugin,
                 triggerUpdateContent: jest.fn(),
             };
             const containerElMock = {
