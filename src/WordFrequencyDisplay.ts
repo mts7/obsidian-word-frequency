@@ -53,7 +53,7 @@ export class WordFrequencyDisplay {
             cls: 'threshold-display',
         });
         thresholdDisplay.setText(
-            `Current Frequency Threshold is ${this.plugin.settings.threshold}.`
+            `Current frequency threshold is ${this.plugin.settings.threshold}.`
         );
         thresholdDisplay.setAttr(
             'title',

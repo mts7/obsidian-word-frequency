@@ -10,5 +10,5 @@ export const DEFAULT_SETTINGS: WordFrequencySettings = {
 
 export const EVENT_UPDATE = 'word-frequency-update';
 export const FREQUENCY_ICON = 'file-chart-column-increasing';
-export const PLUGIN_NAME = 'Word Frequency';
+export const PLUGIN_NAME = 'Word frequency';
 export const VIEW_TYPE = 'word-frequency-view';
