@@ -56,9 +56,10 @@ export class WordFrequencyCounter {
             3000
         );
 
-        this.plugin.registerDomEvent(view.containerEl, 'keyup', () => {
-            debouncedMethod();
-        });
+        // TODO: pass the editor from the event to the debouncedMethod
+        this.plugin.registerEvent(
+            workspace.on('editor-change', debouncedMethod)
+        );
 
         const activeView = workspace.getActiveViewOfType(MarkdownView);
         if (activeView) {
