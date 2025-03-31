@@ -1,9 +1,9 @@
-.setting-item {
+.word-frequency-setting-item {
   display: flex;
   align-items: flex-start;
 }
 
-.setting-item-info {
+.word-frequency-setting-item-info {
   flex-shrink: 0;
 }
 
