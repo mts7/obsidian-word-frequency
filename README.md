@@ -1,4 +1,4 @@
-# Obsidian Word Frequency
+# Word Frequency
 
 Word Frequency is a plugin for [Obsidian.md](https://obsidian.md/) that counts
 the words in the current note and displays word frequency counts in the sidebar.
