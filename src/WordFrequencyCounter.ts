@@ -48,17 +48,13 @@ export class WordFrequencyCounter {
             return;
         }
 
-        const view: MarkdownView = leaf.view;
-        const editor: Editor = view.editor;
-
         const debouncedMethod = debounce(
-            () => this.triggerUpdateContent(editor),
+            (editor: Editor) => this.triggerUpdateContent(editor),
             3000
         );
 
-        // TODO: pass the editor from the event to the debouncedMethod
         this.plugin.registerEvent(
-            workspace.on('editor-change', debouncedMethod)
+            workspace.on('editor-change', (editor) => debouncedMethod(editor))
         );
 
         const activeView = workspace.getActiveViewOfType(MarkdownView);
