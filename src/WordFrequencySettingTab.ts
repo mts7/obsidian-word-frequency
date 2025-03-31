@@ -1,6 +1,7 @@
 import { PluginSettingTab, Setting } from 'obsidian';
 import WordFrequencyPlugin from './main';
 import { WordFrequencyView } from './WordFrequencyView';
+import { VIEW_TYPE } from './constants';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;
@@ -55,12 +56,10 @@ export class WordFrequencySettingTab extends PluginSettingTab {
         this.plugin.settings.threshold = num;
         await this.plugin.saveSettings();
 
-        this.plugin.app.workspace.iterateAllLeaves((leaf) => {
-            if (!(leaf.view instanceof WordFrequencyView)) {
-                return;
+        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
+            if (leaf.view instanceof WordFrequencyView) {
+                leaf.view.updateContent();
             }
-
-            (leaf.view as WordFrequencyView).updateContent();
         });
     }
 }

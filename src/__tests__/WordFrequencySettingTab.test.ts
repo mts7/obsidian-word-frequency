@@ -1,3 +1,4 @@
+import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyView } from '../WordFrequencyView';
@@ -32,7 +33,6 @@ describe('WordFrequencySettingTab', () => {
                         .mockReturnValue([
                             { view: { updateContent: jest.fn() } },
                         ]),
-                    iterateAllLeaves: jest.fn(),
                 },
             },
         } as unknown as WordFrequencyPlugin;
@@ -62,19 +62,20 @@ describe('WordFrequencySettingTab', () => {
         const mockView = Object.create(WordFrequencyView.prototype);
         mockView.updateContent = jest.fn();
         const mockLeaves = [{ view: mockView }, { view: {} }];
-
-        (plugin.app.workspace.iterateAllLeaves as jest.Mock).mockImplementation(
-            (callback) => {
-                mockLeaves.forEach((leaf) => {
-                    callback(leaf);
-                });
-            }
-        );
+        plugin.app.workspace.getLeavesOfType = jest
+            .fn()
+            .mockReturnValue(mockLeaves);
 
         await settingTab.updateThreshold(value);
 
         expect(plugin.settings.threshold).toBe(5);
         expect(plugin.saveSettings).toHaveBeenCalled();
+        expect(plugin.app.workspace.getLeavesOfType).toHaveBeenCalledWith(
+            VIEW_TYPE
+        );
+        expect(plugin.app.workspace.getLeavesOfType).toHaveReturnedWith(
+            mockLeaves
+        );
         expect(mockView.updateContent).toHaveBeenCalled();
     });
 
