@@ -1,10 +1,9 @@
 import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
-import { WordFrequencyCounter } from '../WordFrequencyCounter';
 import WordFrequencyPlugin from '../main';
+import { WordFrequencyCounter } from '../WordFrequencyCounter';
 
 const mockPlugin = {
-    registerDomEvent: jest.fn(),
     registerEvent: jest.fn(),
 } as unknown as WordFrequencyPlugin;
 
