@@ -22,20 +22,22 @@ export class WordFrequencyDisplay {
             return;
         }
 
-        const row = contentContainer.createEl('div', { cls: 'word-row' });
+        const row = contentContainer.createEl('div', {
+            cls: 'word-frequency-row',
+        });
 
         const wordCountContainer = row.createEl('div', {
-            cls: 'word-count-container',
+            cls: 'word-frequency-count-container',
         });
         wordCountContainer.createEl('span', { text: word });
         wordCountContainer.createEl('span', { text: count.toString() });
 
         const buttonContainer = row.createEl('div', {
-            cls: 'button-container',
+            cls: 'word-frequency-button-container',
         });
         const button = buttonContainer.createEl('button');
         setIcon(button, 'trash-2');
-        button.addEventListener('click', () => {
+        this.plugin.registerDomEvent(button, 'click', () => {
             this.saveWordToBlacklist(word);
         });
     }
@@ -51,7 +53,7 @@ export class WordFrequencyDisplay {
             cls: 'threshold-display',
         });
         thresholdDisplay.setText(
-            `Current Frequency Threshold is ${this.plugin.settings.threshold}.`
+            `Current frequency threshold is ${this.plugin.settings.threshold}.`
         );
         thresholdDisplay.setAttr(
             'title',

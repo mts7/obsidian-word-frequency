@@ -15,6 +15,7 @@ describe('WordFrequencyDisplay', () => {
             activateView: jest.fn(),
             onload: jest.fn(),
             onunload: jest.fn(),
+            registerDomEvent: jest.fn(),
             saveData: jest.fn(),
             saveSettings: jest.fn(),
             settings: {
@@ -148,7 +149,7 @@ describe('WordFrequencyDisplay', () => {
                 cls: 'threshold-display',
             });
             expect(thresholdDisplay.setText).toHaveBeenCalledWith(
-                `Current Frequency Threshold is ${mockPlugin.settings.threshold}.`
+                `Current frequency threshold is ${mockPlugin.settings.threshold}.`
             );
             expect(thresholdDisplay.setAttr).toHaveBeenCalledWith(
                 'title',

@@ -59,21 +59,24 @@ describe('WordFrequencySettingTab', () => {
 
     it('should save settings and update content', async () => {
         const value = '5';
+        const mockView = Object.create(WordFrequencyView.prototype);
+        mockView.updateContent = jest.fn();
+        const mockLeaves = [{ view: mockView }, { view: {} }];
+        plugin.app.workspace.getLeavesOfType = jest
+            .fn()
+            .mockReturnValue(mockLeaves);
 
         await settingTab.updateThreshold(value);
-
-        const view = plugin.app.workspace.getLeavesOfType(
-            VIEW_TYPE
-        )[0] as unknown as {
-            view: WordFrequencyView;
-        };
 
         expect(plugin.settings.threshold).toBe(5);
         expect(plugin.saveSettings).toHaveBeenCalled();
         expect(plugin.app.workspace.getLeavesOfType).toHaveBeenCalledWith(
             VIEW_TYPE
         );
-        expect(view.view.updateContent).toHaveBeenCalled();
+        expect(plugin.app.workspace.getLeavesOfType).toHaveReturnedWith(
+            mockLeaves
+        );
+        expect(mockView.updateContent).toHaveBeenCalled();
     });
 
     it('should not save setting', async () => {

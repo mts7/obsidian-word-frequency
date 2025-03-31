@@ -16,9 +16,10 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        new Setting(containerEl)
+        const blacklist = new Setting(containerEl)
             .setName('Blacklist')
             .setDesc('Comma-separated list of words to exclude.')
+            .setClass('word-frequency-setting-item')
             .addTextArea((text) => {
                 text.setValue(this.plugin.settings.blacklist)
                     .onChange(async (value) => {
@@ -26,6 +27,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                     })
                     .inputEl.classList.add('word-frequency-setting-blacklist');
             });
+        blacklist.infoEl.addClass('word-frequency-setting-item-info');
 
         new Setting(containerEl)
             .setName('Word frequency threshold')
@@ -53,8 +55,11 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         this.plugin.settings.threshold = num;
         await this.plugin.saveSettings();
+
         this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
-            (leaf.view as WordFrequencyView).updateContent();
+            if (leaf.view instanceof WordFrequencyView) {
+                leaf.view.updateContent();
+            }
         });
     }
 }

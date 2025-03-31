@@ -1,8 +1,13 @@
 import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
+import WordFrequencyPlugin from '../main';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
 
-const counter = new WordFrequencyCounter();
+const mockPlugin = {
+    registerEvent: jest.fn(),
+} as unknown as WordFrequencyPlugin;
+
+const counter = new WordFrequencyCounter(mockPlugin);
 
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
@@ -89,9 +94,11 @@ describe('WordFrequencyCounter tests', () => {
         });
 
         it('should call the debounce method to call triggerUpdateContent', () => {
+            const mockEvent = jest.fn();
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockReturnValue(mockEvent),
             } as unknown as Workspace;
             const containerElMock = {
                 addEventListener: jest.fn(),
@@ -107,10 +114,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.handleActiveLeafChange(leafMock, workspace);
 
-            expect(containerElMock.addEventListener).toHaveBeenCalledWith(
-                'keyup',
-                expect.any(Function)
-            );
+            expect(mockPlugin.registerEvent).toHaveBeenCalledWith(mockEvent);
         });
 
         it('should set lastActiveEditor with a valid MarkdownView', () => {
@@ -121,11 +125,13 @@ describe('WordFrequencyCounter tests', () => {
                 editor: jest.fn(),
                 containerEl: containerElMock,
             } as unknown as MarkdownView;
+            const mockEvent = jest.fn();
             const workspace: Workspace = {
                 getActiveViewOfType: jest
                     .fn()
                     .mockReturnValue(markdownViewMock),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockReturnValue(mockEvent),
             } as unknown as Workspace;
             const leafMock = {
                 view: markdownViewMock,
@@ -149,9 +155,11 @@ describe('WordFrequencyCounter tests', () => {
                 },
                 containerEl: containerElMock,
             } as unknown as MarkdownView;
+            const mockEvent = jest.fn();
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockReturnValue(mockEvent),
             } as unknown as Workspace;
             const leafMock = {
                 view: markdownViewMock,
@@ -169,6 +177,7 @@ describe('WordFrequencyCounter tests', () => {
             const counterMock = {
                 calculateWordFrequencies: counter.calculateWordFrequencies,
                 handleActiveLeafChange: counter.handleActiveLeafChange,
+                plugin: counter.plugin,
                 triggerUpdateContent: jest.fn(),
             };
             const containerElMock = {
@@ -181,9 +190,11 @@ describe('WordFrequencyCounter tests', () => {
             const leafMock = {
                 view: markdownViewMock,
             } as unknown as WorkspaceLeaf;
+            const mockEvent = jest.fn();
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([leafMock]),
+                on: jest.fn().mockReturnValue(mockEvent),
             } as unknown as Workspace;
             Object.setPrototypeOf(markdownViewMock, MarkdownView.prototype);
 
@@ -196,6 +207,7 @@ describe('WordFrequencyCounter tests', () => {
             const counterMock = {
                 calculateWordFrequencies: counter.calculateWordFrequencies,
                 handleActiveLeafChange: counter.handleActiveLeafChange,
+                plugin: counter.plugin,
                 triggerUpdateContent: jest.fn(),
             };
             const containerElMock = {
@@ -208,9 +220,11 @@ describe('WordFrequencyCounter tests', () => {
             const leafMock = {
                 view: markdownViewMock,
             } as unknown as WorkspaceLeaf;
+            const mockEvent = jest.fn();
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockReturnValue(mockEvent),
             } as unknown as Workspace;
             Object.setPrototypeOf(markdownViewMock, MarkdownView.prototype);
 

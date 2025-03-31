@@ -1,9 +1,20 @@
-import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import {
+    debounce,
+    Editor,
+    MarkdownView,
+    Workspace,
+    WorkspaceLeaf,
+} from 'obsidian';
 import { EVENT_UPDATE, VIEW_TYPE } from './constants';
-import { debounce } from './utils';
+import WordFrequencyPlugin from './main';
 
 export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;
+    plugin: WordFrequencyPlugin;
+
+    constructor(plugin: WordFrequencyPlugin) {
+        this.plugin = plugin;
+    }
 
     calculateWordFrequencies(content: string): [string, number][] {
         if (content.length === 0) {
@@ -37,17 +48,14 @@ export class WordFrequencyCounter {
             return;
         }
 
-        const view: MarkdownView = leaf.view;
-        const editor: Editor = view.editor;
-
         const debouncedMethod = debounce(
-            () => this.triggerUpdateContent(editor),
+            (editor: Editor) => this.triggerUpdateContent(editor),
             3000
         );
 
-        view.containerEl.addEventListener('keyup', () => {
-            debouncedMethod();
-        });
+        this.plugin.registerEvent(
+            workspace.on('editor-change', (editor) => debouncedMethod(editor))
+        );
 
         const activeView = workspace.getActiveViewOfType(MarkdownView);
         if (activeView) {

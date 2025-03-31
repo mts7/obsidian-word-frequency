@@ -9,10 +9,6 @@ import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 
-jest.mock('../utils', () => ({
-    debounce: jest.fn((func) => func),
-}));
-
 interface MockApp extends App {
     workspace: Workspace;
     loadData: jest.Mock;

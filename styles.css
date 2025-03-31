@@ -1,9 +1,9 @@
-.setting-item {
+.word-frequency-setting-item {
   display: flex;
   align-items: flex-start;
 }
 
-.setting-item-info {
+.word-frequency-setting-item-info {
   flex-shrink: 0;
 }
 
@@ -12,14 +12,14 @@
   width: 100%;
 }
 
-.word-row {
+.word-frequency-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.word-count-container {
+.word-frequency-count-container {
   display: flex;
   justify-content: space-between;
   overflow: hidden;
@@ -28,14 +28,14 @@
   width: 100%;
 }
 
-.word-count-container span {
+.word-frequency-count-container span {
   flex-shrink: 1;
   max-width: 80%;
   overflow: hidden;
   padding-right: 10px;
 }
 
-.button-container {
+.word-frequency-button-container {
   margin-left: 10px;
   margin-top: 0;
 }
