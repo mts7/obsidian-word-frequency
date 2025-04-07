@@ -19,14 +19,14 @@ export class WordFrequencyView extends ItemView {
     constructor(
         leaf: WorkspaceLeaf,
         plugin: WordFrequencyPlugin,
-        display?: WordFrequencyDisplay
+        display?: WordFrequencyDisplay,
+        divElement?: HTMLDivElement
     ) {
         super(leaf);
         this.plugin = plugin;
         this.display = display ?? new WordFrequencyDisplay(plugin, this);
-        this.wordListContainer = createDiv({
-            cls: ELEMENT_CLASSES.containerWordList,
-        });
+        // TODO: find a better way to set a default value
+        this.wordListContainer = divElement ?? this.containerEl.createDiv();
     }
 
     getDisplayText(): string {
@@ -63,7 +63,9 @@ export class WordFrequencyView extends ItemView {
         });
         this.display.createHeader(contentContainer);
         this.display.createFilter(contentContainer);
-        contentContainer.appendChild(this.wordListContainer);
+        this.wordListContainer = contentContainer.createDiv({
+            cls: ELEMENT_CLASSES.containerWordList,
+        });
         this.display.createThresholdDisplay(contentContainer);
 
         this.updateContent();

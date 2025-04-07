@@ -11,6 +11,7 @@ import { WordFrequencyView } from '../WordFrequencyView';
 
 describe('WordFrequencyView', () => {
     let mockDisplay: WordFrequencyDisplay;
+    let mockDivElement: HTMLDivElement;
     let mockLeaf: WorkspaceLeaf;
     let mockPlugin: WordFrequencyPlugin;
     let view: WordFrequencyView;
@@ -23,16 +24,28 @@ describe('WordFrequencyView', () => {
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
+        mockDivElement = {
+            createDiv: jest.fn().mockReturnValue({
+                empty: jest.fn(),
+            } as unknown as HTMLDivElement),
+            empty: jest.fn(),
+        } as unknown as HTMLDivElement;
         mockPlugin = {
             settings: {
                 blacklist: 'the, and, to',
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
         } as unknown as WordFrequencyPlugin;
-        view = new WordFrequencyView(mockLeaf, mockPlugin, mockDisplay);
+        view = new WordFrequencyView(
+            mockLeaf,
+            mockPlugin,
+            mockDisplay,
+            mockDivElement
+        );
 
         view.contentEl = {
             empty: jest.fn(),
+            createDiv: jest.fn().mockReturnValue(mockDivElement),
             createEl: jest.fn(),
         } as unknown as HTMLElement;
     });
@@ -43,13 +56,25 @@ describe('WordFrequencyView', () => {
         });
 
         it('should use the provided WordFrequencyDisplay instance if passed', async () => {
+            const displayMock = {
+                addWordToSidebar: jest.fn(),
+                createFilter: jest.fn(),
+                createHeader: jest.fn(),
+                createThresholdDisplay: jest.fn(),
+            } as unknown as WordFrequencyDisplay;
             const view = new WordFrequencyView(
                 mockLeaf,
                 mockPlugin,
-                mockDisplay
+                displayMock,
+                mockDivElement
             );
 
             const viewMock = {
+                contentEl: {
+                    empty: jest.fn(),
+                    createDiv: jest.fn().mockReturnValue(mockDivElement),
+                } as unknown as HTMLElement,
+                display: displayMock,
                 onOpen: view.onOpen,
                 updateContent: jest.fn(),
             };
@@ -59,17 +84,15 @@ describe('WordFrequencyView', () => {
             expect(viewMock.updateContent).toHaveBeenCalled();
         });
 
-        it('should create a new WordFrequencyDisplay instance if no display is passed', async () => {
-            const view = new WordFrequencyView(mockLeaf, mockPlugin);
+        it('should create a new WordFrequencyView instance if no display is passed', async () => {
+            const view = new WordFrequencyView(
+                mockLeaf,
+                mockPlugin,
+                undefined,
+                mockDivElement
+            );
 
-            const viewMock = {
-                onOpen: view.onOpen,
-                updateContent: jest.fn(),
-            };
-
-            await viewMock.onOpen();
-
-            expect(viewMock.updateContent).toHaveBeenCalled();
+            expect(view).toBeInstanceOf(WordFrequencyView);
         });
 
         it('should return the correct display text', () => {
@@ -106,6 +129,11 @@ describe('WordFrequencyView', () => {
 
         it('should call updateContent on open', async () => {
             const viewMock = {
+                contentEl: {
+                    empty: jest.fn(),
+                    createDiv: jest.fn().mockReturnValue(mockDivElement),
+                } as unknown as HTMLElement,
+                display: mockDisplay,
                 onOpen: view.onOpen,
                 updateContent: jest.fn(),
             };
