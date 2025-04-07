@@ -1,6 +1,6 @@
 {
   "name": "word-frequency",
-  "version": "1.2.10",
+  "version": "1.3.0",
   "type": "module",
   "description": "Count word frequency in current note within Obsidian",
   "main": "main.js",
@@ -12,11 +12,12 @@
     "dev": "npm run build && obsidian --dev",
     "watch": "rollup -c --watch",
     "prettier": "npx prettier --check \"src/**/*.{js,ts,jsx,tsx}\"",
-    "pretty-fix": "npx prettier src --write",
-    "lint": "eslint . --ext \"src/**/*.{js,ts,jsx,tsx}\"",
+    "format": "npx prettier src --write",
+    "lint": "eslint . --ext \"**/*.{js,ts,jsx,tsx}\"",
     "lint-fix": "eslint . --ext .js,.ts --fix",
     "test": "jest",
-    "coverage": "npx jest --coverage"
+    "coverage": "npx jest --coverage",
+    "all": "npm run lint-fix && npm run format && npm run build && npm run coverage"
   },
   "repository": {
     "type": "git",

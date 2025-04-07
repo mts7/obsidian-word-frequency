@@ -19,6 +19,7 @@ describe('WordFrequencyView', () => {
         mockLeaf = new WorkspaceLeaf();
         mockDisplay = {
             addWordToSidebar: jest.fn(),
+            createFilter: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
