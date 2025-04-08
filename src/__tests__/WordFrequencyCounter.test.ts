@@ -51,11 +51,22 @@ describe('WordFrequencyCounter tests', () => {
         });
 
         it('should calculate word frequencies with periods, colons, and slashes', () => {
-            const content = 'test. test: test/ test.';
+            const content = 'test. test:  test/   test.';
 
             const result = counter.calculateWordFrequencies(content);
 
             expect(result).toEqual([['test', 4]]);
+        });
+
+        it('should calculate word frequencies with mixed content', () => {
+            const content = '  #$%^&* @(*  @#$  test#@*test  test';
+
+            const result = counter.calculateWordFrequencies(content);
+
+            expect(result).toEqual([
+                ['testtest', 1],
+                ['test', 1],
+            ]);
         });
 
         it('should return an empty array when given an empty string', () => {
@@ -75,6 +86,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counterMock.handleActiveLeafChange(null, workspace);
 
+            expect(mockPlugin.registerEvent).not.toHaveBeenCalled();
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
@@ -90,6 +102,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counterMock.handleActiveLeafChange(leafMock, workspace);
 
+            expect(mockPlugin.registerEvent).not.toHaveBeenCalled();
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
@@ -114,6 +127,10 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.handleActiveLeafChange(leafMock, workspace);
 
+            expect(workspace.on).toHaveBeenCalledWith(
+                'editor-change',
+                expect.any(Function)
+            );
             expect(mockPlugin.registerEvent).toHaveBeenCalledWith(mockEvent);
         });
 
@@ -249,6 +266,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.triggerUpdateContent(editor);
 
+            expect(counter.lastActiveEditor).toBe(undefined);
             expect(counterMock).not.toHaveBeenCalled();
             expect(dispatchEventMock).not.toHaveBeenCalled();
 
