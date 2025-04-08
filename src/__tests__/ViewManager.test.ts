@@ -1,4 +1,4 @@
-import { Workspace, WorkspaceLeaf } from 'obsidian';
+import { Editor, Workspace, WorkspaceLeaf } from 'obsidian';
 import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
@@ -41,6 +41,7 @@ describe('ViewManager', () => {
         const newLeaf = viewManager.getOrCreateLeaf(workspace, VIEW_TYPE);
 
         expect(newLeaf).toBe(mockLeaf);
+        expect(workspace.getRightLeaf).toHaveBeenCalledWith(false);
     });
 
     it('should set view state', async () => {
@@ -57,7 +58,7 @@ describe('ViewManager', () => {
     });
 
     it('should update content', () => {
-        const mockEditor = {} as CodeMirror.Editor;
+        const mockEditor = {} as Editor;
         (workspace.getActiveViewOfType as jest.Mock).mockReturnValueOnce({
             editor: mockEditor,
         });
@@ -67,5 +68,15 @@ describe('ViewManager', () => {
         expect(
             plugin.frequencyCounter.triggerUpdateContent
         ).toHaveBeenCalledWith(mockEditor);
+    });
+
+    it('should update content with a null editor', () => {
+        (workspace.getActiveViewOfType as jest.Mock).mockReturnValue(null);
+
+        viewManager.updateContent();
+
+        expect(
+            plugin.frequencyCounter.triggerUpdateContent
+        ).toHaveBeenCalledWith(undefined);
     });
 });
