@@ -17,7 +17,8 @@
     "lint-fix": "eslint . --ext .js,.ts --fix",
     "test": "jest",
     "coverage": "npx jest --coverage",
-    "all": "npm run lint-fix && npm run format && npm run build && npm run coverage"
+    "mutate": "stryker run",
+    "all": "npm run lint-fix && npm run format && npm run build && npm run coverage && npm run mutate"
   },
   "repository": {
     "type": "git",
@@ -36,6 +37,8 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/jest-runner": "^8.7.1",
     "@types/jest": "^29.5.14",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.13.9",
