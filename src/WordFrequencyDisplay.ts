@@ -49,11 +49,16 @@ export class WordFrequencyDisplay {
     }
 
     createFilter(contentEl: HTMLElement) {
-        const filterContainer = contentEl.createEl('div');
-        const filterInput = filterContainer.createEl('input');
-        filterInput.setAttr('type', 'text');
-        filterInput.addClass(ELEMENT_CLASSES.filter);
-        filterInput.setAttr('placeholder', 'Type to filter results');
+        const filterContainer = contentEl.createEl('div', {
+            cls: ELEMENT_CLASSES.containerFilter,
+        });
+        const filterInput = filterContainer.createEl('input', {
+            cls: ELEMENT_CLASSES.filter,
+            attr: {
+                type: 'text',
+                placeholder: 'Type to filter results',
+            },
+        });
 
         const debouncedMethod = debounce((event: Event) => {
             const target = event.target as HTMLInputElement;

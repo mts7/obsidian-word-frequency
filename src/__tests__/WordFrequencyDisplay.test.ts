@@ -7,8 +7,10 @@ describe('WordFrequencyDisplay', () => {
     let blacklist: Set<string>;
     let display: WordFrequencyDisplay;
     let contentEl: HTMLElement;
+    let firstElement: HTMLElement;
     let mockPlugin: WordFrequencyPlugin;
     let mockView: WordFrequencyView;
+    let secondElement: HTMLElement;
 
     beforeEach(() => {
         mockPlugin = {
@@ -33,12 +35,20 @@ describe('WordFrequencyDisplay', () => {
             onClose: jest.fn(),
             updateContent: jest.fn(),
         } as unknown as WordFrequencyView;
+        secondElement = {
+            addClass: jest.fn(),
+            createEl: jest.fn(),
+            mockCallback: jest.fn(),
+            setAttr: jest.fn(),
+            setText: jest.fn(),
+        } as unknown as HTMLElement;
+        firstElement = {
+            createEl: jest.fn().mockReturnValue(secondElement),
+            setAttr: jest.fn(),
+            setText: jest.fn(),
+        } as unknown as HTMLElement;
         contentEl = {
-            createEl: jest.fn().mockReturnValue({
-                createEl: jest.fn().mockReturnThis(),
-                setAttr: jest.fn(),
-                setText: jest.fn(),
-            }),
+            createEl: jest.fn().mockReturnValue(firstElement),
         } as unknown as HTMLElement;
         blacklist = new Set(
             mockPlugin.settings.blacklist.split(',').map((word) => word.trim())
@@ -124,16 +134,42 @@ describe('WordFrequencyDisplay', () => {
         it.todo('should verify the button click event handles the word');
     });
 
+    describe('createFilter', () => {
+        it('should create an input element with a container', () => {
+            display.createFilter(contentEl);
+
+            expect(contentEl.createEl).toHaveBeenCalledWith('div', {
+                cls: ELEMENT_CLASSES.containerFilter,
+            });
+            expect(firstElement.createEl).toHaveBeenCalledWith('input', {
+                cls: ELEMENT_CLASSES.filter,
+                attr: {
+                    type: 'text',
+                    placeholder: 'Type to filter results',
+                },
+            });
+        });
+
+        it('should register a DOM event with the input element', () => {
+            display.createFilter(contentEl);
+
+            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
+                secondElement,
+                'input',
+                expect.any(Function)
+            );
+        });
+
+        it.todo('should update view content when the filter input changes');
+    });
+
     describe('createHeader', () => {
         it('should set text in the content', () => {
             display.createHeader(contentEl);
 
             expect(contentEl.createEl).toHaveBeenCalledWith('div');
-            const headerContainer = contentEl.createEl('div');
-            expect(headerContainer.createEl).toHaveBeenCalledWith('h4');
-            const headerElement = headerContainer.createEl('h4');
-            expect(headerElement.createEl).toHaveBeenCalledWith('h4');
-            expect(headerElement.setText).toHaveBeenCalledWith(PLUGIN_NAME);
+            expect(firstElement.createEl).toHaveBeenCalledWith('h4');
+            expect(secondElement.setText).toHaveBeenCalledWith(PLUGIN_NAME);
         });
     });
 

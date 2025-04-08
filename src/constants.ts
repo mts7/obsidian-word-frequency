@@ -12,6 +12,7 @@ export const ELEMENT_CLASSES = {
     containerButton: 'word-frequency-button-container',
     containerContent: 'word-frequency-sidebar-content',
     containerCount: 'word-frequency-count-container',
+    containerFilter: 'word-frequency-filter-container',
     containerRow: 'word-frequency-row',
     containerThreshold: 'word-frequency-threshold-display',
     containerWordList: 'word-frequency-word-list',
