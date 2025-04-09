@@ -9,7 +9,7 @@
   "ignoreStatic": true,
   "thresholds": {
     "high": 90,
-    "low": 75,
-    "break": 65
+    "low": 80,
+    "break": 75
   }
 }
