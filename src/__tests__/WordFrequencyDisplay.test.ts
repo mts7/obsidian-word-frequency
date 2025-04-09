@@ -1,3 +1,4 @@
+import { setIcon } from 'obsidian';
 import { ELEMENT_CLASSES, PLUGIN_NAME } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
@@ -107,6 +108,15 @@ describe('WordFrequencyDisplay', () => {
 
             display.addWordToSidebar(blacklist, word, count, contentContainer);
 
+            expect(contentContainer.createEl).toHaveBeenCalledWith('div', {
+                cls: ELEMENT_CLASSES.containerRow,
+            });
+            expect(rowElement.createEl).toHaveBeenNthCalledWith(1, 'div', {
+                cls: ELEMENT_CLASSES.containerCount,
+            });
+            expect(rowElement.createEl).toHaveBeenNthCalledWith(2, 'div', {
+                cls: ELEMENT_CLASSES.containerButton,
+            });
             expect(innerElement.createEl).toHaveBeenNthCalledWith(1, 'span', {
                 text: word,
             });
@@ -114,6 +124,12 @@ describe('WordFrequencyDisplay', () => {
                 text: count.toString(),
             });
             expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button');
+            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
+                buttonElement,
+                'click',
+                expect.any(Function)
+            );
+            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'trash-2');
         });
 
         it('should update blacklist and call saveData and updateContent', () => {
@@ -180,14 +196,13 @@ describe('WordFrequencyDisplay', () => {
             expect(contentEl.createEl).toHaveBeenCalledWith('div', {
                 cls: ELEMENT_CLASSES.containerThreshold,
             });
-            // TODO: determine how to test the element from contentEl was called properly
-            // expect(thresholdDisplay.setText).toHaveBeenCalledWith(
-            //     `Current frequency threshold is ${mockPlugin.settings.threshold}.`
-            // );
-            // expect(thresholdDisplay.setAttr).toHaveBeenCalledWith(
-            //     'title',
-            //     'Configure settings for this plugin to update the frequency threshold.'
-            // );
+            expect(firstElement.setText).toHaveBeenCalledWith(
+                `Current frequency threshold is ${mockPlugin.settings.threshold}.`
+            );
+            expect(firstElement.setAttr).toHaveBeenCalledWith(
+                'title',
+                'Configure settings for this plugin to update the frequency threshold.'
+            );
         });
     });
 });
