@@ -1,5 +1,6 @@
 import { WorkspaceLeaf } from 'obsidian';
 import {
+    ELEMENT_CLASSES,
     EVENT_UPDATE,
     FREQUENCY_ICON,
     PLUGIN_NAME,
@@ -161,6 +162,17 @@ describe('WordFrequencyView', () => {
 
             updateContentSpy.mockRestore();
         });
+
+        it('should call createDiv with specific classes', async () => {
+            await view.onOpen();
+
+            expect(view.contentEl.createDiv).toHaveBeenCalledWith({
+                cls: ELEMENT_CLASSES.containerContent,
+            });
+            expect(mockDivElement.createDiv).toHaveBeenCalledWith({
+                cls: ELEMENT_CLASSES.containerWordList,
+            });
+        });
     });
 
     describe('onClose', () => {
@@ -194,12 +206,46 @@ describe('WordFrequencyView', () => {
                 mockDisplay,
                 'addWordToSidebar'
             );
+            const expectedBlacklist = new Set(
+                mockPlugin.settings.blacklist.split(',').map((w) => w.trim())
+            );
 
             window.document.dispatchEvent(event);
 
+            const calls = addWordToSidebarSpy.mock.calls;
+
             expect(addWordToSidebarSpy).toHaveBeenCalledTimes(2);
+            expect(calls).toHaveLength(2);
+            expect(calls[0][0]).toEqual(expectedBlacklist);
+            expect(calls[0][1]).toBe('apple');
+            expect(calls[0][2]).toBe(5);
+            expect(calls[0][0]).toEqual(calls[1][0]);
+            expect(calls[1][1]).toBe('banana');
+            expect(calls[1][2]).toBe(3);
 
             addWordToSidebarSpy.mockRestore();
+        });
+
+        it('should not add word to sidebar for a invalid event type', async () => {
+            const viewMock = {
+                contentEl: {
+                    empty: jest.fn(),
+                    createDiv: jest.fn().mockReturnValue(mockDivElement),
+                } as unknown as HTMLElement,
+                display: mockDisplay,
+                onOpen: view.onOpen,
+                updateContent: jest.fn(),
+            };
+
+            await viewMock.onOpen();
+
+            const event = new CustomEvent('test-event', {
+                detail: { wordCounts: 'none' },
+            });
+
+            window.document.dispatchEvent(event);
+
+            expect(mockDisplay.addWordToSidebar).not.toHaveBeenCalled();
         });
     });
 });
