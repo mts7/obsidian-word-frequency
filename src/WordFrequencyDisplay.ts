@@ -8,7 +8,17 @@ export class WordFrequencyDisplay {
     private plugin: WordFrequencyPlugin;
     private view: WordFrequencyView;
 
-    constructor(plugin: WordFrequencyPlugin, view: WordFrequencyView) {
+    constructor(
+        plugin: WordFrequencyPlugin,
+        view: WordFrequencyView,
+        private getFilter: () => string = () => this.filter,
+        private debouncedFilterInput = debounce((event: Event) => {
+            const target = event.target as HTMLInputElement;
+            this.filter = target.value;
+
+            this.view.updateContent();
+        }, 500)
+    ) {
         this.plugin = plugin;
         this.view = view;
     }
@@ -22,8 +32,7 @@ export class WordFrequencyDisplay {
         if (
             blacklist.has(word) ||
             count < this.plugin.settings.threshold ||
-            (this.filter !== '' &&
-                !word.toLowerCase().contains(this.filter.toLowerCase()))
+            !word.toLowerCase().includes(this.getFilter().toLowerCase())
         ) {
             return;
         }
@@ -60,15 +69,8 @@ export class WordFrequencyDisplay {
             },
         });
 
-        const debouncedMethod = debounce((event: Event) => {
-            const target = event.target as HTMLInputElement;
-            this.filter = target.value;
-
-            this.view.updateContent();
-        }, 500);
-
         this.plugin.registerDomEvent(filterInput, 'input', (event) =>
-            debouncedMethod(event)
+            this.debouncedFilterInput(event)
         );
     }
 

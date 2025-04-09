@@ -302,10 +302,6 @@ describe('WordFrequencyCounter tests', () => {
             expect(mockPlugin.registerEvent).toHaveBeenCalledWith('mock-event');
             expect(mockDebouncedEditorChange).toHaveBeenCalledWith(editorMock);
         });
-
-        it.todo('should trigger editor-change event to call callback');
-
-        it.todo('should verify call to triggerUpdateContent after 3 seconds');
     });
 
     describe('triggerUpdateContent', () => {

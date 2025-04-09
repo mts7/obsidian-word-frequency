@@ -59,10 +59,39 @@ describe('WordFrequencyDisplay', () => {
     });
 
     describe('addWordToSidebar', () => {
-        it('should return early when the word is in the blacklist', () => {
-            const contentContainer = {
-                createEl: jest.fn(),
+        let buttonElement: HTMLButtonElement;
+        let contentContainer: HTMLDivElement;
+        let innerElement: HTMLDivElement;
+        let rowElement: HTMLDivElement;
+        let spanElement: HTMLSpanElement;
+
+        beforeEach(() => {
+            spanElement = {
+                setText: jest.fn(),
+            } as unknown as HTMLSpanElement;
+            buttonElement = {
+                addEventListener: jest.fn(),
+            } as unknown as HTMLButtonElement;
+            innerElement = {
+                createEl: jest
+                    .fn()
+                    .mockReturnValueOnce(spanElement)
+                    .mockReturnValueOnce(spanElement)
+                    .mockReturnValueOnce(buttonElement),
             } as unknown as HTMLDivElement;
+            rowElement = {
+                createEl: jest.fn().mockReturnValue(innerElement),
+            } as unknown as HTMLDivElement;
+            contentContainer = {
+                createEl: jest.fn().mockReturnValue(rowElement),
+            } as unknown as HTMLDivElement;
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it('should return early when the word is in the blacklist', () => {
             const word = 'the';
             const count = 17;
 
@@ -72,37 +101,17 @@ describe('WordFrequencyDisplay', () => {
         });
 
         it('should return early when the word count is less than the threshold setting', () => {
-            const contentContainer = {
-                createEl: jest.fn(),
-            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 1;
 
             display.addWordToSidebar(blacklist, word, count, contentContainer);
 
             expect(contentContainer.createEl).not.toHaveBeenCalled();
+            expect(setIcon).not.toHaveBeenCalled();
+            expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
         });
 
         it('should add the word with count and button to the row', () => {
-            const spanElement = {
-                setText: jest.fn(),
-            } as unknown as HTMLSpanElement;
-            const buttonElement = {
-                addEventListener: jest.fn(),
-            } as unknown as HTMLButtonElement;
-            const innerElement = {
-                createEl: jest
-                    .fn()
-                    .mockReturnValueOnce(spanElement)
-                    .mockReturnValueOnce(spanElement)
-                    .mockReturnValueOnce(buttonElement),
-            } as unknown as HTMLDivElement;
-            const rowElement = {
-                createEl: jest.fn().mockReturnValue(innerElement),
-            } as unknown as HTMLDivElement;
-            const contentContainer = {
-                createEl: jest.fn().mockReturnValue(rowElement),
-            } as unknown as HTMLDivElement;
             const word = 'banana';
             const count = 13;
 
@@ -132,22 +141,46 @@ describe('WordFrequencyDisplay', () => {
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'trash-2');
         });
 
-        it('should update blacklist and call saveData and updateContent', () => {
-            const word = 'banana';
-            const originalBlacklist = mockPlugin.settings.blacklist;
+        it.todo('should verify the button click event handles the word');
 
-            display.saveWordToBlacklist(word);
+        it('should add word if it matches the filter and has the threshold count', () => {
+            display = new WordFrequencyDisplay(
+                mockPlugin,
+                mockView,
+                () => 'BAN'
+            );
 
-            expect(mockPlugin.settings.blacklist).toBe(
-                `${originalBlacklist},${word}`
+            display.addWordToSidebar(
+                new Set(),
+                'banana',
+                mockPlugin.settings.threshold,
+                contentContainer
             );
-            expect(mockPlugin.saveData).toHaveBeenCalledWith(
-                mockPlugin.settings
+
+            expect(contentContainer.createEl).toHaveBeenCalledWith('div', {
+                cls: ELEMENT_CLASSES.containerRow,
+            });
+            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'trash-2');
+            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
+                buttonElement,
+                'click',
+                expect.any(Function)
             );
-            expect(mockView.updateContent).toHaveBeenCalled();
         });
 
-        it.todo('should verify the button click event handles the word');
+        it('should not add word if it does not match the filter', () => {
+            display = new WordFrequencyDisplay(
+                mockPlugin,
+                mockView,
+                () => 'xyz'
+            );
+
+            display.addWordToSidebar(new Set(), 'banana', 10, contentContainer);
+
+            expect(contentContainer.createEl).not.toHaveBeenCalled();
+            expect(setIcon).not.toHaveBeenCalled();
+            expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
+        });
     });
 
     describe('createFilter', () => {
@@ -203,6 +236,23 @@ describe('WordFrequencyDisplay', () => {
                 'title',
                 'Configure settings for this plugin to update the frequency threshold.'
             );
+        });
+    });
+
+    describe('saveWordToBlacklist', () => {
+        it('should update blacklist and call saveData and updateContent', () => {
+            const word = 'banana';
+            const originalBlacklist = mockPlugin.settings.blacklist;
+
+            display.saveWordToBlacklist(word);
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},${word}`
+            );
+            expect(mockPlugin.saveData).toHaveBeenCalledWith(
+                mockPlugin.settings
+            );
+            expect(mockView.updateContent).toHaveBeenCalled();
         });
     });
 });
