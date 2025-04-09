@@ -46,7 +46,47 @@ describe('WordFrequencySettingTab', () => {
         expect(settingTab.plugin).toBe(plugin);
     });
 
-    it.todo('should create new settings');
+    it('should create new settings', () => {
+        const mockSetName = jest.fn().mockReturnThis();
+        const mockSetDesc = jest.fn().mockReturnThis();
+        const mockSetClass = jest.fn().mockReturnThis();
+        const mockAddTextArea = jest.fn().mockImplementation((cb) => {
+            cb({
+                setValue: jest.fn().mockReturnThis(),
+                onChange: jest.fn().mockReturnThis(),
+                inputEl: { classList: { add: jest.fn() } },
+            });
+            return mockSetting;
+        });
+        const mockAddText = jest.fn().mockImplementation((cb) => {
+            cb({
+                setPlaceholder: jest.fn().mockReturnThis(),
+                setValue: jest.fn().mockReturnThis(),
+                onChange: jest.fn(),
+            });
+            return mockSetting;
+        });
+        const mockSetting = {
+            setName: mockSetName,
+            setDesc: mockSetDesc,
+            setClass: mockSetClass,
+            addTextArea: mockAddTextArea,
+            addText: mockAddText,
+            infoEl: { addClass: jest.fn() },
+        };
+        const mockSettingFactory = jest.fn().mockReturnValue(mockSetting);
+        const settingTab = new WordFrequencySettingTab(
+            plugin,
+            mockSettingFactory
+        );
+        settingTab.containerEl = containerEl;
+
+        settingTab.display();
+
+        expect(mockSettingFactory).toHaveBeenCalledTimes(2);
+        expect(mockSetName).toHaveBeenCalledWith('Blacklist');
+        expect(mockAddTextArea).toHaveBeenCalled();
+    });
 
     it('should save blacklist', async () => {
         const value = 'word1,word2';

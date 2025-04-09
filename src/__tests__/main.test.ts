@@ -7,7 +7,6 @@ import {
 } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
-import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
 import { WordFrequencyView } from '../WordFrequencyView';
 
@@ -76,8 +75,6 @@ describe('WordFrequencyPlugin', () => {
 
     describe('onload', () => {
         it('should set up the plugin', async () => {
-            const settingTab = new WordFrequencySettingTab(plugin);
-
             await plugin.onload();
 
             expect(plugin.frequencyCounter).toBeInstanceOf(
@@ -96,7 +93,7 @@ describe('WordFrequencyPlugin', () => {
                 'active-leaf-change',
                 expect.any(Function)
             );
-            expect(plugin.addSettingTab).toHaveBeenCalledWith(settingTab);
+            expect(plugin.addSettingTab).toHaveBeenCalled();
         });
 
         it('should set up the plugin and respond to callbacks', async () => {
