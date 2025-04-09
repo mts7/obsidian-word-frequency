@@ -8,6 +8,8 @@ import {
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
+import { WordFrequencyCounter } from '../WordFrequencyCounter';
+import { WordFrequencyView } from '../WordFrequencyView';
 
 interface MockApp extends App {
     workspace: Workspace;
@@ -31,7 +33,7 @@ const mockApp: MockApp = {
 const mockManifest: PluginManifest = {
     id: 'word-frequency',
     name: 'Word Frequency',
-    version: '1.2.0',
+    version: '1.3.0',
     minAppVersion: '0.15.0',
     description: 'A plugin to count word frequencies.',
     author: 'Mike Rodarte',
@@ -40,6 +42,7 @@ const mockManifest: PluginManifest = {
 
 describe('WordFrequencyPlugin', () => {
     let plugin: WordFrequencyPlugin;
+    const mockView: WordFrequencyView = {} as unknown as WordFrequencyView;
     let mockViewManager: ViewManager;
 
     beforeEach(async () => {
@@ -48,14 +51,18 @@ describe('WordFrequencyPlugin', () => {
             setViewState: jest.fn(),
             updateContent: jest.fn(),
         } as unknown as ViewManager;
-
+        const mockCreateView = jest.fn().mockReturnValue(mockView);
+        // TODO: provide mocks for the settingTab and frequencyCounter instead of undefined
         plugin = new WordFrequencyPlugin(
             mockApp,
             mockManifest,
-            mockViewManager
+            mockViewManager,
+            undefined,
+            undefined,
+            mockCreateView
         );
         plugin['app'] = mockApp;
-        plugin['loadData'] = jest.fn().mockResolvedValue(DEFAULT_SETTINGS);
+        plugin['loadData'] = jest.fn().mockResolvedValue({});
         plugin['saveData'] = jest.fn().mockResolvedValue(undefined);
         plugin['registerView'] = jest.fn();
         plugin['addRibbonIcon'] = jest.fn();
@@ -73,6 +80,9 @@ describe('WordFrequencyPlugin', () => {
 
             await plugin.onload();
 
+            expect(plugin.frequencyCounter).toBeInstanceOf(
+                WordFrequencyCounter
+            );
             expect(plugin.registerView).toHaveBeenCalledWith(
                 VIEW_TYPE,
                 expect.any(Function)
@@ -87,6 +97,37 @@ describe('WordFrequencyPlugin', () => {
                 expect.any(Function)
             );
             expect(plugin.addSettingTab).toHaveBeenCalledWith(settingTab);
+        });
+
+        it('should set up the plugin and respond to callbacks', async () => {
+            const activateViewMock = jest.fn();
+            const handleActiveLeafChangeMock = jest.fn();
+            plugin['activateView'] = activateViewMock;
+            plugin['frequencyCounter'] = {
+                handleActiveLeafChange: handleActiveLeafChangeMock,
+            } as unknown as WordFrequencyCounter;
+
+            await plugin.onload();
+
+            const ribbonCallback = (plugin.addRibbonIcon as jest.Mock).mock
+                .calls[0][2];
+            ribbonCallback();
+            const eventCallback = (
+                plugin.app.workspace.on as jest.Mock
+            ).mock.calls.find(([event]) => event === 'active-leaf-change')?.[1];
+            const activeLeaf = { id: 'fake-leaf' } as unknown as WorkspaceLeaf;
+            eventCallback?.(activeLeaf);
+            const viewCallback = (plugin.registerView as jest.Mock).mock
+                .calls[0][1];
+            const fakeLeaf = {} as unknown as WorkspaceLeaf;
+            const view = viewCallback(fakeLeaf);
+
+            expect(activateViewMock).toHaveBeenCalled();
+            expect(handleActiveLeafChangeMock).toHaveBeenCalledWith(
+                activeLeaf,
+                plugin.app.workspace
+            );
+            expect(view).toBe(mockView);
         });
     });
 
@@ -138,6 +179,25 @@ describe('WordFrequencyPlugin', () => {
         it('should save settings', async () => {
             await plugin.saveSettings();
             expect(plugin['saveData']).toHaveBeenCalledWith(plugin.settings);
+        });
+    });
+
+    describe('loadSettings()', () => {
+        it('should have default settings with no loaded data', async () => {
+            await plugin.onload();
+
+            expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
+        });
+
+        it('should merge result from loadData with default settings', async () => {
+            const settings = { threshold: 15 };
+            plugin.loadData = jest.fn().mockResolvedValue(settings);
+
+            await plugin.onload();
+
+            expect(plugin.settings).toEqual(
+                Object.assign({}, DEFAULT_SETTINGS, settings)
+            );
         });
     });
 });

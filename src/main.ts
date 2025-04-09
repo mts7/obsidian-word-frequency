@@ -22,7 +22,10 @@ export default class WordFrequencyPlugin extends Plugin {
         manifest: PluginManifest,
         viewManager?: ViewManager,
         settingTab?: WordFrequencySettingTab,
-        frequencyCounter?: WordFrequencyCounter
+        frequencyCounter?: WordFrequencyCounter,
+        private createView: (leaf: WorkspaceLeaf) => WordFrequencyView = (
+            leaf
+        ) => new WordFrequencyView(leaf, this)
     ) {
         super(app, manifest);
         this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
@@ -34,18 +37,10 @@ export default class WordFrequencyPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
 
-        // TODO: use dependency injection
-        this.registerView(
-            VIEW_TYPE,
-            (leaf: WorkspaceLeaf) => new WordFrequencyView(leaf, this)
-        );
+        this.registerView(VIEW_TYPE, this.createView);
 
-        this.addRibbonIcon(
-            FREQUENCY_ICON,
-            `Show ${PLUGIN_NAME} Sidebar`,
-            () => {
-                this.activateView();
-            }
+        this.addRibbonIcon(FREQUENCY_ICON, `Show ${PLUGIN_NAME} Sidebar`, () =>
+            this.activateView()
         );
 
         this.registerEvent(

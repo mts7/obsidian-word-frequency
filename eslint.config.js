@@ -19,7 +19,7 @@ export default [
         },
     },
     {
-        ignores: ['__mocks__/**', 'coverage/**', 'dist/**', 'node_modules/**'],
+        ignores: ['__mocks__/**', 'coverage/**', 'dist/**', 'node_modules/**', '.stryker-tmp/**'],
     },
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
