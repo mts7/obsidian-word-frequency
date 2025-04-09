@@ -12,7 +12,13 @@ export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;
     plugin: WordFrequencyPlugin;
 
-    constructor(plugin: WordFrequencyPlugin) {
+    constructor(
+        plugin: WordFrequencyPlugin,
+        private debouncedEditorChange = debounce(
+            (editor: Editor) => this.triggerUpdateContent(editor),
+            3000
+        )
+    ) {
         this.plugin = plugin;
     }
 
@@ -49,13 +55,10 @@ export class WordFrequencyCounter {
             return;
         }
 
-        const debouncedMethod = debounce(
-            (editor: Editor) => this.triggerUpdateContent(editor),
-            3000
-        );
-
         this.plugin.registerEvent(
-            workspace.on('editor-change', (editor) => debouncedMethod(editor))
+            workspace.on('editor-change', (editor) =>
+                this.debouncedEditorChange(editor)
+            )
         );
 
         const activeView = workspace.getActiveViewOfType(MarkdownView);

@@ -1,4 +1,10 @@
-import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import {
+    Debouncer,
+    Editor,
+    MarkdownView,
+    Workspace,
+    WorkspaceLeaf,
+} from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
@@ -7,7 +13,12 @@ const mockPlugin = {
     registerEvent: jest.fn(),
 } as unknown as WordFrequencyPlugin;
 
-const counter = new WordFrequencyCounter(mockPlugin);
+const mockDebouncedEditorChange = jest.fn() as unknown as Debouncer<
+    [editor: Editor],
+    void
+>;
+
+const counter = new WordFrequencyCounter(mockPlugin, mockDebouncedEditorChange);
 
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
@@ -250,7 +261,49 @@ describe('WordFrequencyCounter tests', () => {
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
-        it.todo('should trigger keyup event to call callback');
+        it('should debounce and call triggerUpdateContent after editor-change event', () => {
+            const triggerUpdateContentSpy = jest.spyOn(
+                counter,
+                'triggerUpdateContent'
+            );
+            const editorMock = {} as Editor;
+            const containerElMock = {
+                addEventListener: jest.fn(),
+            } as unknown as HTMLElement;
+            const markdownViewMock = {
+                editor: editorMock,
+                containerEl: containerElMock,
+            } as unknown as MarkdownView;
+            const leafMock = {
+                view: markdownViewMock,
+            } as unknown as WorkspaceLeaf;
+
+            Object.setPrototypeOf(markdownViewMock, MarkdownView.prototype);
+
+            let registeredCallback: ((editor: Editor) => void) | undefined;
+            const workspace: Workspace = {
+                getActiveViewOfType: jest.fn().mockReturnValue(null),
+                getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockImplementation((_event, cb) => {
+                    registeredCallback = cb;
+                    return 'mock-event';
+                }),
+            } as unknown as Workspace;
+
+            counter.handleActiveLeafChange(leafMock, workspace);
+
+            if (registeredCallback) {
+                registeredCallback(editorMock);
+            } else {
+                throw new Error('Callback not registered');
+            }
+
+            expect(triggerUpdateContentSpy).not.toHaveBeenCalled();
+            expect(mockPlugin.registerEvent).toHaveBeenCalledWith('mock-event');
+            expect(mockDebouncedEditorChange).toHaveBeenCalledWith(editorMock);
+        });
+
+        it.todo('should trigger editor-change event to call callback');
 
         it.todo('should verify call to triggerUpdateContent after 3 seconds');
     });
