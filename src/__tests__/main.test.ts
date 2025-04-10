@@ -98,10 +98,10 @@ describe('WordFrequencyPlugin', () => {
 
         it('should set up the plugin and respond to callbacks', async () => {
             const activateViewMock = jest.fn();
-            const handleActiveLeafChangeMock = jest.fn();
+            const mockLeafChange = jest.fn();
             plugin['activateView'] = activateViewMock;
             plugin['frequencyCounter'] = {
-                handleActiveLeafChange: handleActiveLeafChangeMock,
+                handleActiveLeafChange: mockLeafChange,
             } as unknown as WordFrequencyCounter;
 
             await plugin.onload();
@@ -120,7 +120,7 @@ describe('WordFrequencyPlugin', () => {
             const view = viewCallback(fakeLeaf);
 
             expect(activateViewMock).toHaveBeenCalled();
-            expect(handleActiveLeafChangeMock).toHaveBeenCalledWith(
+            expect(mockLeafChange).toHaveBeenCalledWith(
                 activeLeaf,
                 plugin.app.workspace
             );

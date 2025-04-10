@@ -207,7 +207,9 @@ describe('WordFrequencyView', () => {
                 'addWordToSidebar'
             );
             const expectedBlacklist = new Set(
-                mockPlugin.settings.blacklist.split(',').map((w) => w.trim())
+                mockPlugin.settings.blacklist
+                    .split(',')
+                    .map((word) => word.trim())
             );
 
             window.document.dispatchEvent(event);

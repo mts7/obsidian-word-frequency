@@ -13,12 +13,9 @@ const mockPlugin = {
     registerEvent: jest.fn(),
 } as unknown as WordFrequencyPlugin;
 
-const mockDebouncedEditorChange = jest.fn() as unknown as Debouncer<
-    [editor: Editor],
-    void
->;
+const mockDebouncer = jest.fn() as unknown as Debouncer<[editor: Editor], void>;
 
-const counter = new WordFrequencyCounter(mockPlugin, mockDebouncedEditorChange);
+const counter = new WordFrequencyCounter(mockPlugin, mockDebouncer);
 
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
@@ -284,8 +281,8 @@ describe('WordFrequencyCounter tests', () => {
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([]),
-                on: jest.fn().mockImplementation((_event, cb) => {
-                    registeredCallback = cb;
+                on: jest.fn().mockImplementation((_event, callback) => {
+                    registeredCallback = callback;
                     return 'mock-event';
                 }),
             } as unknown as Workspace;
@@ -300,7 +297,7 @@ describe('WordFrequencyCounter tests', () => {
 
             expect(triggerUpdateContentSpy).not.toHaveBeenCalled();
             expect(mockPlugin.registerEvent).toHaveBeenCalledWith('mock-event');
-            expect(mockDebouncedEditorChange).toHaveBeenCalledWith(editorMock);
+            expect(mockDebouncer).toHaveBeenCalledWith(editorMock);
         });
     });
 

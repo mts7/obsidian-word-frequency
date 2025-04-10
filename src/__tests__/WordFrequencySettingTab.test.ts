@@ -1,4 +1,4 @@
-import { VIEW_TYPE } from '../constants';
+import { SETTINGS_NAMES, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyView } from '../WordFrequencyView';
@@ -50,16 +50,16 @@ describe('WordFrequencySettingTab', () => {
         const mockSetName = jest.fn().mockReturnThis();
         const mockSetDesc = jest.fn().mockReturnThis();
         const mockSetClass = jest.fn().mockReturnThis();
-        const mockAddTextArea = jest.fn().mockImplementation((cb) => {
-            cb({
+        const mockAddTextArea = jest.fn().mockImplementation((callback) => {
+            callback({
                 setValue: jest.fn().mockReturnThis(),
                 onChange: jest.fn().mockReturnThis(),
                 inputEl: { classList: { add: jest.fn() } },
             });
             return mockSetting;
         });
-        const mockAddText = jest.fn().mockImplementation((cb) => {
-            cb({
+        const mockAddText = jest.fn().mockImplementation((callback) => {
+            callback({
                 setPlaceholder: jest.fn().mockReturnThis(),
                 setValue: jest.fn().mockReturnThis(),
                 onChange: jest.fn(),
@@ -84,7 +84,7 @@ describe('WordFrequencySettingTab', () => {
         settingTab.display();
 
         expect(mockSettingFactory).toHaveBeenCalledTimes(2);
-        expect(mockSetName).toHaveBeenCalledWith('Blacklist');
+        expect(mockSetName).toHaveBeenCalledWith(SETTINGS_NAMES.blacklist);
         expect(mockAddTextArea).toHaveBeenCalled();
     });
 

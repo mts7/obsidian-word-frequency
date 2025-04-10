@@ -26,6 +26,15 @@ export default [
     {
         rules: {
             curly: ['error', 'all'],
+            'id-length': [
+                'error',
+                {
+                    min: 3,
+                    max: 24,
+                    properties: 'always',
+                    exceptions: ['id', 'on', 'e', 'i', '_'],
+                },
+            ],
         },
     },
 ];

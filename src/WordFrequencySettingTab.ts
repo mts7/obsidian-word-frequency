@@ -15,7 +15,7 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
     constructor(
         plugin: WordFrequencyPlugin,
-        settingFactory: SettingFactory = (el) => new Setting(el)
+        settingFactory: SettingFactory = (element) => new Setting(element)
     ) {
         super(plugin.app, plugin);
         this.plugin = plugin;
