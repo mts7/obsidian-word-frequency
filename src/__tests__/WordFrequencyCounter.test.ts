@@ -1,4 +1,10 @@
-import { Editor, MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import {
+    Debouncer,
+    Editor,
+    MarkdownView,
+    Workspace,
+    WorkspaceLeaf,
+} from 'obsidian';
 import { EVENT_UPDATE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
@@ -7,7 +13,9 @@ const mockPlugin = {
     registerEvent: jest.fn(),
 } as unknown as WordFrequencyPlugin;
 
-const counter = new WordFrequencyCounter(mockPlugin);
+const mockDebouncer = jest.fn() as unknown as Debouncer<[editor: Editor], void>;
+
+const counter = new WordFrequencyCounter(mockPlugin, mockDebouncer);
 
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
@@ -51,11 +59,22 @@ describe('WordFrequencyCounter tests', () => {
         });
 
         it('should calculate word frequencies with periods, colons, and slashes', () => {
-            const content = 'test. test: test/ test.';
+            const content = 'test. test:  test/   test.';
 
             const result = counter.calculateWordFrequencies(content);
 
             expect(result).toEqual([['test', 4]]);
+        });
+
+        it('should calculate word frequencies with mixed content', () => {
+            const content = '  #$%^&* @(*  @#$  test#@*test  test';
+
+            const result = counter.calculateWordFrequencies(content);
+
+            expect(result).toEqual([
+                ['testtest', 1],
+                ['test', 1],
+            ]);
         });
 
         it('should return an empty array when given an empty string', () => {
@@ -75,6 +94,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counterMock.handleActiveLeafChange(null, workspace);
 
+            expect(mockPlugin.registerEvent).not.toHaveBeenCalled();
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
@@ -90,6 +110,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counterMock.handleActiveLeafChange(leafMock, workspace);
 
+            expect(mockPlugin.registerEvent).not.toHaveBeenCalled();
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
@@ -114,6 +135,10 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.handleActiveLeafChange(leafMock, workspace);
 
+            expect(workspace.on).toHaveBeenCalledWith(
+                'editor-change',
+                expect.any(Function)
+            );
             expect(mockPlugin.registerEvent).toHaveBeenCalledWith(mockEvent);
         });
 
@@ -233,9 +258,47 @@ describe('WordFrequencyCounter tests', () => {
             expect(counterMock.triggerUpdateContent).not.toHaveBeenCalled();
         });
 
-        it.todo('should trigger keyup event to call callback');
+        it('should debounce and call triggerUpdateContent after editor-change event', () => {
+            const triggerUpdateContentSpy = jest.spyOn(
+                counter,
+                'triggerUpdateContent'
+            );
+            const editorMock = {} as Editor;
+            const containerElMock = {
+                addEventListener: jest.fn(),
+            } as unknown as HTMLElement;
+            const markdownViewMock = {
+                editor: editorMock,
+                containerEl: containerElMock,
+            } as unknown as MarkdownView;
+            const leafMock = {
+                view: markdownViewMock,
+            } as unknown as WorkspaceLeaf;
 
-        it.todo('should verify call to triggerUpdateContent after 3 seconds');
+            Object.setPrototypeOf(markdownViewMock, MarkdownView.prototype);
+
+            let registeredCallback: ((editor: Editor) => void) | undefined;
+            const workspace: Workspace = {
+                getActiveViewOfType: jest.fn().mockReturnValue(null),
+                getLeavesOfType: jest.fn().mockReturnValue([]),
+                on: jest.fn().mockImplementation((_event, callback) => {
+                    registeredCallback = callback;
+                    return 'mock-event';
+                }),
+            } as unknown as Workspace;
+
+            counter.handleActiveLeafChange(leafMock, workspace);
+
+            if (registeredCallback) {
+                registeredCallback(editorMock);
+            } else {
+                throw new Error('Callback not registered');
+            }
+
+            expect(triggerUpdateContentSpy).not.toHaveBeenCalled();
+            expect(mockPlugin.registerEvent).toHaveBeenCalledWith('mock-event');
+            expect(mockDebouncer).toHaveBeenCalledWith(editorMock);
+        });
     });
 
     describe('triggerUpdateContent', () => {
@@ -249,6 +312,7 @@ describe('WordFrequencyCounter tests', () => {
 
             counter.triggerUpdateContent(editor);
 
+            expect(counter.lastActiveEditor).toBe(undefined);
             expect(counterMock).not.toHaveBeenCalled();
             expect(dispatchEventMock).not.toHaveBeenCalled();
 

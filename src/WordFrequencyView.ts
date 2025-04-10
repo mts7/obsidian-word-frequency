@@ -1,5 +1,6 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import {
+    ELEMENT_CLASSES,
     EVENT_UPDATE,
     FREQUENCY_ICON,
     PLUGIN_NAME,
@@ -13,15 +14,19 @@ export class WordFrequencyView extends ItemView {
     private eventListener: (event: CustomEvent) => void = () => {};
     private readonly plugin: WordFrequencyPlugin;
     private wordCountList: [string, number][] = [];
+    private wordListContainer: HTMLDivElement;
 
     constructor(
         leaf: WorkspaceLeaf,
         plugin: WordFrequencyPlugin,
-        display?: WordFrequencyDisplay
+        display?: WordFrequencyDisplay,
+        divElement?: HTMLDivElement
     ) {
         super(leaf);
         this.plugin = plugin;
         this.display = display ?? new WordFrequencyDisplay(plugin, this);
+        // TODO: find a better way to set a default value
+        this.wordListContainer = divElement ?? this.containerEl.createDiv();
     }
 
     getDisplayText(): string {
@@ -52,6 +57,17 @@ export class WordFrequencyView extends ItemView {
             this.eventListener as EventListener
         );
 
+        this.contentEl.empty();
+        const contentContainer = this.contentEl.createDiv({
+            cls: ELEMENT_CLASSES.containerContent,
+        });
+        this.display.createHeader(contentContainer);
+        this.display.createFilter(contentContainer);
+        this.wordListContainer = contentContainer.createDiv({
+            cls: ELEMENT_CLASSES.containerWordList,
+        });
+        this.display.createThresholdDisplay(contentContainer);
+
         this.updateContent();
     }
 
@@ -63,9 +79,7 @@ export class WordFrequencyView extends ItemView {
     }
 
     updateContent() {
-        this.contentEl.empty();
-        this.display.createHeader(this.contentEl);
-        const contentContainer = this.contentEl.createEl('div');
+        this.wordListContainer.empty();
         const blacklist = new Set(
             this.plugin.settings.blacklist.split(',').map((word) => word.trim())
         );
@@ -75,9 +89,8 @@ export class WordFrequencyView extends ItemView {
                 blacklist,
                 word,
                 count,
-                contentContainer
+                this.wordListContainer
             );
         });
-        this.display.createThresholdDisplay(this.contentEl);
     }
 }

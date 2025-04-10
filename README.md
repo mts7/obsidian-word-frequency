@@ -23,6 +23,14 @@ This should open and display the sidebar (typically on the right side of the
 desktop window) with the word counts. If the words and counts do not display,
 click inside a note so the plugin knows which note to use.
 
+### Filtering Words
+
+Use the text input field at the top of the sidebar to filter the list of words.
+Only words containing the characters in the input field will display in the list
+with their counts.
+
+Clear the text input field to reset the filter and display all available words.
+
 ### Ignore Specific Words
 
 When browsing the display of words and their frequency counts, click the trash
@@ -70,7 +78,7 @@ consider using a threshold of 10 or more.
 The plugin is fully functional. To assist people more with its use, here are
 some ideas for the developers to implement.
 
-- [ ] add word search filter
+- [x] add word search filter
 - [ ] add maximum display count for sidebar
 
 ## Contributing

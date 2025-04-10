@@ -47,6 +47,15 @@ jobs:
           name: coverage-reports
           path: coverage/
 
+      - name: Run mutation testing
+        run: npm run mutate
+
+      - name: Upload mutation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-reports
+          path: reports/
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

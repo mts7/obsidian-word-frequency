@@ -1,0 +1,15 @@
+{
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "jest",
+  "coverageAnalysis": "perTest",
+  "mutate": ["src/**/*.ts?(x)", "!src/__tests__/**/*.test.ts"],
+  "jest": {
+    "projectType": "custom"
+  },
+  "ignoreStatic": true,
+  "thresholds": {
+    "high": 90,
+    "low": 85,
+    "break": 85
+  }
+}

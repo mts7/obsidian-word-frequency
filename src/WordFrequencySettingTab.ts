@@ -1,14 +1,25 @@
 import { PluginSettingTab, Setting } from 'obsidian';
-import { VIEW_TYPE } from './constants';
+import {
+    ELEMENT_CLASSES,
+    SettingFactory,
+    SETTINGS_DESCRIPTIONS,
+    SETTINGS_NAMES,
+    VIEW_TYPE,
+} from './constants';
 import WordFrequencyPlugin from './main';
 import { WordFrequencyView } from './WordFrequencyView';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;
+    private settingFactory: SettingFactory;
 
-    constructor(plugin: WordFrequencyPlugin) {
+    constructor(
+        plugin: WordFrequencyPlugin,
+        settingFactory: SettingFactory = (element) => new Setting(element)
+    ) {
         super(plugin.app, plugin);
         this.plugin = plugin;
+        this.settingFactory = settingFactory;
     }
 
     display(): void {
@@ -16,22 +27,22 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        const blacklist = new Setting(containerEl)
-            .setName('Blacklist')
-            .setDesc('Comma-separated list of words to exclude.')
-            .setClass('word-frequency-setting-item')
+        const blacklist = this.settingFactory(containerEl)
+            .setName(SETTINGS_NAMES.blacklist)
+            .setDesc(SETTINGS_DESCRIPTIONS.blacklist)
+            .setClass(ELEMENT_CLASSES.settingItem)
             .addTextArea((text) => {
                 text.setValue(this.plugin.settings.blacklist)
                     .onChange(async (value) => {
                         await this.saveBlacklistValue(value);
                     })
-                    .inputEl.classList.add('word-frequency-setting-blacklist');
+                    .inputEl.classList.add(ELEMENT_CLASSES.settingBlacklist);
             });
-        blacklist.infoEl.addClass('word-frequency-setting-item-info');
+        blacklist.infoEl.addClass(ELEMENT_CLASSES.settingInfoItem);
 
-        new Setting(containerEl)
-            .setName('Word frequency threshold')
-            .setDesc('Only show words that appear at least this many times.')
+        this.settingFactory(containerEl)
+            .setName(SETTINGS_NAMES.threshold)
+            .setDesc(SETTINGS_DESCRIPTIONS.threshold)
             .addText((text) =>
                 text
                     .setPlaceholder('3')

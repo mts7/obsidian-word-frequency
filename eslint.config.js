@@ -1,5 +1,4 @@
 import pluginJs from '@eslint/js';
-import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -20,9 +19,22 @@ export default [
         },
     },
     {
-        ignores: ['__mocks__/**', 'coverage/**', 'dist/**', 'node_modules/**'],
+        ignores: ['__mocks__/**', 'coverage/**', 'dist/**', 'node_modules/**', '.stryker-tmp/**'],
     },
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
-    prettierConfig,
+    {
+        rules: {
+            curly: ['error', 'all'],
+            'id-length': [
+                'error',
+                {
+                    min: 3,
+                    max: 24,
+                    properties: 'always',
+                    exceptions: ['id', 'on', 'e', 'i', '_'],
+                },
+            ],
+        },
+    },
 ];

@@ -12,7 +12,13 @@ export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;
     plugin: WordFrequencyPlugin;
 
-    constructor(plugin: WordFrequencyPlugin) {
+    constructor(
+        plugin: WordFrequencyPlugin,
+        private debouncedEditorChange = debounce(
+            (editor: Editor) => this.triggerUpdateContent(editor),
+            3000
+        )
+    ) {
         this.plugin = plugin;
     }
 
@@ -21,19 +27,20 @@ export class WordFrequencyCounter {
             return [];
         }
 
-        const wordCounts = new Map<string, number>();
         const words = content
             .toLowerCase()
             .replace(/[^a-z0-9\s]/g, '')
-            .split(/\s+/);
+            .split(/\s+/)
+            .filter((word): word is string => word.length > 0);
 
-        words.forEach((word) => {
-            if (word) {
-                wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
-            }
-        });
+        const wordCounts = new Map<string, number>();
+        for (const word of words) {
+            wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+        }
 
-        return Array.from(wordCounts.entries()).sort((a, b) => b[1] - a[1]);
+        return Array.from(wordCounts.entries()).sort(
+            ([, countA], [, countB]) => countB - countA
+        );
     }
 
     handleActiveLeafChange(
@@ -48,13 +55,10 @@ export class WordFrequencyCounter {
             return;
         }
 
-        const debouncedMethod = debounce(
-            (editor: Editor) => this.triggerUpdateContent(editor),
-            3000
-        );
-
         this.plugin.registerEvent(
-            workspace.on('editor-change', (editor) => debouncedMethod(editor))
+            workspace.on('editor-change', (editor) =>
+                this.debouncedEditorChange(editor)
+            )
         );
 
         const activeView = workspace.getActiveViewOfType(MarkdownView);
