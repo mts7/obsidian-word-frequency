@@ -19,7 +19,13 @@ export default [
         },
     },
     {
-        ignores: ['__mocks__/**', 'coverage/**', 'dist/**', 'node_modules/**', '.stryker-tmp/**'],
+        ignores: [
+            '__mocks__/**',
+            'coverage/**',
+            'dist/**',
+            'node_modules/**',
+            '.stryker-tmp/**',
+        ],
     },
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
@@ -34,6 +40,10 @@ export default [
                     properties: 'always',
                     exceptions: ['id', 'on', 'e', 'i', '_'],
                 },
+            ],
+            'no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_' },
             ],
         },
     },

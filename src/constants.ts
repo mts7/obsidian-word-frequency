@@ -6,7 +6,7 @@ export interface WordFrequencySettings {
     threshold: number;
 }
 
-export type SettingFactory = (containerEl: HTMLElement) => Setting;
+export type SettingFactory = (_: HTMLElement) => Setting;
 
 export const DEFAULT_SETTINGS: WordFrequencySettings = {
     blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',

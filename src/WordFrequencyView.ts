@@ -11,7 +11,7 @@ import { WordFrequencyDisplay } from './WordFrequencyDisplay';
 
 export class WordFrequencyView extends ItemView {
     private display: WordFrequencyDisplay;
-    private eventListener: (event: CustomEvent) => void = () => {};
+    private eventListener: (_: CustomEvent) => void = () => {};
     private readonly plugin: WordFrequencyPlugin;
     private wordCountList: [string, number][] = [];
     private wordListContainer: HTMLDivElement;
