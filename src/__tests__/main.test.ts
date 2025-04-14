@@ -18,7 +18,7 @@ interface MockApp extends App {
 
 const mockApp: MockApp = {
     workspace: {
-        on: jest.fn((event, callback) => {
+        on: jest.fn((_, callback) => {
             return callback;
         }),
         getLeavesOfType: jest.fn(),
@@ -32,7 +32,7 @@ const mockApp: MockApp = {
 const mockManifest: PluginManifest = {
     id: 'word-frequency',
     name: 'Word Frequency',
-    version: '1.3.0',
+    version: '1.3.1',
     minAppVersion: '0.15.0',
     description: 'A plugin to count word frequencies.',
     author: 'Mike Rodarte',
@@ -86,7 +86,7 @@ describe('WordFrequencyPlugin', () => {
             );
             expect(plugin.addRibbonIcon).toHaveBeenCalledWith(
                 FREQUENCY_ICON,
-                `Show ${PLUGIN_NAME} Sidebar`,
+                `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
                 expect.any(Function)
             );
             expect(plugin.app.workspace.on).toHaveBeenCalledWith(

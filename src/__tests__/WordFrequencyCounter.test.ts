@@ -277,7 +277,7 @@ describe('WordFrequencyCounter tests', () => {
 
             Object.setPrototypeOf(markdownViewMock, MarkdownView.prototype);
 
-            let registeredCallback: ((editor: Editor) => void) | undefined;
+            let registeredCallback: ((_: Editor) => void) | undefined;
             const workspace: Workspace = {
                 getActiveViewOfType: jest.fn().mockReturnValue(null),
                 getLeavesOfType: jest.fn().mockReturnValue([]),

@@ -23,9 +23,11 @@ export default class WordFrequencyPlugin extends Plugin {
         viewManager?: ViewManager,
         settingTab?: WordFrequencySettingTab,
         frequencyCounter?: WordFrequencyCounter,
+        /* eslint-disable no-unused-vars */
         private createView: (leaf: WorkspaceLeaf) => WordFrequencyView = (
             leaf
         ) => new WordFrequencyView(leaf, this)
+        /* eslint-enable no-unused-vars */
     ) {
         super(app, manifest);
         this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
@@ -39,8 +41,10 @@ export default class WordFrequencyPlugin extends Plugin {
 
         this.registerView(VIEW_TYPE, this.createView);
 
-        this.addRibbonIcon(FREQUENCY_ICON, `Show ${PLUGIN_NAME} Sidebar`, () =>
-            this.activateView()
+        this.addRibbonIcon(
+            FREQUENCY_ICON,
+            `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
+            () => this.activateView()
         );
 
         this.registerEvent(

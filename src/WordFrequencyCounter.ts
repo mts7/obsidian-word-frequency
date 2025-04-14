@@ -14,10 +14,12 @@ export class WordFrequencyCounter {
 
     constructor(
         plugin: WordFrequencyPlugin,
+        /* eslint-disable no-unused-vars */
         private debouncedEditorChange = debounce(
             (editor: Editor) => this.triggerUpdateContent(editor),
             3000
         )
+        /* eslint-enable no-unused-vars */
     ) {
         this.plugin = plugin;
     }
