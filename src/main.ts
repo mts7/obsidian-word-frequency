@@ -5,6 +5,7 @@ import {
     PLUGIN_NAME,
     VIEW_TYPE,
     FREQUENCY_ICON,
+    COMMAND_ID_SHOW_SIDEBAR,
 } from './constants';
 import { ViewManager } from './ViewManager';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
@@ -37,15 +38,19 @@ export default class WordFrequencyPlugin extends Plugin {
     }
 
     async onload() {
+        const title = `Show ${PLUGIN_NAME.toLowerCase()} sidebar`;
+
         await this.loadSettings();
 
         this.registerView(VIEW_TYPE, this.createView);
 
-        this.addRibbonIcon(
-            FREQUENCY_ICON,
-            `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
-            () => this.activateView()
-        );
+        this.addRibbonIcon(FREQUENCY_ICON, title, () => this.activateView());
+
+        this.addCommand({
+            id: COMMAND_ID_SHOW_SIDEBAR,
+            name: title,
+            callback: () => this.activateView(),
+        });
 
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {

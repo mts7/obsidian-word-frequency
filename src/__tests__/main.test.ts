@@ -1,5 +1,6 @@
 import { App, WorkspaceLeaf, PluginManifest, Workspace } from 'obsidian';
 import {
+    COMMAND_ID_SHOW_SIDEBAR,
     DEFAULT_SETTINGS,
     FREQUENCY_ICON,
     PLUGIN_NAME,
@@ -64,6 +65,7 @@ describe('WordFrequencyPlugin', () => {
         plugin['loadData'] = jest.fn().mockResolvedValue({});
         plugin['saveData'] = jest.fn().mockResolvedValue(undefined);
         plugin['registerView'] = jest.fn();
+        plugin['addCommand'] = jest.fn();
         plugin['addRibbonIcon'] = jest.fn();
         plugin['registerEvent'] = jest.fn();
         plugin['addSettingTab'] = jest.fn();
@@ -89,6 +91,11 @@ describe('WordFrequencyPlugin', () => {
                 `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
                 expect.any(Function)
             );
+            expect(plugin.addCommand).toHaveBeenCalledWith({
+                id: COMMAND_ID_SHOW_SIDEBAR,
+                name: `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
+                callback: expect.any(Function),
+            });
             expect(plugin.app.workspace.on).toHaveBeenCalledWith(
                 'active-leaf-change',
                 expect.any(Function)
@@ -109,6 +116,10 @@ describe('WordFrequencyPlugin', () => {
             const ribbonCallback = (plugin.addRibbonIcon as jest.Mock).mock
                 .calls[0][2];
             ribbonCallback();
+            const commandArgs = (plugin.addCommand as jest.Mock).mock
+                .calls[0][0];
+            const commandCallback = commandArgs.callback;
+            commandCallback();
             const eventCallback = (
                 plugin.app.workspace.on as jest.Mock
             ).mock.calls.find(([event]) => event === 'active-leaf-change')?.[1];
