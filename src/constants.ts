@@ -27,6 +27,7 @@ export const ELEMENT_CLASSES = {
     settingItem: 'word-frequency-setting-item',
 };
 
+export const COMMAND_ID_SHOW_SIDEBAR = 'word-frequency-show-sidebar';
 export const EVENT_UPDATE = 'word-frequency-update';
 export const FREQUENCY_ICON = 'file-chart-column-increasing';
 export const PLUGIN_NAME = 'Word frequency';

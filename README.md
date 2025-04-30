@@ -18,7 +18,11 @@ characters do not count as part of the word.
 ### Active the Counter
 
 On the ribbon (typically on the left side of the desktop window), select the 
-`Show Word Frequency Sidebar` icon that looks like a paper with a bar chart.
+`Show word frequency sidebar` icon that looks like a paper with a bar chart.
+
+Alternatively, open the Command Palette, type `Show word frequency sidebar`, and
+select the `Word Frequency: Show word frequency sidebar` option.
+
 This should open and display the sidebar (typically on the right side of the
 desktop window) with the word counts. If the words and counts do not display,
 click inside a note so the plugin knows which note to use.
