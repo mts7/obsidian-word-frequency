@@ -7,6 +7,7 @@ import {
 } from 'obsidian';
 import { EVENT_UPDATE, VIEW_TYPE } from './constants';
 import WordFrequencyPlugin from './main';
+import { segmentText } from './segmentationUtils';
 
 export class WordFrequencyCounter {
     lastActiveEditor: Editor | undefined;
@@ -29,11 +30,7 @@ export class WordFrequencyCounter {
             return [];
         }
 
-        const words = content
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .split(/\s+/)
-            .filter((word): word is string => word.length > 0);
+        const words = segmentText(content);
 
         const wordCounts = new Map<string, number>();
         for (const word of words) {

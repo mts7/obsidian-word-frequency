@@ -24,6 +24,7 @@ export default [
             'coverage/**',
             'dist/**',
             'node_modules/**',
+            'reports/**',
             '.stryker-tmp/**',
         ],
     },
