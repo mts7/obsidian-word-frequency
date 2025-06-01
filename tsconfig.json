@@ -15,5 +15,5 @@
     "target": "ESNext",
     "types": ["obsidian", "node", "jest"],
   },
-  "include": ["src/**/*", "types", "node_modules/@types/jest/index.d.ts"]
+  "include": ["src/**/*", "node_modules/@types/jest/index.d.ts"]
 }

@@ -26,7 +26,7 @@ export class WordFrequencyCounter {
     }
 
     calculateWordFrequencies(content: string): [string, number][] {
-        if (!content) {
+        if (content.length === 0) {
             return [];
         }
 

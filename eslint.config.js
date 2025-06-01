@@ -48,10 +48,4 @@ export default [
             ],
         },
     },
-    {
-        files: ['**/*.d.ts'],
-        rules: {
-            'no-unused-vars': 'off',
-        },
-    },
 ];
