@@ -24,6 +24,7 @@ export default [
             'coverage/**',
             'dist/**',
             'node_modules/**',
+            'reports/**',
             '.stryker-tmp/**',
         ],
     },
@@ -45,6 +46,12 @@ export default [
                 'error',
                 { argsIgnorePattern: '^_' },
             ],
+        },
+    },
+    {
+        files: ['**/*.d.ts'],
+        rules: {
+            'no-unused-vars': 'off',
         },
     },
 ];

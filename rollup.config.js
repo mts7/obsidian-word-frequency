@@ -1,6 +1,6 @@
+import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from '@rollup/plugin-typescript';
 import json from '@rollup/plugin-json';
 
 export default {
@@ -9,6 +9,14 @@ export default {
         file: 'dist/main.js',
         format: 'cjs',
     },
-    plugins: [commonjs(), json(), resolve(), typescript()],
+    plugins: [
+        resolve(),
+        commonjs({
+            include: /node_modules/,
+            requireReturnsDefault: 'auto',
+        }),
+        json(),
+        typescript()
+    ],
     external: ['obsidian'],
 };
