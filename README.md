@@ -15,7 +15,7 @@ The words and their frequency counts display in descending order, having the
 most common word at the top and the least common word at the bottom. Special
 characters do not count as part of the word.
 
-### Active the Counter
+### Activate the Counter
 
 On the ribbon (typically on the left side of the desktop window), select the 
 `Show word frequency sidebar` icon that looks like a paper with a bar chart.
@@ -84,6 +84,7 @@ some ideas for the developers to implement.
 
 - [x] add word search filter
 - [ ] add maximum display count for sidebar
+- [ ] change ignore (add to blacklist) icon
 
 ## Contributing
 
