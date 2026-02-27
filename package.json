@@ -54,7 +54,7 @@
     "jsdom": "^26.0.0",
     "obsidian": "^1.8.7",
     "prettier": "^3.5.3",
-    "rollup": "^4.34.9",
+    "rollup": "^4.59.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-jest": "^29.2.6",
     "typescript": "^5.8.2",
