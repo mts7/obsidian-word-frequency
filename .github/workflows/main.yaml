@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "23"
+          node-version: "25"
 
       - name: Install dependencies
         run: npm install
@@ -74,7 +74,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "23"
+          node-version: "25"
 
       - name: Install dependencies
         run: npm install

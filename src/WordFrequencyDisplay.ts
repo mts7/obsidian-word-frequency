@@ -53,7 +53,7 @@ export class WordFrequencyDisplay {
             cls: ELEMENT_CLASSES.containerButton,
         });
         const button = buttonContainer.createEl('button');
-        setIcon(button, 'trash-2');
+        setIcon(button, 'search-x');
         this.plugin.registerDomEvent(button, 'click', () => {
             this.saveWordToBlacklist(word);
         });
