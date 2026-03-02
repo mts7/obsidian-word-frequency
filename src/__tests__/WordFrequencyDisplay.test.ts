@@ -138,7 +138,7 @@ describe('WordFrequencyDisplay', () => {
                 'click',
                 expect.any(Function)
             );
-            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'trash-2');
+            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
         });
 
         it.todo('should verify the button click event handles the word');
@@ -160,7 +160,7 @@ describe('WordFrequencyDisplay', () => {
             expect(contentContainer.createEl).toHaveBeenCalledWith('div', {
                 cls: ELEMENT_CLASSES.containerRow,
             });
-            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'trash-2');
+            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
             expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
                 buttonElement,
                 'click',

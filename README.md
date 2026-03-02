@@ -84,7 +84,7 @@ some ideas for the developers to implement.
 
 - [x] add word search filter
 - [ ] add maximum display count for sidebar
-- [ ] change ignore (add to blacklist) icon
+- [x] change ignore (add to blacklist) icon
 
 ## Contributing
 
