@@ -173,6 +173,21 @@ describe('WordFrequencyView', () => {
                 cls: ELEMENT_CLASSES.containerWordList,
             });
         });
+
+        it('should clear the content and build the display', async () => {
+            await view.onOpen();
+
+            expect(view.contentEl.empty).toHaveBeenCalled();
+            expect(mockDisplay.createHeader).toHaveBeenCalledWith(
+                mockDivElement
+            );
+            expect(mockDisplay.createFilter).toHaveBeenCalledWith(
+                mockDivElement
+            );
+            expect(mockDisplay.createThresholdDisplay).toHaveBeenCalledWith(
+                mockDivElement
+            );
+        });
     });
 
     describe('onClose', () => {
@@ -193,6 +208,12 @@ describe('WordFrequencyView', () => {
     });
 
     describe('updateContent', () => {
+        it('should clear the word list before adding words', () => {
+            view.updateContent();
+
+            expect(mockDivElement.empty).toHaveBeenCalled();
+        });
+
         it('should add words to sidebar for each word', async () => {
             await view.onOpen();
             const wordCounts = [

@@ -9,6 +9,7 @@ import {
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
+import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyView } from '../WordFrequencyView';
 
 interface MockApp extends App {
@@ -100,7 +101,10 @@ describe('WordFrequencyPlugin', () => {
                 'active-leaf-change',
                 expect.any(Function)
             );
-            expect(plugin.addSettingTab).toHaveBeenCalled();
+            expect(plugin.settingTab).toBeInstanceOf(WordFrequencySettingTab);
+            expect(plugin.addSettingTab).toHaveBeenCalledWith(
+                plugin.settingTab
+            );
         });
 
         it('should set up the plugin and respond to callbacks', async () => {
@@ -130,7 +134,7 @@ describe('WordFrequencyPlugin', () => {
             const fakeLeaf = {} as unknown as WorkspaceLeaf;
             const view = viewCallback(fakeLeaf);
 
-            expect(activateViewMock).toHaveBeenCalled();
+            expect(activateViewMock).toHaveBeenCalledTimes(2);
             expect(mockLeafChange).toHaveBeenCalledWith(
                 activeLeaf,
                 plugin.app.workspace

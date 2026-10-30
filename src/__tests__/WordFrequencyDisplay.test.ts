@@ -1,4 +1,4 @@
-import { setIcon } from 'obsidian';
+import { debounce, setIcon } from 'obsidian';
 import { ELEMENT_CLASSES, PLUGIN_NAME } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
@@ -141,7 +141,20 @@ describe('WordFrequencyDisplay', () => {
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
         });
 
-        it.todo('should verify the button click event handles the word');
+        it('should save the word to the blacklist when the button is clicked', () => {
+            const word = 'banana';
+            const originalBlacklist = mockPlugin.settings.blacklist;
+
+            display.addWordToSidebar(blacklist, word, 13, contentContainer);
+            const clickHandler = (mockPlugin.registerDomEvent as jest.Mock).mock
+                .calls[0][2];
+            clickHandler();
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},${word}`
+            );
+            expect(mockView.updateContent).toHaveBeenCalled();
+        });
 
         it('should add word if it matches the filter and has the threshold count', () => {
             display = new WordFrequencyDisplay(
@@ -209,7 +222,25 @@ describe('WordFrequencyDisplay', () => {
             );
         });
 
-        it.todo('should update view content when the filter input changes');
+        it('should update view content when the filter input changes', () => {
+            (debounce as jest.Mock).mockImplementationOnce((callback) =>
+                jest.fn(callback)
+            );
+            display = new WordFrequencyDisplay(mockPlugin, mockView);
+            const contentContainer = {
+                createEl: jest.fn().mockReturnValue(firstElement),
+            } as unknown as HTMLDivElement;
+
+            display.createFilter(contentEl);
+            const inputHandler = (mockPlugin.registerDomEvent as jest.Mock).mock
+                .calls[0][2];
+            inputHandler({ target: { value: 'BAN' } });
+            display.addWordToSidebar(new Set(), 'apple', 5, contentContainer);
+
+            expect(debounce).toHaveBeenCalledWith(expect.any(Function), 500);
+            expect(mockView.updateContent).toHaveBeenCalled();
+            expect(contentContainer.createEl).not.toHaveBeenCalled();
+        });
     });
 
     describe('createHeader', () => {
