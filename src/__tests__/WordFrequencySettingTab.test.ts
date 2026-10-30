@@ -1,4 +1,5 @@
-import { SETTINGS_NAMES, VIEW_TYPE } from '../constants';
+import { Setting } from 'obsidian';
+import { ELEMENT_CLASSES, SETTINGS_NAMES, VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyView } from '../WordFrequencyView';
@@ -46,46 +47,81 @@ describe('WordFrequencySettingTab', () => {
         expect(settingTab.plugin).toBe(plugin);
     });
 
-    it('should create new settings', () => {
-        const mockSetName = jest.fn().mockReturnThis();
-        const mockSetDesc = jest.fn().mockReturnThis();
-        const mockSetClass = jest.fn().mockReturnThis();
-        const mockAddTextArea = jest.fn().mockImplementation((callback) => {
-            callback({
-                setValue: jest.fn().mockReturnThis(),
-                onChange: jest.fn().mockReturnThis(),
-                inputEl: { classList: { add: jest.fn() } },
-            });
-            return mockSetting;
-        });
-        const mockAddText = jest.fn().mockImplementation((callback) => {
-            callback({
-                setPlaceholder: jest.fn().mockReturnThis(),
-                setValue: jest.fn().mockReturnThis(),
-                onChange: jest.fn(),
-            });
-            return mockSetting;
-        });
-        const mockSetting = {
-            setName: mockSetName,
-            setDesc: mockSetDesc,
-            setClass: mockSetClass,
-            addTextArea: mockAddTextArea,
-            addText: mockAddText,
+    const createMockSetting = () => {
+        const textArea = {
+            setValue: jest.fn().mockReturnThis(),
+            onChange: jest.fn().mockReturnThis(),
+            inputEl: { classList: { add: jest.fn() } },
+        };
+        const text = {
+            setPlaceholder: jest.fn().mockReturnThis(),
+            setValue: jest.fn().mockReturnThis(),
+            onChange: jest.fn().mockReturnThis(),
+        };
+        const setting = {
+            setName: jest.fn().mockReturnThis(),
+            setDesc: jest.fn().mockReturnThis(),
+            setClass: jest.fn().mockReturnThis(),
+            addTextArea: jest.fn().mockImplementation((callback) => {
+                callback(textArea);
+                return setting;
+            }),
+            addText: jest.fn().mockImplementation((callback) => {
+                callback(text);
+                return setting;
+            }),
             infoEl: { addClass: jest.fn() },
         };
-        const mockSettingFactory = jest.fn().mockReturnValue(mockSetting);
+
+        return { setting, text, textArea };
+    };
+
+    it('should create new settings', async () => {
+        const { setting, text, textArea } = createMockSetting();
+        const mockSettingFactory = jest.fn().mockReturnValue(setting);
         const settingTab = new WordFrequencySettingTab(
             plugin,
             mockSettingFactory
         );
         settingTab.containerEl = containerEl;
+        containerEl.appendChild(document.createElement('span'));
+        plugin.settings.blacklist = 'the,and';
+        plugin.settings.threshold = 4;
+        const saveBlacklistSpy = jest
+            .spyOn(settingTab, 'saveBlacklistValue')
+            .mockResolvedValue();
+        const updateThresholdSpy = jest
+            .spyOn(settingTab, 'updateThreshold')
+            .mockResolvedValue();
+
+        settingTab.display();
+        await textArea.onChange.mock.calls[0][0]('a,b');
+        await text.onChange.mock.calls[0][0]('7');
+
+        expect(containerEl.childElementCount).toBe(0);
+        expect(mockSettingFactory).toHaveBeenCalledTimes(2);
+        expect(setting.setName).toHaveBeenCalledWith(SETTINGS_NAMES.blacklist);
+        expect(setting.setName).toHaveBeenCalledWith(SETTINGS_NAMES.threshold);
+        expect(setting.infoEl.addClass).toHaveBeenCalledWith(
+            ELEMENT_CLASSES.settingInfoItem
+        );
+        expect(textArea.setValue).toHaveBeenCalledWith('the,and');
+        expect(textArea.inputEl.classList.add).toHaveBeenCalledWith(
+            ELEMENT_CLASSES.settingBlacklist
+        );
+        expect(text.setPlaceholder).toHaveBeenCalledWith('3');
+        expect(text.setValue).toHaveBeenCalledWith('4');
+        expect(saveBlacklistSpy).toHaveBeenCalledWith('a,b');
+        expect(updateThresholdSpy).toHaveBeenCalledWith('7');
+    });
+
+    it('should use the obsidian Setting by default', () => {
+        const { setting } = createMockSetting();
+        (Setting as unknown as jest.Mock).mockImplementation(() => setting);
 
         settingTab.display();
 
-        expect(mockSettingFactory).toHaveBeenCalledTimes(2);
-        expect(mockSetName).toHaveBeenCalledWith(SETTINGS_NAMES.blacklist);
-        expect(mockAddTextArea).toHaveBeenCalled();
+        expect(Setting).toHaveBeenCalledWith(containerEl);
     });
 
     it('should save blacklist', async () => {

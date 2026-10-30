@@ -1,4 +1,5 @@
 import {
+    debounce,
     Debouncer,
     Editor,
     MarkdownView,
@@ -20,6 +21,31 @@ const counter = new WordFrequencyCounter(mockPlugin, mockDebouncer);
 describe('WordFrequencyCounter tests', () => {
     beforeEach(() => {
         counter.lastActiveEditor = undefined;
+    });
+
+    describe('constructor', () => {
+        it('should set the plugin', () => {
+            const newCounter = new WordFrequencyCounter(
+                mockPlugin,
+                mockDebouncer
+            );
+
+            expect(newCounter.plugin).toBe(mockPlugin);
+        });
+
+        it('should debounce editor changes to triggerUpdateContent by default', () => {
+            const editor = {} as Editor;
+            const defaultCounter = new WordFrequencyCounter(mockPlugin);
+            const triggerSpy = jest
+                .spyOn(defaultCounter, 'triggerUpdateContent')
+                .mockImplementation(() => {});
+            const [callback, wait] = (debounce as jest.Mock).mock.lastCall;
+
+            callback(editor);
+
+            expect(wait).toBe(3000);
+            expect(triggerSpy).toHaveBeenCalledWith(editor);
+        });
     });
 
     describe('calculateWordFrequencies', () => {
@@ -756,14 +782,20 @@ describe('WordFrequencyCounter tests', () => {
                 'dispatchEvent'
             );
 
+            const consoleErrorSpy = jest
+                .spyOn(console, 'error')
+                .mockImplementation(() => {});
+
             counter.triggerUpdateContent(editor);
 
             expect(counter.lastActiveEditor).toBe(undefined);
             expect(counterMock).not.toHaveBeenCalled();
             expect(dispatchEventMock).not.toHaveBeenCalled();
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
 
             counterMock.mockRestore();
             dispatchEventMock.mockRestore();
+            consoleErrorSpy.mockRestore();
         });
 
         it('should dispatch an event after calculating word frequencies', () => {
@@ -774,10 +806,12 @@ describe('WordFrequencyCounter tests', () => {
             );
             const expectedValue = 'hello world hello';
             const expectedEvent = new CustomEvent(EVENT_UPDATE, {
-                detail: [
-                    ['hello', 2],
-                    ['world', 1],
-                ],
+                detail: {
+                    wordCounts: [
+                        ['hello', 2],
+                        ['world', 1],
+                    ],
+                },
             });
             const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
@@ -787,6 +821,9 @@ describe('WordFrequencyCounter tests', () => {
 
             expect(counterMock).toHaveBeenCalledWith(expectedValue);
             expect(dispatchEventMock).toHaveBeenCalledWith(expectedEvent);
+            expect(
+                (dispatchEventMock.mock.calls[0][0] as CustomEvent).detail
+            ).toEqual(expectedEvent.detail);
 
             counterMock.mockRestore();
             dispatchEventMock.mockRestore();
@@ -826,10 +863,12 @@ describe('WordFrequencyCounter tests', () => {
             );
             const expectedValue = 'hello world hello';
             const expectedEvent = new CustomEvent(EVENT_UPDATE, {
-                detail: [
-                    ['hello', 2],
-                    ['world', 1],
-                ],
+                detail: {
+                    wordCounts: [
+                        ['hello', 2],
+                        ['world', 1],
+                    ],
+                },
             });
             const editor: Editor = {
                 getValue: jest.fn().mockReturnValue(expectedValue),
@@ -841,6 +880,9 @@ describe('WordFrequencyCounter tests', () => {
 
             expect(counterMock).toHaveBeenCalledWith(expectedValue);
             expect(dispatchEventMock).toHaveBeenCalledWith(expectedEvent);
+            expect(
+                (dispatchEventMock.mock.calls[0][0] as CustomEvent).detail
+            ).toEqual(expectedEvent.detail);
             expect(editorSpy).toHaveBeenCalled();
 
             counterMock.mockRestore();
