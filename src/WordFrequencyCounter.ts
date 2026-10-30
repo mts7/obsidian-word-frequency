@@ -1,28 +1,23 @@
-import {
-    debounce,
-    Editor,
-    MarkdownView,
-    Workspace,
-    WorkspaceLeaf,
-} from 'obsidian';
+import { debounce, Debouncer, MarkdownView, WorkspaceLeaf } from 'obsidian';
 import { EVENT_UPDATE, VIEW_TYPE } from './constants';
 import WordFrequencyPlugin from './main';
 import { segmentText } from './segmentationUtils';
 
+const EDIT_UPDATE_DELAY_MS = 3000;
+
 export class WordFrequencyCounter {
-    lastActiveEditor: Editor | undefined;
     plugin: WordFrequencyPlugin;
+    private debouncedUpdate: Debouncer<[], void>;
+    private noteView: MarkdownView | undefined;
 
     constructor(
         plugin: WordFrequencyPlugin,
-        /* eslint-disable no-unused-vars */
-        private debouncedEditorChange = debounce(
-            (editor: Editor) => this.triggerUpdateContent(editor),
-            3000
-        )
-        /* eslint-enable no-unused-vars */
+        debouncedUpdate?: Debouncer<[], void>
     ) {
         this.plugin = plugin;
+        this.debouncedUpdate =
+            debouncedUpdate ??
+            debounce(() => this.updateIfSidebarOpen(), EDIT_UPDATE_DELAY_MS);
     }
 
     calculateWordFrequencies(content: string): [string, number][] {
@@ -42,47 +37,85 @@ export class WordFrequencyCounter {
         );
     }
 
-    handleActiveLeafChange(
-        leaf: WorkspaceLeaf | null,
-        workspace: Workspace
-    ): void {
-        if (leaf === null) {
-            return;
-        }
-
-        if (!(leaf.view instanceof MarkdownView)) {
-            return;
-        }
+    registerEvents(): void {
+        const { workspace } = this.plugin.app;
 
         this.plugin.registerEvent(
-            workspace.on('editor-change', (editor) =>
-                this.debouncedEditorChange(editor)
+            workspace.on('active-leaf-change', (leaf) =>
+                this.handleActiveLeafChange(leaf)
             )
         );
-
-        const activeView = workspace.getActiveViewOfType(MarkdownView);
-        if (activeView) {
-            this.lastActiveEditor = activeView.editor;
-        }
-        if (workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
-            this.triggerUpdateContent(this.lastActiveEditor);
-        }
+        this.plugin.registerEvent(
+            workspace.on('file-open', () => this.updateIfSidebarOpen())
+        );
+        this.plugin.registerEvent(
+            workspace.on('editor-change', () => this.debouncedUpdate())
+        );
+        workspace.onLayoutReady(() => this.updateIfSidebarOpen());
     }
 
-    triggerUpdateContent(editor?: Editor) {
-        if (editor === undefined) {
-            if (this.lastActiveEditor === undefined) {
-                return;
-            }
-            editor = this.lastActiveEditor;
+    handleActiveLeafChange(leaf: WorkspaceLeaf | null): void {
+        if (!(leaf?.view instanceof MarkdownView)) {
+            return;
         }
+
+        this.noteView = leaf.view;
+        this.updateIfSidebarOpen();
+    }
+
+    cancelPendingUpdate(): void {
+        this.debouncedUpdate.cancel();
+    }
+
+    triggerUpdateContent(): void {
+        const noteView = this.findNoteView();
+        if (noteView === undefined) {
+            return;
+        }
+
         try {
-            const wordCounts = this.calculateWordFrequencies(editor.getValue());
+            const wordCounts = this.calculateWordFrequencies(
+                noteView.editor.getValue()
+            );
             window.document.dispatchEvent(
                 new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } })
             );
         } catch (error) {
             console.error('error in triggerUpdateContent', error);
         }
+    }
+
+    private updateIfSidebarOpen(): void {
+        if (this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).length > 0) {
+            this.triggerUpdateContent();
+        }
+    }
+
+    private findNoteView(): MarkdownView | undefined {
+        const { workspace } = this.plugin.app;
+
+        const activeView = workspace.getActiveViewOfType(MarkdownView);
+        if (activeView !== null) {
+            this.noteView = activeView;
+
+            return activeView;
+        }
+
+        if (this.noteView !== undefined && this.isStillOpen(this.noteView)) {
+            return this.noteView;
+        }
+
+        const recentView = workspace.getMostRecentLeaf()?.view;
+
+        return recentView instanceof MarkdownView ? recentView : undefined;
+    }
+
+    private isStillOpen(view: MarkdownView): boolean {
+        return (
+            view.leaf.view === view &&
+            this.plugin.app.workspace
+                .getLeavesOfType('markdown')
+                .includes(view.leaf)
+        );
     }
 }

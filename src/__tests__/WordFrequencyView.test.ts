@@ -32,6 +32,9 @@ describe('WordFrequencyView', () => {
             empty: jest.fn(),
         } as unknown as HTMLDivElement;
         mockPlugin = {
+            frequencyCounter: {
+                triggerUpdateContent: jest.fn(),
+            },
             settings: {
                 blacklist: 'the, and, to',
                 saveData: jest.fn().mockResolvedValue(undefined),
@@ -77,6 +80,7 @@ describe('WordFrequencyView', () => {
                 } as unknown as HTMLElement,
                 display: displayMock,
                 onOpen: view.onOpen,
+                plugin: mockPlugin,
                 updateContent: jest.fn(),
             };
 
@@ -128,6 +132,23 @@ describe('WordFrequencyView', () => {
             );
         });
 
+        it('should ask for a count of the current note after listening for updates', async () => {
+            const addEventListenerSpy = jest.spyOn(
+                window.document,
+                'addEventListener'
+            );
+
+            await view.onOpen();
+
+            const requestCount = mockPlugin.frequencyCounter
+                .triggerUpdateContent as jest.Mock;
+            expect(requestCount).toHaveBeenCalledWith();
+            expect(
+                addEventListenerSpy.mock.invocationCallOrder.at(-1)
+            ).toBeLessThan(requestCount.mock.invocationCallOrder[0]);
+            addEventListenerSpy.mockRestore();
+        });
+
         it('should call updateContent on open', async () => {
             const viewMock = {
                 contentEl: {
@@ -136,6 +157,7 @@ describe('WordFrequencyView', () => {
                 } as unknown as HTMLElement,
                 display: mockDisplay,
                 onOpen: view.onOpen,
+                plugin: mockPlugin,
                 updateContent: jest.fn(),
             };
 
@@ -257,6 +279,7 @@ describe('WordFrequencyView', () => {
                 } as unknown as HTMLElement,
                 display: mockDisplay,
                 onOpen: view.onOpen,
+                plugin: mockPlugin,
                 updateContent: jest.fn(),
             };
 

@@ -146,14 +146,39 @@ describe('Word Frequency plugin lifecycle', () => {
             ['cherry', 2],
         ]);
 
+        await browser.executeObsidian(async ({ app }) => {
+            await app.workspace.requestSaveLayout.run();
+        });
         await browser.reloadObsidian();
         await startErrorCapture();
+
+        const restoredNote = await browser.executeObsidian(
+            ({ app, obsidian }) => {
+                const view = app.workspace.getMostRecentLeaf()?.view;
+
+                return view instanceof obsidian.MarkdownView
+                    ? view.file?.path
+                    : undefined;
+            }
+        );
+        expect(restoredNote).toBe(FRUIT_NOTE);
 
         expect((await getSettings()).threshold).toBe(2);
         await $(VIEW).waitForExist();
         await expect($(THRESHOLD_DISPLAY)).toHaveText(
             'Current frequency threshold is 2.'
         );
+        await expectWordList([
+            ['apple', 5],
+            ['banana', 4],
+            ['cherry', 2],
+        ]);
+
+        await browser.executeObsidian(({ app }, viewType) => {
+            app.workspace.detachLeavesOfType(viewType);
+        }, VIEW_TYPE);
+        await showSidebar();
+
         await expectWordList([
             ['apple', 5],
             ['banana', 4],
