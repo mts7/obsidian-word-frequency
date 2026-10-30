@@ -26,6 +26,8 @@ export default [
             'node_modules/**',
             'reports/**',
             '.stryker-tmp/**',
+            '.e2e-plugin/**',
+            '.obsidian-cache/**',
         ],
     },
     pluginJs.configs.recommended,

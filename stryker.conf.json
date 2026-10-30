@@ -7,6 +7,7 @@
     "projectType": "custom"
   },
   "ignoreStatic": true,
+  "ignorePatterns": [".obsidian-cache", ".e2e-plugin", "test/e2e"],
   "thresholds": {
     "high": 90,
     "low": 85,
