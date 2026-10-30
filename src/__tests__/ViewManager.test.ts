@@ -1,4 +1,4 @@
-import { Editor, Workspace, WorkspaceLeaf } from 'obsidian';
+import { Workspace, WorkspaceLeaf } from 'obsidian';
 import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
@@ -14,7 +14,6 @@ describe('ViewManager', () => {
                 workspace: {
                     getLeavesOfType: jest.fn(),
                     getRightLeaf: jest.fn(),
-                    getActiveViewOfType: jest.fn(),
                 },
             },
             frequencyCounter: {
@@ -57,26 +56,11 @@ describe('ViewManager', () => {
         });
     });
 
-    it('should update content', () => {
-        const mockEditor = {} as Editor;
-        (workspace.getActiveViewOfType as jest.Mock).mockReturnValueOnce({
-            editor: mockEditor,
-        });
-
+    it('should ask the counter to count the current note', () => {
         viewManager.updateContent();
 
         expect(
             plugin.frequencyCounter.triggerUpdateContent
-        ).toHaveBeenCalledWith(mockEditor);
-    });
-
-    it('should update content with a null editor', () => {
-        (workspace.getActiveViewOfType as jest.Mock).mockReturnValue(null);
-
-        viewManager.updateContent();
-
-        expect(
-            plugin.frequencyCounter.triggerUpdateContent
-        ).toHaveBeenCalledWith(undefined);
+        ).toHaveBeenCalledWith();
     });
 });

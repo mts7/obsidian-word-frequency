@@ -1,4 +1,4 @@
-import { MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
+import { Workspace, WorkspaceLeaf } from 'obsidian';
 import WordFrequencyPlugin from './main';
 
 export class ViewManager {
@@ -28,8 +28,6 @@ export class ViewManager {
     }
 
     updateContent(): void {
-        const editor =
-            this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
-        this.plugin.frequencyCounter.triggerUpdateContent(editor);
+        this.plugin.frequencyCounter.triggerUpdateContent();
     }
 }

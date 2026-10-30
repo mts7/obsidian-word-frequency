@@ -69,6 +69,7 @@ export class WordFrequencyView extends ItemView {
         this.display.createThresholdDisplay(contentContainer);
 
         this.updateContent();
+        this.plugin.frequencyCounter.triggerUpdateContent();
     }
 
     async onClose() {

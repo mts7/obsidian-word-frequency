@@ -27,6 +27,7 @@ const mockApp: MockApp = {
         getRightLeaf: jest.fn(),
         revealLeaf: jest.fn(),
         getActiveViewOfType: jest.fn(),
+        onLayoutReady: jest.fn(),
         setViewState: jest.fn(),
     } as unknown as Workspace,
 } as MockApp;
@@ -101,6 +102,15 @@ describe('WordFrequencyPlugin', () => {
                 'active-leaf-change',
                 expect.any(Function)
             );
+            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
+                'file-open',
+                expect.any(Function)
+            );
+            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
+                'editor-change',
+                expect.any(Function)
+            );
+            expect(plugin.app.workspace.onLayoutReady).toHaveBeenCalled();
             expect(plugin.settingTab).toBeInstanceOf(WordFrequencySettingTab);
             expect(plugin.addSettingTab).toHaveBeenCalledWith(
                 plugin.settingTab
@@ -109,10 +119,10 @@ describe('WordFrequencyPlugin', () => {
 
         it('should set up the plugin and respond to callbacks', async () => {
             const activateViewMock = jest.fn();
-            const mockLeafChange = jest.fn();
+            const registerEvents = jest.fn();
             plugin['activateView'] = activateViewMock;
             plugin['frequencyCounter'] = {
-                handleActiveLeafChange: mockLeafChange,
+                registerEvents,
             } as unknown as WordFrequencyCounter;
 
             await plugin.onload();
@@ -124,22 +134,27 @@ describe('WordFrequencyPlugin', () => {
                 .calls[0][0];
             const commandCallback = commandArgs.callback;
             commandCallback();
-            const eventCallback = (
-                plugin.app.workspace.on as jest.Mock
-            ).mock.calls.find(([event]) => event === 'active-leaf-change')?.[1];
-            const activeLeaf = { id: 'fake-leaf' } as unknown as WorkspaceLeaf;
-            eventCallback?.(activeLeaf);
             const viewCallback = (plugin.registerView as jest.Mock).mock
                 .calls[0][1];
             const fakeLeaf = {} as unknown as WorkspaceLeaf;
             const view = viewCallback(fakeLeaf);
 
             expect(activateViewMock).toHaveBeenCalledTimes(2);
-            expect(mockLeafChange).toHaveBeenCalledWith(
-                activeLeaf,
-                plugin.app.workspace
-            );
+            expect(registerEvents).toHaveBeenCalledTimes(1);
             expect(view).toBe(mockView);
+        });
+    });
+
+    describe('onunload', () => {
+        it('should cancel a pending word count update', () => {
+            const cancelPendingUpdate = jest.fn();
+            plugin['frequencyCounter'] = {
+                cancelPendingUpdate,
+            } as unknown as WordFrequencyCounter;
+
+            plugin.onunload();
+
+            expect(cancelPendingUpdate).toHaveBeenCalled();
         });
     });
 

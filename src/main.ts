@@ -52,19 +52,14 @@ export default class WordFrequencyPlugin extends Plugin {
             callback: () => this.activateView(),
         });
 
-        this.registerEvent(
-            this.app.workspace.on('active-leaf-change', (leaf) => {
-                this.frequencyCounter.handleActiveLeafChange(
-                    leaf,
-                    this.app.workspace
-                );
-            })
-        );
+        this.frequencyCounter.registerEvents();
 
         this.addSettingTab(this.settingTab);
     }
 
-    onunload() {}
+    onunload() {
+        this.frequencyCounter.cancelPendingUpdate();
+    }
 
     async activateView() {
         const { workspace } = this.app;
