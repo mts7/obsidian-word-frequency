@@ -1,4 +1,6 @@
 import { Workspace, WorkspaceLeaf } from 'obsidian';
+import { VIEW_TYPE } from './constants';
+import { WordFrequencyView } from './WordFrequencyView';
 
 export class ViewManager {
     getOrCreateLeaf(
@@ -17,6 +19,14 @@ export class ViewManager {
         await leaf.setViewState({
             type: viewType,
             active: true,
+        });
+    }
+
+    refreshViews(workspace: Workspace): void {
+        workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
+            if (leaf.view instanceof WordFrequencyView) {
+                leaf.view.updateContent();
+            }
         });
     }
 }

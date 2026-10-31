@@ -8,11 +8,12 @@ import {
     expectWordList,
     FRUIT_COUNTS,
     FRUIT_NOTE,
+    getRecordedUpdates,
     openNoteInNewTab,
     openNoteInSameTab,
     openSidebarForFruit,
-    PLUGIN_ID,
     showSidebar,
+    startRecordingUpdates,
     switchToMainWindow,
     useCleanState,
     VEGETABLES_COUNTS,
@@ -27,43 +28,13 @@ const ADDED_POTATOES: [string, number][] = [
     ['carrot', 5],
 ];
 
-type CountedWindow = Window & { wordFrequencyCounts?: number };
-type CountingPlugin = {
-    frequencyCounter: {
-        calculateWordFrequencies(_content: string): [string, number][];
-    };
-};
-
-async function startCountingCounts(): Promise<void> {
-    await switchToMainWindow();
-    await browser.executeObsidian(({ app }, pluginId) => {
-        const counter = (
-            app as unknown as {
-                plugins: { plugins: Record<string, CountingPlugin> };
-            }
-        ).plugins.plugins[pluginId].frequencyCounter;
-        const calculate = counter.calculateWordFrequencies.bind(counter);
-        const counted = window as CountedWindow;
-        counted.wordFrequencyCounts = 0;
-        counter.calculateWordFrequencies = (content) => {
-            counted.wordFrequencyCounts =
-                (counted.wordFrequencyCounts ?? 0) + 1;
-
-            return calculate(content);
-        };
-    }, PLUGIN_ID);
-}
-
-async function countsSoFar(): Promise<number> {
+async function getUpdateCount(): Promise<number> {
     await browser.pause(SETTLE_MS);
-    await switchToMainWindow();
 
-    return browser.execute(
-        () => (window as CountedWindow).wordFrequencyCounts ?? 0
-    );
+    return (await getRecordedUpdates()).length;
 }
 
-async function editVegetables(): Promise<void> {
+async function editVegetablesAndWait(): Promise<void> {
     await appendToNote(VEGETABLES_NOTE, '\nPotato potato.\n');
     await browser.pause(EDIT_DEBOUNCE_MS);
 }
@@ -88,7 +59,7 @@ async function uncoverSidebar(): Promise<void> {
     });
 }
 
-describe('Word Frequency plugin work', () => {
+describe('Word Frequency plugin updates', () => {
     useCleanState();
 
     describe('switching notes', () => {
@@ -99,23 +70,23 @@ describe('Word Frequency plugin work', () => {
         });
 
         it('should count a note once when switching to its tab', async () => {
-            await startCountingCounts();
+            await startRecordingUpdates();
 
             await activateNote(FRUIT_NOTE);
 
             await expectWordList(FRUIT_COUNTS);
-            expect(await countsSoFar()).toBe(1);
+            expect(await getUpdateCount()).toBe(1);
         });
 
         it('should count a note once when opening it in the same tab', async () => {
             await activateNote(FRUIT_NOTE);
             await expectWordList(FRUIT_COUNTS);
-            await startCountingCounts();
+            await startRecordingUpdates();
 
             await openNoteInSameTab(VEGETABLES_NOTE);
 
             await expectWordList(VEGETABLES_COUNTS);
-            expect(await countsSoFar()).toBe(1);
+            expect(await getUpdateCount()).toBe(1);
         });
     });
 
@@ -126,18 +97,18 @@ describe('Word Frequency plugin work', () => {
             await expectWordList(VEGETABLES_COUNTS);
             await closeRightSidebar();
             await expect($(VIEW)).not.toBeDisplayed();
-            await startCountingCounts();
+            await startRecordingUpdates();
         });
 
         it('should not count notes while the sidebar cannot be seen', async () => {
-            await editVegetables();
+            await editVegetablesAndWait();
             await activateNote(FRUIT_NOTE);
 
-            expect(await countsSoFar()).toBe(0);
+            expect(await getUpdateCount()).toBe(0);
         });
 
         it('should show current counts once the sidebar is expanded', async () => {
-            await editVegetables();
+            await editVegetablesAndWait();
 
             await showSidebar();
 
@@ -153,18 +124,18 @@ describe('Word Frequency plugin work', () => {
             await coverSidebar();
             await activateNote(VEGETABLES_NOTE);
             await expect($(VIEW)).not.toBeDisplayed();
-            await startCountingCounts();
+            await startRecordingUpdates();
         });
 
         it('should not count notes while the sidebar cannot be seen', async () => {
-            await editVegetables();
+            await editVegetablesAndWait();
             await activateNote(FRUIT_NOTE);
 
-            expect(await countsSoFar()).toBe(0);
+            expect(await getUpdateCount()).toBe(0);
         });
 
         it('should show current counts once the sidebar is in front again', async () => {
-            await editVegetables();
+            await editVegetablesAndWait();
 
             await uncoverSidebar();
 

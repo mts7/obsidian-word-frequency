@@ -136,9 +136,9 @@ describe('WordFrequencyDisplay', () => {
             expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', {
                 text: count.toString(),
             });
-            expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button', {
-                attr: { 'data-word': word },
-            });
+            expect((innerElement.createEl as jest.Mock).mock.calls[2][0]).toBe(
+                'button'
+            );
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
         });
 
@@ -261,19 +261,36 @@ describe('WordFrequencyDisplay', () => {
 
     describe('updateThresholdDisplay', () => {
         it('should show the current threshold after it changes', () => {
-            display.createThresholdDisplay(contentEl);
+            const sidebar = document.createElement('div');
+            display.createThresholdDisplay(sidebar);
             mockPlugin.settings.threshold = 2;
 
             display.updateThresholdDisplay();
 
-            expect(firstElement.setText).toHaveBeenLastCalledWith(
+            expect(sidebar.textContent).toBe(
                 'Current frequency threshold is 2.'
             );
         });
 
         it('should do nothing before the threshold display exists', () => {
             expect(() => display.updateThresholdDisplay()).not.toThrow();
-            expect(firstElement.setText).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('blacklisting from rendered words', () => {
+        it('should blacklist the word whose button is clicked among many rows', () => {
+            const wordList = document.createElement('div');
+            const originalBlacklist = mockPlugin.settings.blacklist;
+            display.listenForBlacklistClicks(wordList);
+            ['apple', 'banana', 'cherry'].forEach((word) =>
+                display.addWordToSidebar(new Set(), word, 5, wordList)
+            );
+
+            wordList.querySelectorAll('button')[1].click();
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},banana`
+            );
         });
     });
 

@@ -12,7 +12,6 @@ export class WordFrequencyDisplay {
     constructor(
         plugin: WordFrequencyPlugin,
         view: WordFrequencyView,
-        /* eslint-disable no-unused-vars */
         private getFilter: () => string = () => this.filter,
         private debouncedFilterInput = debounce((event: Event) => {
             const target = event.target as HTMLInputElement;
@@ -20,7 +19,6 @@ export class WordFrequencyDisplay {
 
             this.view.updateContent();
         }, 500)
-        /* eslint-enable no-unused-vars */
     ) {
         this.plugin = plugin;
         this.view = view;

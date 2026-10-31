@@ -1,12 +1,4 @@
-import { Setting } from 'obsidian';
-
-// TODO: move non-constants out of this file
-export interface WordFrequencySettings {
-    blacklist: string;
-    threshold: number;
-}
-
-export type SettingFactory = (_: HTMLElement) => Setting;
+import { WordFrequencySettings } from './types';
 
 export const DEFAULT_SETTINGS: WordFrequencySettings = {
     blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',

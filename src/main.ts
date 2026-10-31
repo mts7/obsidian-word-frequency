@@ -1,40 +1,58 @@
 import { App, Plugin, PluginManifest, WorkspaceLeaf } from 'obsidian';
 import {
-    WordFrequencySettings,
     DEFAULT_SETTINGS,
     PLUGIN_NAME,
     VIEW_TYPE,
     FREQUENCY_ICON,
     COMMAND_ID_SHOW_SIDEBAR,
 } from './constants';
+import { NoteTracker } from './NoteTracker';
+import { WordFrequencySettings } from './types';
+import { UpdateScheduler } from './UpdateScheduler';
 import { ViewManager } from './ViewManager';
 import { WordFrequencyCounter } from './WordFrequencyCounter';
 import { WordFrequencySettingTab } from './WordFrequencySettingTab';
 import { WordFrequencyView } from './WordFrequencyView';
 
+export interface PluginDependencies {
+    createView: (leaf: WorkspaceLeaf) => WordFrequencyView;
+    frequencyCounter: WordFrequencyCounter;
+    noteTracker: NoteTracker;
+    settingTab: WordFrequencySettingTab;
+    updateScheduler: UpdateScheduler;
+    viewManager: ViewManager;
+}
+
 export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter;
-    settings: WordFrequencySettings = DEFAULT_SETTINGS;
+    settings: WordFrequencySettings = { ...DEFAULT_SETTINGS };
     settingTab: WordFrequencySettingTab;
     viewManager: ViewManager;
+    private readonly createView: (leaf: WorkspaceLeaf) => WordFrequencyView;
+    private readonly updateScheduler: UpdateScheduler;
 
     constructor(
         app: App,
         manifest: PluginManifest,
-        viewManager?: ViewManager,
-        settingTab?: WordFrequencySettingTab,
-        frequencyCounter?: WordFrequencyCounter,
-        /* eslint-disable no-unused-vars */
-        private createView: (leaf: WorkspaceLeaf) => WordFrequencyView = (
-            leaf
-        ) => new WordFrequencyView(leaf, this)
-        /* eslint-enable no-unused-vars */
+        dependencies: Partial<PluginDependencies> = {}
     ) {
         super(app, manifest);
-        this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
-        this.viewManager = viewManager ?? new ViewManager();
+        const noteTracker =
+            dependencies.noteTracker ?? new NoteTracker(app.workspace);
+        this.createView =
+            dependencies.createView ??
+            ((leaf) => new WordFrequencyView(leaf, this));
         this.frequencyCounter =
-            frequencyCounter ?? new WordFrequencyCounter(this);
+            dependencies.frequencyCounter ??
+            new WordFrequencyCounter(noteTracker);
+        this.settingTab =
+            dependencies.settingTab ?? new WordFrequencySettingTab(this);
+        this.updateScheduler =
+            dependencies.updateScheduler ??
+            new UpdateScheduler(this, app.workspace, noteTracker, () =>
+                this.frequencyCounter.triggerUpdateContent()
+            );
+        this.viewManager = dependencies.viewManager ?? new ViewManager();
     }
 
     async onload() {
@@ -52,13 +70,13 @@ export default class WordFrequencyPlugin extends Plugin {
             callback: () => this.activateView(),
         });
 
-        this.frequencyCounter.registerEvents();
+        this.updateScheduler.registerEvents();
 
         this.addSettingTab(this.settingTab);
     }
 
     onunload() {
-        this.frequencyCounter.cancelPendingUpdate();
+        this.updateScheduler.cancelPendingUpdate();
     }
 
     async activateView() {
@@ -78,11 +96,7 @@ export default class WordFrequencyPlugin extends Plugin {
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
 
-        this.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
-            if (leaf.view instanceof WordFrequencyView) {
-                leaf.view.updateContent();
-            }
-        });
+        this.viewManager.refreshViews(this.app.workspace);
     }
 
     private async loadSettings(): Promise<void> {

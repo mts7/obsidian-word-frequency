@@ -3,9 +3,10 @@ import { beforeEach, describe, it } from 'mocha';
 import { obsidianPage } from 'wdio-obsidian-service';
 import {
     appendToNote,
+    getRecordedUpdates,
     getWordList,
-    PLUGIN_ID,
     showSidebar,
+    startRecordingUpdates,
     useCleanState,
     WORD_LIST,
 } from '../helpers';
@@ -14,19 +15,15 @@ const LARGE_NOTE = 'Large.md';
 const DISTINCT_WORDS = 2000;
 const REPETITIONS = 100;
 const LOAD_LIMIT_MS = 30000;
-const REFRESH_LIMIT_MS = 2000;
+const FREEZE_LIMIT_MS = 2000;
 
-type CountingPlugin = {
-    frequencyCounter: { triggerUpdateContent(): void };
-};
-
-function wordFor(index: number): string {
+function createWord(index: number): string {
     return `word${String.fromCharCode(97 + (index % 26))}${index}`;
 }
 
 function buildLargeNote(): string {
     const line = Array.from({ length: DISTINCT_WORDS }, (_, index) =>
-        wordFor(index)
+        createWord(index)
     ).join(' ');
 
     return Array.from({ length: REPETITIONS }, () => line).join('\n');
@@ -45,33 +42,39 @@ async function waitForRows(rowCount: number): Promise<void> {
     );
 }
 
-async function waitUntilObsidianIsIdle(): Promise<void> {
-    await browser.executeObsidian(async () => {
-        const settleAt = performance.now() + 30000;
-        let quietTicks = 0;
-        while (quietTicks < 5 && performance.now() < settleAt) {
-            const started = performance.now();
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            quietTicks = performance.now() - started < 150 ? quietTicks + 1 : 0;
-        }
+async function startWatchingLongTasks(): Promise<void> {
+    await browser.execute(() => {
+        const tasks: { start: number; duration: number }[] = [];
+        window.wordFrequencyLongTasks = tasks;
+        new PerformanceObserver((list) =>
+            list.getEntries().forEach((entry) =>
+                tasks.push({
+                    start: entry.startTime,
+                    duration: entry.duration,
+                })
+            )
+        ).observe({ entryTypes: ['longtask'] });
     });
 }
 
-async function timeRefresh(): Promise<number> {
-    return browser.executeObsidian(async ({ app }, pluginId) => {
-        const plugin = (
-            app as unknown as {
-                plugins: { plugins: Record<string, CountingPlugin> };
-            }
-        ).plugins.plugins[pluginId];
-        const started = performance.now();
-        plugin.frequencyCounter.triggerUpdateContent();
-        await new Promise((resolve) =>
-            requestAnimationFrame(() => setTimeout(resolve, 0))
-        );
+async function getFreezeDuringUpdate(): Promise<number> {
+    await browser.waitUntil(
+        async () => (await getRecordedUpdates()).length > 0,
+        {
+            timeout: LOAD_LIMIT_MS,
+        }
+    );
+    await browser.pause(500);
+    const [updatedAt] = await getRecordedUpdates();
 
-        return performance.now() - started;
-    }, PLUGIN_ID);
+    return browser.execute(
+        (time) =>
+            (window.wordFrequencyLongTasks ?? []).find(
+                (task) =>
+                    task.start <= time && time <= task.start + task.duration
+            )?.duration ?? 0,
+        updatedAt
+    );
 }
 
 describe('Word Frequency plugin with a large note', () => {
@@ -88,20 +91,23 @@ describe('Word Frequency plugin with a large note', () => {
         const words = await getWordList();
 
         expect(words).toHaveLength(DISTINCT_WORDS);
-        expect(words[0]).toEqual([wordFor(0), REPETITIONS]);
+        expect(words[0]).toEqual([createWord(0), REPETITIONS]);
         expect(words[DISTINCT_WORDS - 1]).toEqual([
-            wordFor(DISTINCT_WORDS - 1),
+            createWord(DISTINCT_WORDS - 1),
             REPETITIONS,
         ]);
     });
 
-    it(`should recount and redraw ${DISTINCT_WORDS} words within ${REFRESH_LIMIT_MS} ms after an edit`, async () => {
-        await appendToNote(LARGE_NOTE, ` ${wordFor(1)}`.repeat(REPETITIONS));
-        await waitUntilObsidianIsIdle();
+    it(`should not freeze Obsidian for ${FREEZE_LIMIT_MS} ms or more while recounting after an edit`, async () => {
+        await startRecordingUpdates();
+        await startWatchingLongTasks();
 
-        const elapsed = await timeRefresh();
+        await appendToNote(LARGE_NOTE, ` ${createWord(1)}`.repeat(REPETITIONS));
 
-        expect(elapsed).toBeLessThan(REFRESH_LIMIT_MS);
-        expect((await getWordList())[0]).toEqual([wordFor(1), REPETITIONS * 2]);
+        expect(await getFreezeDuringUpdate()).toBeLessThan(FREEZE_LIMIT_MS);
+        expect((await getWordList())[0]).toEqual([
+            createWord(1),
+            REPETITIONS * 2,
+        ]);
     });
 });
