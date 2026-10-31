@@ -2,7 +2,6 @@ import pluginJs from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-/** @type {import('eslint').Linter.Config[]} */
 export default [
     {
         files: ['**/*.{js,mjs,cjs,ts}'],
@@ -44,7 +43,8 @@ export default [
                     exceptions: ['id', 'on', 'e', 'i', '_'],
                 },
             ],
-            'no-unused-vars': [
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
                 'error',
                 { argsIgnorePattern: '^_' },
             ],

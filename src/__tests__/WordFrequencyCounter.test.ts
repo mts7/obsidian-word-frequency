@@ -1,130 +1,24 @@
-import {
-    debounce,
-    Debouncer,
-    MarkdownView,
-    Workspace,
-    WorkspaceLeaf,
-} from 'obsidian';
-import { EVENT_UPDATE, VIEW_TYPE } from '../constants';
-import WordFrequencyPlugin from '../main';
+import { EVENT_UPDATE } from '../constants';
+import { NoteTracker } from '../NoteTracker';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
+import {
+    createNote,
+    createUnreadableNote,
+    FakeWorkspace,
+    recordUpdates,
+} from './fakes/workspace';
 
-type Listener = (..._args: unknown[]) => void;
-type PendingDebouncer = jest.Mock & { cancel: jest.Mock };
-
-const FRUIT = 'apple banana apple';
-const VEGETABLES = 'carrot carrot potato';
 const FRUIT_COUNTS = [
     ['apple', 2],
     ['banana', 1],
 ];
-const VEGETABLES_COUNTS = [
-    ['carrot', 2],
-    ['potato', 1],
-];
 
-function createNote(content: string): {
-    leaf: WorkspaceLeaf;
-    view: MarkdownView;
-} {
-    const leaf = {} as WorkspaceLeaf & { view: MarkdownView };
-    const view = Object.create(MarkdownView.prototype) as MarkdownView;
-    Object.assign(view, {
-        editor: { getValue: jest.fn().mockReturnValue(content) },
-        leaf,
-    });
-    leaf.view = view;
-
-    return { leaf, view };
+function createCounter(workspace = new FakeWorkspace()): WordFrequencyCounter {
+    return new WordFrequencyCounter(new NoteTracker(workspace.getWorkspace()));
 }
 
-function createEnvironment() {
-    const listeners: Record<string, Listener> = {};
-    const state = {
-        activeView: null as MarkdownView | null,
-        markdownLeaves: [] as WorkspaceLeaf[],
-        mostRecentLeaf: null as WorkspaceLeaf | null,
-        sidebarOpen: true,
-    };
-    const workspace = {
-        on: jest.fn((name: string, callback: Listener) => {
-            listeners[name] = callback;
-
-            return name;
-        }),
-        onLayoutReady: jest.fn((callback: Listener) => {
-            listeners['layout-ready'] = callback;
-        }),
-        getActiveViewOfType: jest.fn(() => state.activeView),
-        getLeavesOfType: jest.fn((type: string) => {
-            if (type === VIEW_TYPE) {
-                return state.sidebarOpen ? [{} as WorkspaceLeaf] : [];
-            }
-
-            return type === 'markdown' ? state.markdownLeaves : [];
-        }),
-        getMostRecentLeaf: jest.fn(() => state.mostRecentLeaf),
-    } as unknown as Workspace;
-    const plugin = {
-        app: { workspace },
-        registerEvent: jest.fn(),
-    } as unknown as WordFrequencyPlugin;
-    const debouncer = Object.assign(jest.fn(), {
-        cancel: jest.fn(),
-    }) as PendingDebouncer;
-    const counter = new WordFrequencyCounter(
-        plugin,
-        debouncer as unknown as Debouncer<[], void>
-    );
-
-    return { counter, debouncer, listeners, plugin, state, workspace };
-}
-
-function captureDispatches(): jest.SpyInstance {
-    return jest.spyOn(window.document, 'dispatchEvent');
-}
-
-function dispatchedCounts(spy: jest.SpyInstance): unknown[] {
-    return spy.mock.calls
-        .map(([event]) => event as CustomEvent)
-        .filter((event) => event.type === EVENT_UPDATE)
-        .map((event) => event.detail.wordCounts);
-}
-
-const { counter } = createEnvironment();
-
-describe('WordFrequencyCounter tests', () => {
-    let dispatchSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-        dispatchSpy = captureDispatches();
-    });
-
-    afterEach(() => {
-        dispatchSpy.mockRestore();
-    });
-
-    describe('constructor', () => {
-        it('should set the plugin', () => {
-            const { counter, plugin } = createEnvironment();
-
-            expect(counter.plugin).toBe(plugin);
-        });
-
-        it('should delay editor updates by 3000 ms and count the current note when they run', () => {
-            const { plugin, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.activeView = fruit.view;
-            const defaultCounter = new WordFrequencyCounter(plugin);
-            const [callback, wait] = (debounce as jest.Mock).mock.lastCall;
-
-            callback();
-
-            expect(defaultCounter).toBeInstanceOf(WordFrequencyCounter);
-            expect(wait).toBe(3000);
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
-        });
-    });
+describe('WordFrequencyCounter', () => {
+    const counter = createCounter();
 
     describe('calculateWordFrequencies', () => {
         it('should calculate word frequencies', () => {
@@ -634,265 +528,69 @@ describe('WordFrequencyCounter tests', () => {
         });
     });
 
-    describe('registerEvents', () => {
-        it('should register each workspace listener once and wait for the layout', () => {
-            const { counter, plugin, workspace } = createEnvironment();
-
-            counter.registerEvents();
-
-            expect(workspace.on).toHaveBeenCalledTimes(3);
-            expect(workspace.on).toHaveBeenCalledWith(
-                'active-leaf-change',
-                expect.any(Function)
-            );
-            expect(workspace.on).toHaveBeenCalledWith(
-                'file-open',
-                expect.any(Function)
-            );
-            expect(workspace.on).toHaveBeenCalledWith(
-                'editor-change',
-                expect.any(Function)
-            );
-            expect(plugin.registerEvent).toHaveBeenCalledWith(
-                'active-leaf-change'
-            );
-            expect(plugin.registerEvent).toHaveBeenCalledWith('file-open');
-            expect(plugin.registerEvent).toHaveBeenCalledWith('editor-change');
-            expect(workspace.onLayoutReady).toHaveBeenCalledTimes(1);
-        });
-
-        it('should not register more listeners when notes become active', () => {
-            const { counter, listeners, plugin, workspace } =
-                createEnvironment();
-            counter.registerEvents();
-
-            for (let switches = 0; switches < 5; switches++) {
-                listeners['active-leaf-change'](createNote(FRUIT).leaf);
-            }
-
-            expect(workspace.on).toHaveBeenCalledTimes(3);
-            expect(plugin.registerEvent).toHaveBeenCalledTimes(3);
-        });
-
-        it('should count a note that becomes active', () => {
-            const { counter, listeners, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.markdownLeaves = [fruit.leaf];
-            counter.registerEvents();
-
-            listeners['active-leaf-change'](fruit.leaf);
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
-        });
-
-        it('should count the active note when a file opens', () => {
-            const { counter, listeners, state } = createEnvironment();
-            state.activeView = createNote(FRUIT).view;
-            counter.registerEvents();
-
-            listeners['file-open']();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
-        });
-
-        it('should count the most recent note once the layout is ready', () => {
-            const { counter, listeners, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.markdownLeaves = [fruit.leaf];
-            state.mostRecentLeaf = fruit.leaf;
-            counter.registerEvents();
-
-            listeners['layout-ready']();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
-        });
-
-        it('should delay the update after an editor change', () => {
-            const { counter, debouncer, listeners } = createEnvironment();
-            counter.registerEvents();
-
-            listeners['editor-change']();
-
-            expect(debouncer).toHaveBeenCalledWith();
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-        });
-
-        it('should not count anything while the sidebar is closed', () => {
-            const { counter, listeners, state } = createEnvironment();
-            state.sidebarOpen = false;
-            state.activeView = createNote(FRUIT).view;
-            counter.registerEvents();
-
-            listeners['active-leaf-change'](createNote(FRUIT).leaf);
-            listeners['file-open']();
-            listeners['layout-ready']();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-        });
-    });
-
-    describe('delayed update', () => {
-        it('should count the note that is current when it runs, not the note that was edited', () => {
-            let pending: Listener | undefined;
-            (debounce as jest.Mock).mockImplementationOnce(
-                (callback: Listener) =>
-                    Object.assign(
-                        () => {
-                            pending = callback;
-                        },
-                        { cancel: jest.fn() }
-                    )
-            );
-            const { plugin, state } = createEnvironment();
-            const counter = new WordFrequencyCounter(plugin);
-            const fruit = createNote(FRUIT);
-            const vegetables = createNote(VEGETABLES);
-            state.markdownLeaves = [fruit.leaf, vegetables.leaf];
-            counter.registerEvents();
-            const listeners = Object.fromEntries(
-                (
-                    plugin.app.workspace.on as unknown as jest.Mock
-                ).mock.calls.map(([name, callback]) => [name, callback])
-            ) as Record<string, Listener>;
-            listeners['active-leaf-change'](fruit.leaf);
-            listeners['editor-change']();
-            listeners['active-leaf-change'](vegetables.leaf);
-            dispatchSpy.mockClear();
-
-            pending?.();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([VEGETABLES_COUNTS]);
-        });
-
-        it('should cancel a pending update', () => {
-            const { counter, debouncer } = createEnvironment();
-
-            counter.cancelPendingUpdate();
-
-            expect(debouncer.cancel).toHaveBeenCalled();
-        });
-    });
-
-    describe('handleActiveLeafChange', () => {
-        it('should not count anything when no leaf is active', () => {
-            const { counter } = createEnvironment();
-
-            counter.handleActiveLeafChange(null);
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-        });
-
-        it('should keep counting the previous note when a non-note leaf becomes active', () => {
-            const { counter, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.markdownLeaves = [fruit.leaf];
-            counter.handleActiveLeafChange(fruit.leaf);
-            dispatchSpy.mockClear();
-
-            counter.handleActiveLeafChange({
-                view: {},
-            } as unknown as WorkspaceLeaf);
-            counter.triggerUpdateContent();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
-        });
-    });
-
     describe('triggerUpdateContent', () => {
-        it('should count the active note', () => {
-            const { counter, state } = createEnvironment();
-            state.activeView = createNote(FRUIT).view;
+        let workspace: FakeWorkspace;
+        let updates: ReturnType<typeof recordUpdates>;
 
-            counter.triggerUpdateContent();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
+        beforeEach(() => {
+            workspace = new FakeWorkspace();
+            updates = recordUpdates();
         });
 
-        it('should count the remembered note while the sidebar is active', () => {
-            const { counter, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.markdownLeaves = [fruit.leaf];
-            counter.handleActiveLeafChange(fruit.leaf);
-            dispatchSpy.mockClear();
-
-            counter.triggerUpdateContent();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([FRUIT_COUNTS]);
+        afterEach(() => {
+            updates.stop();
         });
 
-        it('should count the most recent note after the remembered note was closed', () => {
-            const { counter, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            const vegetables = createNote(VEGETABLES);
-            state.markdownLeaves = [fruit.leaf];
-            counter.handleActiveLeafChange(fruit.leaf);
-            state.markdownLeaves = [vegetables.leaf];
-            state.mostRecentLeaf = vegetables.leaf;
-            dispatchSpy.mockClear();
+        it('should publish the counts of the current note', () => {
+            workspace.activateNote(createNote('apple banana apple'));
 
-            counter.triggerUpdateContent();
+            createCounter(workspace).triggerUpdateContent();
 
-            expect(dispatchedCounts(dispatchSpy)).toEqual([VEGETABLES_COUNTS]);
+            expect(updates.counts).toEqual([FRUIT_COUNTS]);
         });
 
-        it('should not use the remembered note after its leaf shows something else', () => {
-            const { counter, state } = createEnvironment();
-            const fruit = createNote(FRUIT);
-            state.markdownLeaves = [fruit.leaf];
-            counter.handleActiveLeafChange(fruit.leaf);
-            (fruit.leaf as { view: unknown }).view = {};
-            dispatchSpy.mockClear();
-
-            counter.triggerUpdateContent();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-        });
-
-        it('should not dispatch or report an error when no note is open', () => {
-            const { counter } = createEnvironment();
-            const consoleErrorSpy = jest
-                .spyOn(console, 'error')
-                .mockImplementation(() => {});
-
-            counter.triggerUpdateContent();
-
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-            expect(consoleErrorSpy).not.toHaveBeenCalled();
-            consoleErrorSpy.mockRestore();
-        });
-
-        it('should dispatch the counts as the event detail', () => {
-            const { counter, state } = createEnvironment();
-            state.activeView = createNote(FRUIT).view;
-
-            counter.triggerUpdateContent();
-
-            const event = dispatchSpy.mock.calls[0][0] as CustomEvent;
-            expect(event.type).toBe(EVENT_UPDATE);
-            expect(event.detail).toEqual({ wordCounts: FRUIT_COUNTS });
-        });
-
-        it('should call console.error when counting throws an error', () => {
-            const { counter, state } = createEnvironment();
-            state.activeView = createNote(FRUIT).view;
-            const expectedError = new Error('test error');
-            jest.spyOn(counter, 'calculateWordFrequencies').mockImplementation(
-                () => {
-                    throw expectedError;
-                }
+        it('should publish to the given event target', () => {
+            const target = new EventTarget();
+            const published: unknown[] = [];
+            target.addEventListener(EVENT_UPDATE, (event) =>
+                published.push((event as CustomEvent).detail)
             );
-            const consoleErrorSpy = jest
+            workspace.activateNote(createNote('apple banana apple'));
+            const tracker = new NoteTracker(workspace.getWorkspace());
+
+            new WordFrequencyCounter(tracker, target).triggerUpdateContent();
+
+            expect(published).toEqual([{ wordCounts: FRUIT_COUNTS }]);
+            expect(updates.counts).toEqual([]);
+        });
+
+        it('should publish nothing when no note is open', () => {
+            const consoleError = jest
                 .spyOn(console, 'error')
                 .mockImplementation(() => {});
 
-            counter.triggerUpdateContent();
+            createCounter(workspace).triggerUpdateContent();
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect(updates.counts).toEqual([]);
+            expect(consoleError).not.toHaveBeenCalled();
+            consoleError.mockRestore();
+        });
+
+        it('should report an error and publish nothing when the note cannot be read', () => {
+            const error = new Error('unreadable');
+            workspace.activateNote(createUnreadableNote(error));
+            const consoleError = jest
+                .spyOn(console, 'error')
+                .mockImplementation(() => {});
+
+            createCounter(workspace).triggerUpdateContent();
+
+            expect(consoleError).toHaveBeenCalledWith(
                 'error in triggerUpdateContent',
-                expectedError
+                error
             );
-            expect(dispatchedCounts(dispatchSpy)).toEqual([]);
-            consoleErrorSpy.mockRestore();
+            expect(updates.counts).toEqual([]);
+            consoleError.mockRestore();
         });
     });
 });

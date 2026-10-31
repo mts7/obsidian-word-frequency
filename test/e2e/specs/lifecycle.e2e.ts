@@ -4,9 +4,11 @@ import { obsidianPage } from 'wdio-obsidian-service';
 import {
     activateNote,
     appendToNote,
+    EDIT_DEBOUNCE_MS,
     expectWordList,
     FRUIT_COUNTS,
     FRUIT_NOTE,
+    getRecordedUpdates,
     getSettings,
     openNoteInNewTab,
     openNoteInNewWindow,
@@ -16,6 +18,7 @@ import {
     SHOW_SIDEBAR_COMMAND,
     showSidebar,
     startErrorCapture,
+    startRecordingUpdates,
     switchToMainWindow,
     THRESHOLD_DISPLAY,
     updateSettings,
@@ -32,17 +35,6 @@ async function countSidebars(): Promise<number> {
     return browser.executeObsidian(
         ({ app }, viewType) => app.workspace.getLeavesOfType(viewType).length,
         VIEW_TYPE
-    );
-}
-
-async function countEditorListeners(): Promise<number> {
-    return browser.executeObsidian(
-        ({ app }) =>
-            (
-                app.workspace as unknown as {
-                    _: Record<string, unknown[] | undefined>;
-                }
-            )._['editor-change']?.length ?? 0
     );
 }
 
@@ -90,24 +82,28 @@ describe('Word Frequency plugin lifecycle', () => {
         expect(await countSidebars()).toBe(1);
     });
 
-    it('should not add editor-change listeners each time a note becomes active', async () => {
+    it('should update once per edit no matter how often notes were switched', async () => {
         await openSidebarForFruit();
         await openNoteInNewTab(VEGETABLES_NOTE);
-        await activateNote(FRUIT_NOTE);
-        const listenersBefore = await countEditorListeners();
-
         for (let switches = 0; switches < 5; switches++) {
-            await activateNote(VEGETABLES_NOTE);
             await activateNote(FRUIT_NOTE);
+            await activateNote(VEGETABLES_NOTE);
         }
+        await activateNote(FRUIT_NOTE);
+        await expectWordList(FRUIT_COUNTS);
+        await startRecordingUpdates();
 
-        expect(await countEditorListeners()).toBe(listenersBefore);
+        await appendToNote(FRUIT_NOTE, '\nApple.\n');
+        await browser.pause(EDIT_DEBOUNCE_MS + 1000);
+
+        expect(await getRecordedUpdates()).toHaveLength(1);
     });
 
     it('should update the sidebar for a note edited in a pop-out window', async () => {
         await openSidebarForFruit();
 
         await openNoteInNewWindow(VEGETABLES_NOTE);
+        await activateNote(VEGETABLES_NOTE);
         await expectWordList(VEGETABLES_COUNTS);
         await appendToNote(VEGETABLES_NOTE, '\nPotato potato.\n');
 

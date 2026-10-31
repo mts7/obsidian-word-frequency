@@ -34,6 +34,10 @@ describe('WordFrequencyDisplay', () => {
             getViewType: jest.fn(),
             onOpen: jest.fn(),
             onClose: jest.fn(),
+            registerDomEvent: jest.fn(
+                (element: HTMLElement, type: string, handler: EventListener) =>
+                    element.addEventListener(type, handler)
+            ),
             updateContent: jest.fn(),
         } as unknown as WordFrequencyView;
         secondElement = {
@@ -132,28 +136,18 @@ describe('WordFrequencyDisplay', () => {
             expect(innerElement.createEl).toHaveBeenNthCalledWith(2, 'span', {
                 text: count.toString(),
             });
-            expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button');
-            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
-                buttonElement,
-                'click',
-                expect.any(Function)
+            expect((innerElement.createEl as jest.Mock).mock.calls[2][0]).toBe(
+                'button'
             );
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
         });
 
-        it('should save the word to the blacklist when the button is clicked', () => {
-            const word = 'banana';
-            const originalBlacklist = mockPlugin.settings.blacklist;
+        it('should not register a listener for each word', () => {
+            display.addWordToSidebar(blacklist, 'apple', 13, contentContainer);
+            display.addWordToSidebar(blacklist, 'banana', 13, contentContainer);
 
-            display.addWordToSidebar(blacklist, word, 13, contentContainer);
-            const clickHandler = (mockPlugin.registerDomEvent as jest.Mock).mock
-                .calls[0][2];
-            clickHandler();
-
-            expect(mockPlugin.settings.blacklist).toBe(
-                `${originalBlacklist},${word}`
-            );
-            expect(mockView.updateContent).toHaveBeenCalled();
+            expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
+            expect(mockView.registerDomEvent).not.toHaveBeenCalled();
         });
 
         it('should add word if it matches the filter and has the threshold count', () => {
@@ -174,11 +168,6 @@ describe('WordFrequencyDisplay', () => {
                 cls: ELEMENT_CLASSES.containerRow,
             });
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
-            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
-                buttonElement,
-                'click',
-                expect.any(Function)
-            );
         });
 
         it('should not add word if it does not match the filter', () => {
@@ -272,19 +261,118 @@ describe('WordFrequencyDisplay', () => {
 
     describe('updateThresholdDisplay', () => {
         it('should show the current threshold after it changes', () => {
-            display.createThresholdDisplay(contentEl);
+            const sidebar = document.createElement('div');
+            display.createThresholdDisplay(sidebar);
             mockPlugin.settings.threshold = 2;
 
             display.updateThresholdDisplay();
 
-            expect(firstElement.setText).toHaveBeenLastCalledWith(
+            expect(sidebar.textContent).toBe(
                 'Current frequency threshold is 2.'
             );
         });
 
         it('should do nothing before the threshold display exists', () => {
             expect(() => display.updateThresholdDisplay()).not.toThrow();
-            expect(firstElement.setText).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('blacklisting from rendered words', () => {
+        it('should blacklist the word whose button is clicked among many rows', () => {
+            const wordList = document.createElement('div');
+            const originalBlacklist = mockPlugin.settings.blacklist;
+            display.listenForBlacklistClicks(wordList);
+            ['apple', 'banana', 'cherry'].forEach((word) =>
+                display.addWordToSidebar(new Set(), word, 5, wordList)
+            );
+
+            wordList.querySelectorAll('button')[1].click();
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},banana`
+            );
+        });
+    });
+
+    describe('listenForBlacklistClicks', () => {
+        let wordList: HTMLDivElement;
+        let row: HTMLDivElement;
+        let wordText: HTMLSpanElement;
+        let countText: HTMLSpanElement;
+        let icon: HTMLElement;
+        let originalBlacklist: string;
+
+        beforeEach(() => {
+            wordList = document.createElement('div');
+            row = document.createElement('div');
+            const countContainer = document.createElement('div');
+            wordText = document.createElement('span');
+            wordText.textContent = 'banana';
+            countText = document.createElement('span');
+            countText.textContent = '13';
+            countContainer.append(wordText, countText);
+            const buttonContainer = document.createElement('div');
+            const button = document.createElement('button');
+            button.dataset.word = 'banana';
+            icon = document.createElement('span');
+            button.appendChild(icon);
+            buttonContainer.appendChild(button);
+            row.append(countContainer, buttonContainer);
+            wordList.appendChild(row);
+            originalBlacklist = mockPlugin.settings.blacklist;
+
+            display.listenForBlacklistClicks(wordList);
+        });
+
+        it('should register one click listener with the view', () => {
+            expect(mockView.registerDomEvent).toHaveBeenCalledTimes(1);
+            expect(mockView.registerDomEvent).toHaveBeenCalledWith(
+                wordList,
+                'click',
+                expect.any(Function)
+            );
+        });
+
+        it('should blacklist the word of the clicked button', () => {
+            icon.click();
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},banana`
+            );
+            expect(mockView.updateContent).toHaveBeenCalled();
+        });
+
+        it.each([
+            ['the word', () => wordText],
+            ['the count', () => countText],
+            ['the row', () => row],
+            ['the list', () => wordList],
+        ])('should not blacklist anything when %s is clicked', (_, target) => {
+            target().click();
+
+            expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
+            expect(mockView.updateContent).not.toHaveBeenCalled();
+        });
+
+        it('should ignore a button without a word', () => {
+            const otherButton = document.createElement('button');
+            row.appendChild(otherButton);
+
+            otherButton.click();
+
+            expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
+            expect(mockView.updateContent).not.toHaveBeenCalled();
+        });
+
+        it('should ignore a word button outside the list', () => {
+            const outerButton = document.createElement('button');
+            outerButton.dataset.word = 'outer';
+            outerButton.appendChild(wordList);
+
+            wordText.click();
+
+            expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
+            expect(mockView.updateContent).not.toHaveBeenCalled();
         });
     });
 

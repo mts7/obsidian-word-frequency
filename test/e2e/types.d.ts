@@ -9,5 +9,7 @@ declare module 'wdio-obsidian-service' {
 declare global {
     interface Window {
         wordFrequencyErrors?: string[];
+        wordFrequencyUpdates?: number[];
+        wordFrequencyLongTasks?: { start: number; duration: number }[];
     }
 }

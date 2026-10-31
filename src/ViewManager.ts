@@ -1,13 +1,8 @@
 import { Workspace, WorkspaceLeaf } from 'obsidian';
-import WordFrequencyPlugin from './main';
+import { VIEW_TYPE } from './constants';
+import { WordFrequencyView } from './WordFrequencyView';
 
 export class ViewManager {
-    private plugin: WordFrequencyPlugin;
-
-    constructor(plugin: WordFrequencyPlugin) {
-        this.plugin = plugin;
-    }
-
     getOrCreateLeaf(
         workspace: Workspace,
         viewType: string
@@ -27,7 +22,11 @@ export class ViewManager {
         });
     }
 
-    updateContent(): void {
-        this.plugin.frequencyCounter.triggerUpdateContent();
+    refreshViews(workspace: Workspace): void {
+        workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
+            if (leaf.view instanceof WordFrequencyView) {
+                leaf.view.updateContent();
+            }
+        });
     }
 }

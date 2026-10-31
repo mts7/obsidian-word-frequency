@@ -12,7 +12,6 @@ export class WordFrequencyDisplay {
     constructor(
         plugin: WordFrequencyPlugin,
         view: WordFrequencyView,
-        /* eslint-disable no-unused-vars */
         private getFilter: () => string = () => this.filter,
         private debouncedFilterInput = debounce((event: Event) => {
             const target = event.target as HTMLInputElement;
@@ -20,7 +19,6 @@ export class WordFrequencyDisplay {
 
             this.view.updateContent();
         }, 500)
-        /* eslint-enable no-unused-vars */
     ) {
         this.plugin = plugin;
         this.view = view;
@@ -53,11 +51,10 @@ export class WordFrequencyDisplay {
         const buttonContainer = row.createEl('div', {
             cls: ELEMENT_CLASSES.containerButton,
         });
-        const button = buttonContainer.createEl('button');
-        setIcon(button, 'eye-off');
-        this.plugin.registerDomEvent(button, 'click', () => {
-            this.saveWordToBlacklist(word);
+        const button = buttonContainer.createEl('button', {
+            attr: { 'data-word': word },
         });
+        setIcon(button, 'eye-off');
     }
 
     createFilter(contentEl: HTMLElement) {
@@ -98,6 +95,16 @@ export class WordFrequencyDisplay {
         this.thresholdDisplay?.setText(
             `Current frequency threshold is ${this.plugin.settings.threshold}.`
         );
+    }
+
+    listenForBlacklistClicks(wordList: HTMLElement) {
+        this.view.registerDomEvent(wordList, 'click', (event) => {
+            const button = (event.target as HTMLElement).closest('button');
+            const word = button?.dataset.word;
+            if (word !== undefined && wordList.contains(button)) {
+                this.saveWordToBlacklist(word);
+            }
+        });
     }
 
     saveWordToBlacklist(word: string) {

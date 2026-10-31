@@ -1,4 +1,4 @@
-import { App, WorkspaceLeaf, PluginManifest, Workspace } from 'obsidian';
+import { App, PluginManifest, WorkspaceLeaf } from 'obsidian';
 import {
     COMMAND_ID_SHOW_SIDEBAR,
     DEFAULT_SETTINGS,
@@ -7,32 +7,11 @@ import {
     VIEW_TYPE,
 } from '../constants';
 import WordFrequencyPlugin from '../main';
-import { ViewManager } from '../ViewManager';
-import { WordFrequencyCounter } from '../WordFrequencyCounter';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 import { WordFrequencyView } from '../WordFrequencyView';
+import { createNote, FakeWorkspace, recordUpdates } from './fakes/workspace';
 
-interface MockApp extends App {
-    workspace: Workspace;
-    loadData: jest.Mock;
-    saveData: jest.Mock;
-}
-
-const mockApp: MockApp = {
-    workspace: {
-        on: jest.fn((_, callback) => {
-            return callback;
-        }),
-        getLeavesOfType: jest.fn(),
-        getRightLeaf: jest.fn(),
-        revealLeaf: jest.fn(),
-        getActiveViewOfType: jest.fn(),
-        onLayoutReady: jest.fn(),
-        setViewState: jest.fn(),
-    } as unknown as Workspace,
-} as MockApp;
-
-const mockManifest: PluginManifest = {
+const MANIFEST: PluginManifest = {
     id: 'word-frequency',
     name: 'Word Frequency',
     version: '1.3.1',
@@ -41,213 +20,215 @@ const mockManifest: PluginManifest = {
     author: 'Mike Rodarte',
     authorUrl: 'https://example.com',
 };
+const SIDEBAR_TITLE = `Show ${PLUGIN_NAME.toLowerCase()} sidebar`;
+const EDIT_DELAY_MS = 3000;
+
+function createSidebarLeaf(): WorkspaceLeaf {
+    return { setViewState: jest.fn() } as unknown as WorkspaceLeaf;
+}
+
+function getListedWords(view: WordFrequencyView): string[] {
+    return Array.from(
+        view.contentEl.querySelectorAll('.word-frequency-row span:first-child')
+    ).map((word) => word.textContent ?? '');
+}
 
 describe('WordFrequencyPlugin', () => {
+    let workspace: FakeWorkspace;
     let plugin: WordFrequencyPlugin;
-    const mockView: WordFrequencyView = {} as unknown as WordFrequencyView;
-    let mockViewManager: ViewManager;
+    let updates: ReturnType<typeof recordUpdates>;
 
-    beforeEach(async () => {
-        mockViewManager = {
-            getOrCreateLeaf: jest.fn().mockReturnValue(null),
-            setViewState: jest.fn(),
-            updateContent: jest.fn(),
-        } as unknown as ViewManager;
-        const mockCreateView = jest.fn().mockReturnValue(mockView);
-        // TODO: provide mocks for the settingTab and frequencyCounter instead of undefined
+    beforeEach(() => {
+        workspace = new FakeWorkspace();
         plugin = new WordFrequencyPlugin(
-            mockApp,
-            mockManifest,
-            mockViewManager,
-            undefined,
-            undefined,
-            mockCreateView
+            { workspace: workspace.getWorkspace() } as App,
+            MANIFEST
         );
-        plugin['app'] = mockApp;
-        plugin['loadData'] = jest.fn().mockResolvedValue({});
-        plugin['saveData'] = jest.fn().mockResolvedValue(undefined);
-        plugin['registerView'] = jest.fn();
-        plugin['addCommand'] = jest.fn();
-        plugin['addRibbonIcon'] = jest.fn();
-        plugin['registerEvent'] = jest.fn();
-        plugin['addSettingTab'] = jest.fn();
+        updates = recordUpdates();
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        updates.stop();
+        jest.useRealTimers();
     });
 
     describe('onload', () => {
-        it('should set up the plugin', async () => {
+        it('should add the sidebar view, ribbon icon, command and settings to Obsidian', async () => {
             await plugin.onload();
 
-            expect(plugin.frequencyCounter).toBeInstanceOf(
-                WordFrequencyCounter
-            );
             expect(plugin.registerView).toHaveBeenCalledWith(
                 VIEW_TYPE,
                 expect.any(Function)
             );
             expect(plugin.addRibbonIcon).toHaveBeenCalledWith(
                 FREQUENCY_ICON,
-                `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
+                SIDEBAR_TITLE,
                 expect.any(Function)
             );
             expect(plugin.addCommand).toHaveBeenCalledWith({
                 id: COMMAND_ID_SHOW_SIDEBAR,
-                name: `Show ${PLUGIN_NAME.toLowerCase()} sidebar`,
+                name: SIDEBAR_TITLE,
                 callback: expect.any(Function),
             });
-            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
-                'active-leaf-change',
-                expect.any(Function)
-            );
-            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
-                'file-open',
-                expect.any(Function)
-            );
-            expect(plugin.app.workspace.on).toHaveBeenCalledWith(
-                'editor-change',
-                expect.any(Function)
-            );
-            expect(plugin.app.workspace.onLayoutReady).toHaveBeenCalled();
-            expect(plugin.settingTab).toBeInstanceOf(WordFrequencySettingTab);
             expect(plugin.addSettingTab).toHaveBeenCalledWith(
-                plugin.settingTab
+                expect.any(WordFrequencySettingTab)
             );
         });
 
-        it('should set up the plugin and respond to callbacks', async () => {
-            const activateViewMock = jest.fn();
-            const registerEvents = jest.fn();
-            plugin['activateView'] = activateViewMock;
-            plugin['frequencyCounter'] = {
-                registerEvents,
-            } as unknown as WordFrequencyCounter;
-
+        it.each([
+            [
+                'ribbon icon',
+                (target: WordFrequencyPlugin) =>
+                    (target.addRibbonIcon as jest.Mock).mock.calls[0][2](),
+            ],
+            [
+                'command',
+                (target: WordFrequencyPlugin) =>
+                    (
+                        target.addCommand as jest.Mock
+                    ).mock.calls[0][0].callback(),
+            ],
+        ])('should show the sidebar from the %s', async (_, runAction) => {
+            const leaf = createSidebarLeaf();
+            workspace.rightLeaf = leaf;
             await plugin.onload();
 
-            const ribbonCallback = (plugin.addRibbonIcon as jest.Mock).mock
-                .calls[0][2];
-            ribbonCallback();
-            const commandArgs = (plugin.addCommand as jest.Mock).mock
-                .calls[0][0];
-            const commandCallback = commandArgs.callback;
-            commandCallback();
-            const viewCallback = (plugin.registerView as jest.Mock).mock
-                .calls[0][1];
-            const fakeLeaf = {} as unknown as WorkspaceLeaf;
-            const view = viewCallback(fakeLeaf);
+            await runAction(plugin);
+            await Promise.resolve();
 
-            expect(activateViewMock).toHaveBeenCalledTimes(2);
-            expect(registerEvents).toHaveBeenCalledTimes(1);
-            expect(view).toBe(mockView);
+            expect(workspace.revealedLeaves).toEqual([leaf]);
+        });
+
+        it('should create the sidebar view for Obsidian', async () => {
+            await plugin.onload();
+
+            const createView = (plugin.registerView as jest.Mock).mock
+                .calls[0][1];
+
+            expect(createView({} as WorkspaceLeaf)).toBeInstanceOf(
+                WordFrequencyView
+            );
+        });
+
+        it('should use an injected view factory', async () => {
+            const view = {} as WordFrequencyView;
+            plugin = new WordFrequencyPlugin(
+                { workspace: workspace.getWorkspace() } as App,
+                MANIFEST,
+                { createView: () => view }
+            );
+            await plugin.onload();
+
+            const createView = (plugin.registerView as jest.Mock).mock
+                .calls[0][1];
+
+            expect(createView({} as WorkspaceLeaf)).toBe(view);
+        });
+
+        it('should count a note when it becomes active while the sidebar is open', async () => {
+            workspace.openSidebar();
+            await plugin.onload();
+
+            workspace.activateNote(createNote('apple banana apple'));
+
+            expect(updates.counts.at(-1)).toEqual([
+                ['apple', 2],
+                ['banana', 1],
+            ]);
         });
     });
 
     describe('onunload', () => {
-        it('should cancel a pending word count update', () => {
-            const cancelPendingUpdate = jest.fn();
-            plugin['frequencyCounter'] = {
-                cancelPendingUpdate,
-            } as unknown as WordFrequencyCounter;
+        it('should not count a note edited just before the plugin unloads', async () => {
+            jest.useFakeTimers();
+            workspace.openSidebar();
+            await plugin.onload();
+            workspace.activateNote(createNote('apple'));
+            updates.counts.length = 0;
+            workspace.editNote();
 
             plugin.onunload();
+            jest.advanceTimersByTime(EDIT_DELAY_MS);
 
-            expect(cancelPendingUpdate).toHaveBeenCalled();
+            expect(updates.counts).toEqual([]);
         });
     });
 
     describe('activateView', () => {
-        it('should set the view state and show the leaf with content', async () => {
-            const mockLeaf = jest.fn() as unknown as WorkspaceLeaf;
-            mockViewManager = {
-                getOrCreateLeaf: jest.fn().mockReturnValue(mockLeaf),
-                setViewState: jest.fn(),
-                updateContent: jest.fn(),
-            } as unknown as ViewManager;
-            plugin = new WordFrequencyPlugin(
-                mockApp,
-                mockManifest,
-                mockViewManager
-            );
-            plugin['app'] = mockApp;
+        it('should open the sidebar view in the right sidebar and reveal it', async () => {
+            const leaf = createSidebarLeaf();
+            workspace.rightLeaf = leaf;
 
             await plugin.activateView();
 
-            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(
-                plugin.app.workspace,
-                VIEW_TYPE
-            );
-            expect(mockViewManager.setViewState).toHaveBeenCalledWith(
-                mockLeaf,
-                VIEW_TYPE
-            );
-            expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledWith(
-                mockLeaf
-            );
-            expect(mockViewManager.updateContent).toHaveBeenCalled();
+            expect(leaf.setViewState).toHaveBeenCalledWith({
+                type: VIEW_TYPE,
+                active: true,
+            });
+            expect(workspace.revealedLeaves).toEqual([leaf]);
         });
 
-        it('should not set view state or reveal leaf when there is no leaf', async () => {
+        it('should not count the note again after revealing the sidebar', async () => {
+            workspace.openSidebar(createSidebarLeaf());
+            workspace.activateNote(createNote('apple'));
+            await plugin.onload();
+            updates.counts.length = 0;
+
             await plugin.activateView();
 
-            expect(mockViewManager.getOrCreateLeaf).toHaveBeenCalledWith(
-                plugin.app.workspace,
-                VIEW_TYPE
-            );
-            expect(mockViewManager.setViewState).not.toHaveBeenCalled();
-            expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
-            expect(mockViewManager.updateContent).not.toHaveBeenCalled();
+            expect(updates.counts).toEqual([]);
+        });
+
+        it('should do nothing when Obsidian has no sidebar leaf', async () => {
+            await plugin.activateView();
+
+            expect(workspace.revealedLeaves).toEqual([]);
         });
     });
 
     describe('saveSettings', () => {
-        it('should save settings', async () => {
-            (mockApp.workspace.getLeavesOfType as jest.Mock).mockReturnValue(
-                []
-            );
-
+        it('should save the settings', async () => {
             await plugin.saveSettings();
 
-            expect(plugin['saveData']).toHaveBeenCalledWith(plugin.settings);
+            expect(plugin.saveData).toHaveBeenCalledWith(plugin.settings);
         });
 
-        it('should refresh each open sidebar after saving', async () => {
-            const sidebar = Object.create(WordFrequencyView.prototype);
-            sidebar.updateContent = jest.fn(() =>
-                expect(plugin['saveData']).toHaveBeenCalled()
+        it('should apply saved settings to the open sidebar', async () => {
+            const leaf = {} as WorkspaceLeaf;
+            const view = new WordFrequencyView(leaf, plugin);
+            Object.assign(leaf, { view });
+            workspace.openSidebar(leaf);
+            workspace.activateNote(
+                createNote('apple apple apple banana banana banana')
             );
-            (mockApp.workspace.getLeavesOfType as jest.Mock).mockReturnValue([
-                { view: sidebar },
-                { view: {} },
-            ]);
+            await plugin.onload();
+            await view.onOpen();
+            expect(getListedWords(view)).toEqual(['apple', 'banana']);
 
+            plugin.settings.blacklist = 'apple';
             await plugin.saveSettings();
 
-            expect(mockApp.workspace.getLeavesOfType).toHaveBeenCalledWith(
-                VIEW_TYPE
-            );
-            expect(sidebar.updateContent).toHaveBeenCalledTimes(1);
+            expect(getListedWords(view)).toEqual(['banana']);
         });
     });
 
-    describe('loadSettings()', () => {
-        it('should have default settings with no loaded data', async () => {
+    describe('loadSettings', () => {
+        it('should use the default settings when nothing is saved', async () => {
             await plugin.onload();
 
             expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
         });
 
-        it('should merge result from loadData with default settings', async () => {
+        it('should merge saved settings with the default settings', async () => {
             const settings = { threshold: 15 };
-            plugin.loadData = jest.fn().mockResolvedValue(settings);
+            (plugin.loadData as jest.Mock).mockResolvedValue(settings);
 
             await plugin.onload();
 
-            expect(plugin.settings).toEqual(
-                Object.assign({}, DEFAULT_SETTINGS, settings)
-            );
+            expect(plugin.settings).toEqual({
+                ...DEFAULT_SETTINGS,
+                ...settings,
+            });
         });
     });
 });

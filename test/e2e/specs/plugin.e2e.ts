@@ -1,4 +1,4 @@
-import { $, browser, expect } from '@wdio/globals';
+import { $, $$, browser, expect } from '@wdio/globals';
 import { describe, it } from 'mocha';
 import { obsidianPage } from 'wdio-obsidian-service';
 import {
@@ -30,6 +30,7 @@ import {
     useCleanState,
     VEGETABLES_COUNTS,
     VEGETABLES_NOTE,
+    WORD_LIST,
     VIEW,
     WORD_BUTTON,
 } from '../helpers';
@@ -167,6 +168,22 @@ describe('Word Frequency plugin in Obsidian', () => {
             const blacklist = `${DEFAULT_SETTINGS.blacklist},apple`;
             expect((await getSettings()).blacklist).toBe(blacklist);
             await expectSavedSettings({ blacklist });
+        });
+
+        it('should not blacklist a word when its text or count is clicked', async () => {
+            await openSidebarForFruit();
+
+            await $(
+                `${WORD_LIST} .word-frequency-count-container span`
+            ).click();
+            await $$(
+                `${WORD_LIST} .word-frequency-count-container span`
+            )[1].click();
+
+            await expectWordList(FRUIT_COUNTS);
+            expect((await getSettings()).blacklist).toBe(
+                DEFAULT_SETTINGS.blacklist
+            );
         });
 
         it('should blacklist a word when the blacklist is empty', async () => {

@@ -66,6 +66,7 @@ export class WordFrequencyView extends ItemView {
         this.wordListContainer = contentContainer.createDiv({
             cls: ELEMENT_CLASSES.containerWordList,
         });
+        this.display.listenForBlacklistClicks(this.wordListContainer);
         this.display.createThresholdDisplay(contentContainer);
 
         this.updateContent();

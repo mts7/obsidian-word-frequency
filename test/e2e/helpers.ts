@@ -38,6 +38,7 @@ const FIXTURES = [FRUIT_NOTE, VEGETABLES_NOTE].map((note) => ({
 }));
 
 export const EDIT_DEBOUNCE_MS = 3000;
+export const UPDATE_EVENT = 'word-frequency-update';
 
 let hasPendingEdit = false;
 
@@ -366,4 +367,24 @@ export function useCleanState(): void {
         }
         await expectNoErrors();
     });
+}
+
+export async function startRecordingUpdates(): Promise<void> {
+    await switchToMainWindow();
+    await browser.execute((updateEvent) => {
+        if (window.wordFrequencyUpdates === undefined) {
+            const updates: number[] = [];
+            window.wordFrequencyUpdates = updates;
+            document.addEventListener(updateEvent, () =>
+                updates.push(performance.now())
+            );
+        }
+        window.wordFrequencyUpdates.length = 0;
+    }, UPDATE_EVENT);
+}
+
+export async function getRecordedUpdates(): Promise<number[]> {
+    await switchToMainWindow();
+
+    return browser.execute(() => [...(window.wordFrequencyUpdates ?? [])]);
 }

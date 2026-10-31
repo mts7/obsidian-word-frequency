@@ -1,11 +1,11 @@
 import { PluginSettingTab, Setting } from 'obsidian';
 import {
     ELEMENT_CLASSES,
-    SettingFactory,
     SETTINGS_DESCRIPTIONS,
     SETTINGS_NAMES,
 } from './constants';
 import WordFrequencyPlugin from './main';
+import { SettingFactory } from './types';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;

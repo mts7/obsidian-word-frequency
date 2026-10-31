@@ -1,28 +1,20 @@
-import { Workspace, WorkspaceLeaf } from 'obsidian';
+import { App, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import { VIEW_TYPE } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
+import { WordFrequencyView } from '../WordFrequencyView';
+import { createNote, FakeWorkspace } from './fakes/workspace';
 
 describe('ViewManager', () => {
     let viewManager: ViewManager;
-    let plugin: WordFrequencyPlugin;
     let workspace: Workspace;
 
     beforeEach(() => {
-        plugin = {
-            app: {
-                workspace: {
-                    getLeavesOfType: jest.fn(),
-                    getRightLeaf: jest.fn(),
-                },
-            },
-            frequencyCounter: {
-                triggerUpdateContent: jest.fn(),
-            },
-        } as unknown as WordFrequencyPlugin;
-
-        workspace = plugin.app.workspace;
-        viewManager = new ViewManager(plugin);
+        workspace = {
+            getLeavesOfType: jest.fn(),
+            getRightLeaf: jest.fn(),
+        } as unknown as Workspace;
+        viewManager = new ViewManager();
     });
 
     it('should get or create a leaf', () => {
@@ -56,11 +48,38 @@ describe('ViewManager', () => {
         });
     });
 
-    it('should ask the counter to count the current note', () => {
-        viewManager.updateContent();
+    describe('refreshViews', () => {
+        it('should apply current settings to every open sidebar and ignore other panes', async () => {
+            const fakeWorkspace = new FakeWorkspace();
+            fakeWorkspace.activateNote(createNote('apple apple apple pear'));
+            const plugin = new WordFrequencyPlugin(
+                { workspace: fakeWorkspace.getWorkspace() } as App,
+                { id: 'word-frequency' } as PluginManifest
+            );
+            const sidebars = [1, 2].map(
+                () => new WordFrequencyView({} as WorkspaceLeaf, plugin)
+            );
+            await Promise.all(sidebars.map((sidebar) => sidebar.onOpen()));
+            sidebars.forEach((sidebar) =>
+                fakeWorkspace.openSidebar({
+                    view: sidebar,
+                } as unknown as WorkspaceLeaf)
+            );
+            fakeWorkspace.openSidebar({ view: {} } as WorkspaceLeaf);
+            plugin.settings.threshold = 1;
 
-        expect(
-            plugin.frequencyCounter.triggerUpdateContent
-        ).toHaveBeenCalledWith();
+            viewManager.refreshViews(fakeWorkspace.getWorkspace());
+
+            sidebars.forEach((sidebar) =>
+                expect(
+                    Array.from(
+                        sidebar.contentEl.querySelectorAll(
+                            '.word-frequency-row span:first-child'
+                        )
+                    ).map((word) => word.textContent)
+                ).toEqual(['apple', 'pear'])
+            );
+            await Promise.all(sidebars.map((sidebar) => sidebar.onClose()));
+        });
     });
 });

@@ -20,7 +20,8 @@
     "mutate": "stryker run",
     "build:e2e": "npm run build && mkdir -p .e2e-plugin && cp dist/main.js manifest.json styles.css .e2e-plugin/",
     "test:e2e": "tsc -p test/e2e && npm run build:e2e && wdio run ./wdio.conf.mts",
-    "all": "npm run lint-fix && npm run format && npm run build && npm run coverage && npm run mutate"
+    "all": "npm run lint-fix && npm run format && npm run build && npm run coverage && npm run mutate",
+    "checks": "node scripts/check-standards.mjs"
   },
   "repository": {
     "type": "git",

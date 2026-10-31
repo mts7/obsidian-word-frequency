@@ -1,4 +1,4 @@
-import { WorkspaceLeaf } from 'obsidian';
+import { App, PluginManifest, WorkspaceLeaf } from 'obsidian';
 import {
     ELEMENT_CLASSES,
     EVENT_UPDATE,
@@ -9,6 +9,7 @@ import {
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
+import { createNote, FakeWorkspace } from './fakes/workspace';
 
 describe('WordFrequencyView', () => {
     let mockDisplay: WordFrequencyDisplay;
@@ -24,6 +25,7 @@ describe('WordFrequencyView', () => {
             createFilter: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
+            listenForBlacklistClicks: jest.fn(),
             updateThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
         mockDivElement = {
@@ -66,6 +68,7 @@ describe('WordFrequencyView', () => {
                 createFilter: jest.fn(),
                 createHeader: jest.fn(),
                 createThresholdDisplay: jest.fn(),
+                listenForBlacklistClicks: jest.fn(),
             } as unknown as WordFrequencyDisplay;
             const view = new WordFrequencyView(
                 mockLeaf,
@@ -131,23 +134,6 @@ describe('WordFrequencyView', () => {
                 EVENT_UPDATE,
                 expect.any(Function)
             );
-        });
-
-        it('should ask for a count of the current note after listening for updates', async () => {
-            const addEventListenerSpy = jest.spyOn(
-                window.document,
-                'addEventListener'
-            );
-
-            await view.onOpen();
-
-            const requestCount = mockPlugin.frequencyCounter
-                .triggerUpdateContent as jest.Mock;
-            expect(requestCount).toHaveBeenCalledWith();
-            expect(
-                addEventListenerSpy.mock.invocationCallOrder.at(-1)
-            ).toBeLessThan(requestCount.mock.invocationCallOrder[0]);
-            addEventListenerSpy.mockRestore();
         });
 
         it('should call updateContent on open', async () => {
@@ -237,12 +223,6 @@ describe('WordFrequencyView', () => {
             expect(mockDivElement.empty).toHaveBeenCalled();
         });
 
-        it('should show the current threshold', () => {
-            view.updateContent();
-
-            expect(mockDisplay.updateThresholdDisplay).toHaveBeenCalledWith();
-        });
-
         it('should add words to sidebar for each word', async () => {
             await view.onOpen();
             const wordCounts = [
@@ -299,6 +279,63 @@ describe('WordFrequencyView', () => {
             window.document.dispatchEvent(event);
 
             expect(mockDisplay.addWordToSidebar).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('with the real display', () => {
+        let plugin: WordFrequencyPlugin;
+        let sidebar: WordFrequencyView;
+
+        function getListedWords(): string[] {
+            return Array.from(
+                sidebar.contentEl.querySelectorAll(
+                    '.word-frequency-row span:first-child'
+                )
+            ).map((word) => word.textContent ?? '');
+        }
+
+        beforeEach(async () => {
+            const workspace = new FakeWorkspace();
+            workspace.activateNote(
+                createNote('apple apple apple banana banana banana cherry')
+            );
+            plugin = new WordFrequencyPlugin(
+                { workspace: workspace.getWorkspace() } as App,
+                { id: 'word-frequency' } as PluginManifest
+            );
+            sidebar = new WordFrequencyView({} as WorkspaceLeaf, plugin);
+
+            await sidebar.onOpen();
+        });
+
+        afterEach(async () => {
+            await sidebar.onClose();
+        });
+
+        it("should list the current note's words as soon as it opens", () => {
+            expect(getListedWords()).toEqual(['apple', 'banana']);
+        });
+
+        it('should blacklist a word when its button is clicked', () => {
+            sidebar.contentEl
+                .querySelector<HTMLButtonElement>('.word-frequency-row button')
+                ?.click();
+
+            expect(getListedWords()).toEqual(['banana']);
+            expect(plugin.settings.blacklist.split(',')).toContain('apple');
+        });
+
+        it('should show the current threshold after it changes', () => {
+            plugin.settings.threshold = 1;
+
+            sidebar.updateContent();
+
+            expect(
+                sidebar.contentEl.querySelector(
+                    '.word-frequency-threshold-display'
+                )?.textContent
+            ).toBe('Current frequency threshold is 1.');
+            expect(getListedWords()).toEqual(['apple', 'banana', 'cherry']);
         });
     });
 });
