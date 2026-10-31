@@ -32,7 +32,7 @@ export default class WordFrequencyPlugin extends Plugin {
     ) {
         super(app, manifest);
         this.settingTab = settingTab ?? new WordFrequencySettingTab(this);
-        this.viewManager = viewManager ?? new ViewManager(this);
+        this.viewManager = viewManager ?? new ViewManager();
         this.frequencyCounter =
             frequencyCounter ?? new WordFrequencyCounter(this);
     }
@@ -73,8 +73,6 @@ export default class WordFrequencyPlugin extends Plugin {
         await this.viewManager.setViewState(leaf, VIEW_TYPE);
 
         await workspace.revealLeaf(leaf);
-
-        this.viewManager.updateContent();
     }
 
     async saveSettings(): Promise<void> {

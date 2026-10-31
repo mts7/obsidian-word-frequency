@@ -108,6 +108,7 @@ describe('Word Frequency plugin lifecycle', () => {
         await openSidebarForFruit();
 
         await openNoteInNewWindow(VEGETABLES_NOTE);
+        await activateNote(VEGETABLES_NOTE);
         await expectWordList(VEGETABLES_COUNTS);
         await appendToNote(VEGETABLES_NOTE, '\nPotato potato.\n');
 

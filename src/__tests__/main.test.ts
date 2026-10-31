@@ -51,7 +51,6 @@ describe('WordFrequencyPlugin', () => {
         mockViewManager = {
             getOrCreateLeaf: jest.fn().mockReturnValue(null),
             setViewState: jest.fn(),
-            updateContent: jest.fn(),
         } as unknown as ViewManager;
         const mockCreateView = jest.fn().mockReturnValue(mockView);
         // TODO: provide mocks for the settingTab and frequencyCounter instead of undefined
@@ -159,12 +158,11 @@ describe('WordFrequencyPlugin', () => {
     });
 
     describe('activateView', () => {
-        it('should set the view state and show the leaf with content', async () => {
+        it('should set the view state and show the leaf without counting the note again', async () => {
             const mockLeaf = jest.fn() as unknown as WorkspaceLeaf;
             mockViewManager = {
                 getOrCreateLeaf: jest.fn().mockReturnValue(mockLeaf),
                 setViewState: jest.fn(),
-                updateContent: jest.fn(),
             } as unknown as ViewManager;
             plugin = new WordFrequencyPlugin(
                 mockApp,
@@ -172,6 +170,10 @@ describe('WordFrequencyPlugin', () => {
                 mockViewManager
             );
             plugin['app'] = mockApp;
+            const triggerUpdateContent = jest.spyOn(
+                plugin.frequencyCounter,
+                'triggerUpdateContent'
+            );
 
             await plugin.activateView();
 
@@ -186,7 +188,7 @@ describe('WordFrequencyPlugin', () => {
             expect(plugin.app.workspace.revealLeaf).toHaveBeenCalledWith(
                 mockLeaf
             );
-            expect(mockViewManager.updateContent).toHaveBeenCalled();
+            expect(triggerUpdateContent).not.toHaveBeenCalled();
         });
 
         it('should not set view state or reveal leaf when there is no leaf', async () => {
@@ -198,7 +200,6 @@ describe('WordFrequencyPlugin', () => {
             );
             expect(mockViewManager.setViewState).not.toHaveBeenCalled();
             expect(plugin.app.workspace.revealLeaf).not.toHaveBeenCalled();
-            expect(mockViewManager.updateContent).not.toHaveBeenCalled();
         });
     });
 

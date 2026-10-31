@@ -1,28 +1,17 @@
 import { Workspace, WorkspaceLeaf } from 'obsidian';
 import { VIEW_TYPE } from '../constants';
-import WordFrequencyPlugin from '../main';
 import { ViewManager } from '../ViewManager';
 
 describe('ViewManager', () => {
     let viewManager: ViewManager;
-    let plugin: WordFrequencyPlugin;
     let workspace: Workspace;
 
     beforeEach(() => {
-        plugin = {
-            app: {
-                workspace: {
-                    getLeavesOfType: jest.fn(),
-                    getRightLeaf: jest.fn(),
-                },
-            },
-            frequencyCounter: {
-                triggerUpdateContent: jest.fn(),
-            },
-        } as unknown as WordFrequencyPlugin;
-
-        workspace = plugin.app.workspace;
-        viewManager = new ViewManager(plugin);
+        workspace = {
+            getLeavesOfType: jest.fn(),
+            getRightLeaf: jest.fn(),
+        } as unknown as Workspace;
+        viewManager = new ViewManager();
     });
 
     it('should get or create a leaf', () => {
@@ -54,13 +43,5 @@ describe('ViewManager', () => {
             type: VIEW_TYPE,
             active: true,
         });
-    });
-
-    it('should ask the counter to count the current note', () => {
-        viewManager.updateContent();
-
-        expect(
-            plugin.frequencyCounter.triggerUpdateContent
-        ).toHaveBeenCalledWith();
     });
 });

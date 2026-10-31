@@ -24,6 +24,7 @@ describe('WordFrequencyView', () => {
             createFilter: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
+            listenForBlacklistClicks: jest.fn(),
             updateThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
         mockDivElement = {
@@ -66,6 +67,7 @@ describe('WordFrequencyView', () => {
                 createFilter: jest.fn(),
                 createHeader: jest.fn(),
                 createThresholdDisplay: jest.fn(),
+                listenForBlacklistClicks: jest.fn(),
             } as unknown as WordFrequencyDisplay;
             const view = new WordFrequencyView(
                 mockLeaf,
@@ -119,6 +121,20 @@ describe('WordFrequencyView', () => {
     });
 
     describe('onOpen', () => {
+        it('should listen for blacklist clicks on the word list', async () => {
+            const wordList = { empty: jest.fn() } as unknown as HTMLDivElement;
+            (mockDivElement.createDiv as jest.Mock).mockReturnValue(wordList);
+
+            await view.onOpen();
+
+            expect(mockDisplay.listenForBlacklistClicks).toHaveBeenCalledTimes(
+                1
+            );
+            expect(mockDisplay.listenForBlacklistClicks).toHaveBeenCalledWith(
+                wordList
+            );
+        });
+
         it('should add an event listener for EVENT_UPDATE', async () => {
             const addEventListenerSpy = jest.spyOn(
                 window.document,
