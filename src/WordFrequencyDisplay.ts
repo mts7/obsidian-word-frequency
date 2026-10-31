@@ -6,6 +6,7 @@ import { WordFrequencyView } from './WordFrequencyView';
 export class WordFrequencyDisplay {
     private filter: string = '';
     private plugin: WordFrequencyPlugin;
+    private thresholdDisplay: HTMLElement | undefined;
     private view: WordFrequencyView;
 
     constructor(
@@ -83,15 +84,19 @@ export class WordFrequencyDisplay {
     }
 
     createThresholdDisplay(contentEl: HTMLElement) {
-        const thresholdDisplay = contentEl.createEl('div', {
+        this.thresholdDisplay = contentEl.createEl('div', {
             cls: ELEMENT_CLASSES.containerThreshold,
         });
-        thresholdDisplay.setText(
-            `Current frequency threshold is ${this.plugin.settings.threshold}.`
-        );
-        thresholdDisplay.setAttr(
+        this.thresholdDisplay.setAttr(
             'title',
             'Configure settings for this plugin to update the frequency threshold.'
+        );
+        this.updateThresholdDisplay();
+    }
+
+    updateThresholdDisplay() {
+        this.thresholdDisplay?.setText(
+            `Current frequency threshold is ${this.plugin.settings.threshold}.`
         );
     }
 

@@ -4,10 +4,8 @@ import {
     SettingFactory,
     SETTINGS_DESCRIPTIONS,
     SETTINGS_NAMES,
-    VIEW_TYPE,
 } from './constants';
 import WordFrequencyPlugin from './main';
-import { WordFrequencyView } from './WordFrequencyView';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;
@@ -66,11 +64,5 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         this.plugin.settings.threshold = num;
         await this.plugin.saveSettings();
-
-        this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
-            if (leaf.view instanceof WordFrequencyView) {
-                leaf.view.updateContent();
-            }
-        });
     }
 }

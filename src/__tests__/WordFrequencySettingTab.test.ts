@@ -1,8 +1,7 @@
 import { Setting } from 'obsidian';
-import { ELEMENT_CLASSES, SETTINGS_NAMES, VIEW_TYPE } from '../constants';
+import { ELEMENT_CLASSES, SETTINGS_NAMES } from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
-import { WordFrequencyView } from '../WordFrequencyView';
 
 const createMockContainerEl = () => {
     const mockContainerEl = document.createElement('div');
@@ -27,15 +26,7 @@ describe('WordFrequencySettingTab', () => {
                 threshold: 0,
             },
             saveSettings: jest.fn().mockResolvedValue(undefined),
-            app: {
-                workspace: {
-                    getLeavesOfType: jest
-                        .fn()
-                        .mockReturnValue([
-                            { view: { updateContent: jest.fn() } },
-                        ]),
-                },
-            },
+            app: {},
         } as unknown as WordFrequencyPlugin;
 
         containerEl = createMockContainerEl();
@@ -133,26 +124,11 @@ describe('WordFrequencySettingTab', () => {
         expect(plugin.saveSettings).toHaveBeenCalled();
     });
 
-    it('should save settings and update content', async () => {
-        const value = '5';
-        const mockView = Object.create(WordFrequencyView.prototype);
-        mockView.updateContent = jest.fn();
-        const mockLeaves = [{ view: mockView }, { view: {} }];
-        plugin.app.workspace.getLeavesOfType = jest
-            .fn()
-            .mockReturnValue(mockLeaves);
-
-        await settingTab.updateThreshold(value);
+    it('should save a numeric threshold', async () => {
+        await settingTab.updateThreshold('5');
 
         expect(plugin.settings.threshold).toBe(5);
         expect(plugin.saveSettings).toHaveBeenCalled();
-        expect(plugin.app.workspace.getLeavesOfType).toHaveBeenCalledWith(
-            VIEW_TYPE
-        );
-        expect(plugin.app.workspace.getLeavesOfType).toHaveReturnedWith(
-            mockLeaves
-        );
-        expect(mockView.updateContent).toHaveBeenCalled();
     });
 
     it('should not save setting', async () => {
@@ -161,6 +137,6 @@ describe('WordFrequencySettingTab', () => {
         await settingTab.updateThreshold(value);
 
         expect(plugin.saveSettings).not.toHaveBeenCalled();
-        expect(plugin.app.workspace.getLeavesOfType).not.toHaveBeenCalled();
+        expect(plugin.settings.threshold).toBe(0);
     });
 });

@@ -93,5 +93,7 @@ export class WordFrequencyView extends ItemView {
                 this.wordListContainer
             );
         });
+
+        this.display.updateThresholdDisplay();
     }
 }
