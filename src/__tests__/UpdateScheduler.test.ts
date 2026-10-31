@@ -18,6 +18,10 @@ const VEGETABLE_COUNTS = [
     ['potato', 1],
 ];
 
+function finishPendingUpdates(): void {
+    jest.advanceTimersByTime(0);
+}
+
 function createScheduler(workspace: FakeWorkspace): UpdateScheduler {
     const tracker = new NoteTracker(workspace.getWorkspace());
     const counter = new WordFrequencyCounter(tracker);
@@ -36,6 +40,11 @@ describe('UpdateScheduler', () => {
     let updates: ReturnType<typeof recordUpdates>;
     let fruit: ReturnType<typeof createNote>;
     let vegetables: ReturnType<typeof createNote>;
+
+    function switchToNote(note: ReturnType<typeof createNote>): void {
+        workspace.activateNote(note);
+        finishPendingUpdates();
+    }
 
     beforeEach(() => {
         jest.useFakeTimers();
@@ -64,7 +73,7 @@ describe('UpdateScheduler', () => {
             jest.fn()
         ).registerEvents();
 
-        expect(registrar.registerEvent).toHaveBeenCalledTimes(3);
+        expect(registrar.registerEvent).toHaveBeenCalledTimes(4);
     });
 
     it('should count a note when it becomes active', () => {
@@ -72,6 +81,7 @@ describe('UpdateScheduler', () => {
         workspace.activeNote = fruit;
 
         workspace.trigger('active-leaf-change', fruit.leaf);
+        finishPendingUpdates();
 
         expect(updates.counts).toEqual([FRUIT_COUNTS]);
     });
@@ -81,6 +91,7 @@ describe('UpdateScheduler', () => {
         workspace.activeNote = fruit;
 
         workspace.trigger('file-open', {});
+        finishPendingUpdates();
 
         expect(updates.counts).toEqual([FRUIT_COUNTS]);
     });
@@ -94,30 +105,132 @@ describe('UpdateScheduler', () => {
         expect(updates.counts).toEqual([FRUIT_COUNTS]);
     });
 
+    it('should count a note once when Obsidian reports both the pane change and the file opening', () => {
+        workspace.activateNote(fruit);
+        finishPendingUpdates();
+
+        expect(updates.counts).toEqual([FRUIT_COUNTS]);
+    });
+
     it('should count a note that becomes active in a window Obsidian does not report as active', () => {
         workspace.openNote(fruit);
 
         workspace.trigger('active-leaf-change', fruit.leaf);
+        finishPendingUpdates();
 
         expect(updates.counts).toEqual([FRUIT_COUNTS]);
     });
 
     it('should not recount when a pane that is not a note becomes active', () => {
-        workspace.activateNote(fruit);
+        switchToNote(fruit);
         updates.counts.length = 0;
 
         workspace.activateSidebar();
+        finishPendingUpdates();
 
         expect(updates.counts).toEqual([]);
     });
 
     it('should not recount when no pane is active', () => {
-        workspace.activateNote(fruit);
+        switchToNote(fruit);
         updates.counts.length = 0;
 
         workspace.trigger('active-leaf-change', null);
 
         expect(updates.counts).toEqual([]);
+    });
+
+    it('should not recount when the layout changes and the counts are current', () => {
+        switchToNote(fruit);
+        updates.counts.length = 0;
+
+        workspace.trigger('layout-change');
+        finishPendingUpdates();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    it('should not count when the layout changes before any update was needed', () => {
+        workspace.openNote(fruit);
+        workspace.activeNote = fruit;
+
+        workspace.trigger('layout-change');
+        finishPendingUpdates();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    it('should not count a note switch after the pending update is cancelled', () => {
+        workspace.activateNote(fruit);
+
+        scheduler.cancelPendingUpdate();
+        finishPendingUpdates();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    it('should not count when the layout changes after the sidebar opens, since the sidebar counts as it opens', () => {
+        workspace.sidebarLeaves = [];
+        switchToNote(fruit);
+        workspace.openSidebar();
+
+        workspace.trigger('layout-change');
+        finishPendingUpdates();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    describe('while the sidebar is open but cannot be seen', () => {
+        beforeEach(() => {
+            switchToNote(fruit);
+            updates.counts.length = 0;
+            workspace.coverSidebar();
+        });
+
+        it('should not count a note that becomes active', () => {
+            switchToNote(vegetables);
+
+            expect(updates.counts).toEqual([]);
+        });
+
+        it('should not count an edited note', () => {
+            workspace.editNote();
+            jest.advanceTimersByTime(EDIT_DELAY_MS);
+
+            expect(updates.counts).toEqual([]);
+        });
+
+        it('should count the current note once when the layout shows the sidebar again', () => {
+            switchToNote(vegetables);
+            workspace.editNote();
+            jest.advanceTimersByTime(EDIT_DELAY_MS);
+            workspace.uncoverSidebar();
+
+            workspace.trigger('layout-change');
+            workspace.trigger('layout-change');
+            finishPendingUpdates();
+
+            expect(updates.counts).toEqual([VEGETABLE_COUNTS]);
+        });
+
+        it('should count the current note when the sidebar becomes active', () => {
+            switchToNote(vegetables);
+            workspace.uncoverSidebar();
+
+            workspace.activateSidebar();
+            finishPendingUpdates();
+
+            expect(updates.counts).toEqual([VEGETABLE_COUNTS]);
+        });
+
+        it('should not count when the layout changes and the sidebar still cannot be seen', () => {
+            switchToNote(vegetables);
+
+            workspace.trigger('layout-change');
+            finishPendingUpdates();
+
+            expect(updates.counts).toEqual([]);
+        });
     });
 
     it('should count nothing while the sidebar is closed', () => {
@@ -133,7 +246,7 @@ describe('UpdateScheduler', () => {
 
     describe('after an edit', () => {
         beforeEach(() => {
-            workspace.activateNote(fruit);
+            switchToNote(fruit);
             updates.counts.length = 0;
         });
 
@@ -165,7 +278,7 @@ describe('UpdateScheduler', () => {
 
         it('should count the note that is current when the delay ends, not the note that was edited', () => {
             workspace.editNote();
-            workspace.activateNote(vegetables);
+            switchToNote(vegetables);
             updates.counts.length = 0;
 
             jest.advanceTimersByTime(EDIT_DELAY_MS);
@@ -175,8 +288,8 @@ describe('UpdateScheduler', () => {
 
         it('should still count once per edit after many note switches', () => {
             for (let switches = 0; switches < 5; switches++) {
-                workspace.activateNote(vegetables);
-                workspace.activateNote(fruit);
+                switchToNote(vegetables);
+                switchToNote(fruit);
             }
             updates.counts.length = 0;
 

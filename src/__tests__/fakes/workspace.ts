@@ -66,7 +66,19 @@ export class FakeWorkspace {
     }
 
     openSidebar(leaf: WorkspaceLeaf = {} as WorkspaceLeaf): void {
+        Object.assign(leaf, { view: leaf.view ?? {} });
+        Object.assign(leaf.view, {
+            containerEl: leaf.view.containerEl ?? document.createElement('div'),
+        });
         this.sidebarLeaves.push(leaf);
+    }
+
+    coverSidebar(): void {
+        this.setSidebarHidden(true);
+    }
+
+    uncoverSidebar(): void {
+        this.setSidebarHidden(false);
     }
 
     activateNote(note: MarkdownView): void {
@@ -126,6 +138,12 @@ export class FakeWorkspace {
 
     async revealLeaf(leaf: WorkspaceLeaf): Promise<void> {
         this.revealedLeaves.push(leaf);
+    }
+
+    private setSidebarHidden(hidden: boolean): void {
+        this.sidebarLeaves.forEach((leaf) => {
+            leaf.view.containerEl.hidden = hidden;
+        });
     }
 }
 

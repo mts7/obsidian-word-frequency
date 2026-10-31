@@ -46,4 +46,7 @@ Object.assign(HTMLElement.prototype, {
     addClass(this: HTMLElement, ...classes: string[]) {
         this.classList.add(...classes);
     },
+    isShown(this: HTMLElement) {
+        return this.closest('[hidden]') === null;
+    },
 });

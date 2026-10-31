@@ -15,6 +15,7 @@ import {
     showSidebar,
     startRecordingUpdates,
     switchToMainWindow,
+    TAB_HEADER,
     useCleanState,
     VEGETABLES_COUNTS,
     VEGETABLES_NOTE,
@@ -57,6 +58,14 @@ async function uncoverSidebar(): Promise<void> {
     await browser.executeObsidian(async ({ app }) => {
         app.workspace.detachLeavesOfType('outline');
     });
+    await browser.waitUntil(
+        async () => {
+            await $(TAB_HEADER).click();
+
+            return $(VIEW).isDisplayed();
+        },
+        { timeoutMsg: 'the sidebar tab did not come to the front' }
+    );
 }
 
 describe('Word Frequency plugin updates', () => {

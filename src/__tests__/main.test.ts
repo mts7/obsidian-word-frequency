@@ -126,10 +126,12 @@ describe('WordFrequencyPlugin', () => {
         });
 
         it('should count a note when it becomes active while the sidebar is open', async () => {
+            jest.useFakeTimers();
             workspace.openSidebar();
             await plugin.onload();
 
             workspace.activateNote(createNote('apple banana apple'));
+            jest.advanceTimersByTime(0);
 
             expect(updates.counts.at(-1)).toEqual([
                 ['apple', 2],
