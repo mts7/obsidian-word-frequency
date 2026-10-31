@@ -24,6 +24,7 @@ describe('WordFrequencyView', () => {
             createFilter: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
+            updateThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
         mockDivElement = {
             createDiv: jest.fn().mockReturnValue({
@@ -234,6 +235,12 @@ describe('WordFrequencyView', () => {
             view.updateContent();
 
             expect(mockDivElement.empty).toHaveBeenCalled();
+        });
+
+        it('should show the current threshold', () => {
+            view.updateContent();
+
+            expect(mockDisplay.updateThresholdDisplay).toHaveBeenCalledWith();
         });
 
         it('should add words to sidebar for each word', async () => {

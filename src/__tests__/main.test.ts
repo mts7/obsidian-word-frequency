@@ -204,8 +204,31 @@ describe('WordFrequencyPlugin', () => {
 
     describe('saveSettings', () => {
         it('should save settings', async () => {
+            (mockApp.workspace.getLeavesOfType as jest.Mock).mockReturnValue(
+                []
+            );
+
             await plugin.saveSettings();
+
             expect(plugin['saveData']).toHaveBeenCalledWith(plugin.settings);
+        });
+
+        it('should refresh each open sidebar after saving', async () => {
+            const sidebar = Object.create(WordFrequencyView.prototype);
+            sidebar.updateContent = jest.fn(() =>
+                expect(plugin['saveData']).toHaveBeenCalled()
+            );
+            (mockApp.workspace.getLeavesOfType as jest.Mock).mockReturnValue([
+                { view: sidebar },
+                { view: {} },
+            ]);
+
+            await plugin.saveSettings();
+
+            expect(mockApp.workspace.getLeavesOfType).toHaveBeenCalledWith(
+                VIEW_TYPE
+            );
+            expect(sidebar.updateContent).toHaveBeenCalledTimes(1);
         });
     });
 

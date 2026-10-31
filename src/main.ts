@@ -79,6 +79,12 @@ export default class WordFrequencyPlugin extends Plugin {
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
+
+        this.app.workspace.getLeavesOfType(VIEW_TYPE).forEach((leaf) => {
+            if (leaf.view instanceof WordFrequencyView) {
+                leaf.view.updateContent();
+            }
+        });
     }
 
     private async loadSettings(): Promise<void> {

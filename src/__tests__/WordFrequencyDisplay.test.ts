@@ -270,6 +270,24 @@ describe('WordFrequencyDisplay', () => {
         });
     });
 
+    describe('updateThresholdDisplay', () => {
+        it('should show the current threshold after it changes', () => {
+            display.createThresholdDisplay(contentEl);
+            mockPlugin.settings.threshold = 2;
+
+            display.updateThresholdDisplay();
+
+            expect(firstElement.setText).toHaveBeenLastCalledWith(
+                'Current frequency threshold is 2.'
+            );
+        });
+
+        it('should do nothing before the threshold display exists', () => {
+            expect(() => display.updateThresholdDisplay()).not.toThrow();
+            expect(firstElement.setText).not.toHaveBeenCalled();
+        });
+    });
+
     describe('saveWordToBlacklist', () => {
         it('should update blacklist and call saveData and updateContent', () => {
             const word = 'banana';
