@@ -1,5 +1,9 @@
 import { Setting } from 'obsidian';
-import { ELEMENT_CLASSES, SETTINGS_NAMES } from '../constants';
+import {
+    ELEMENT_CLASSES,
+    SETTINGS_DESCRIPTIONS,
+    SETTINGS_NAMES,
+} from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 
@@ -113,6 +117,57 @@ describe('WordFrequencySettingTab', () => {
         settingTab.display();
 
         expect(Setting).toHaveBeenCalledWith(containerEl);
+    });
+
+    it('should define searchable settings with names and descriptions', () => {
+        const definitions = settingTab.getSettingDefinitions();
+
+        expect(definitions).toEqual([
+            expect.objectContaining({
+                name: SETTINGS_NAMES.blacklist,
+                desc: SETTINGS_DESCRIPTIONS.blacklist,
+            }),
+            expect.objectContaining({
+                name: SETTINGS_NAMES.threshold,
+                desc: SETTINGS_DESCRIPTIONS.threshold,
+            }),
+        ]);
+    });
+
+    it('should render the defined settings like the legacy display', async () => {
+        const { setting, text, textArea } = createMockSetting();
+        plugin.settings.blacklist = 'the,and';
+        plugin.settings.threshold = 4;
+        const saveBlacklistSpy = jest
+            .spyOn(settingTab, 'saveBlacklistValue')
+            .mockResolvedValue();
+        const updateThresholdSpy = jest
+            .spyOn(settingTab, 'updateThreshold')
+            .mockResolvedValue();
+        const [blacklist, threshold] =
+            settingTab.getSettingDefinitions() as unknown as {
+                render: (_setting: unknown) => void;
+            }[];
+
+        blacklist.render(setting);
+        threshold.render(setting);
+        await textArea.onChange.mock.calls[0][0]('a,b');
+        await text.onChange.mock.calls[0][0]('7');
+
+        expect(setting.setClass).toHaveBeenCalledWith(
+            ELEMENT_CLASSES.settingItem
+        );
+        expect(setting.infoEl.addClass).toHaveBeenCalledWith(
+            ELEMENT_CLASSES.settingInfoItem
+        );
+        expect(textArea.setValue).toHaveBeenCalledWith('the,and');
+        expect(textArea.inputEl.classList.add).toHaveBeenCalledWith(
+            ELEMENT_CLASSES.settingBlacklist
+        );
+        expect(text.setPlaceholder).toHaveBeenCalledWith('3');
+        expect(text.setValue).toHaveBeenCalledWith('4');
+        expect(saveBlacklistSpy).toHaveBeenCalledWith('a,b');
+        expect(updateThresholdSpy).toHaveBeenCalledWith('7');
     });
 
     it('should save blacklist', async () => {
