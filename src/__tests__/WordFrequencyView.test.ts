@@ -327,6 +327,10 @@ describe('WordFrequencyView', () => {
             ).map((word) => word.textContent ?? '');
         }
 
+        function waitForSave(): Promise<void> {
+            return new Promise((resolve) => setTimeout(resolve));
+        }
+
         beforeEach(async () => {
             const workspace = new FakeWorkspace();
             workspace.activateNote(
@@ -336,7 +340,10 @@ describe('WordFrequencyView', () => {
                 { workspace: workspace.getWorkspace() } as App,
                 { id: 'word-frequency' } as PluginManifest
             );
-            sidebar = new WordFrequencyView({} as WorkspaceLeaf, plugin);
+            const leaf = {} as WorkspaceLeaf;
+            sidebar = new WordFrequencyView(leaf, plugin);
+            Object.assign(leaf, { view: sidebar });
+            workspace.openSidebar(leaf);
 
             await sidebar.onOpen();
         });
@@ -349,13 +356,15 @@ describe('WordFrequencyView', () => {
             expect(getListedWords()).toEqual(['apple', 'banana']);
         });
 
-        it('should blacklist a word when its button is clicked', () => {
+        it('should blacklist a word when its button is clicked', async () => {
             sidebar.contentEl
                 .querySelector<HTMLButtonElement>('.word-frequency-row button')
                 ?.click();
+            await waitForSave();
 
             expect(getListedWords()).toEqual(['banana']);
             expect(plugin.settings.blacklist.split(',')).toContain('apple');
+            expect(plugin.saveData).toHaveBeenCalledWith(plugin.settings);
         });
 
         it('should show the current threshold after it changes', () => {
