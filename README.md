@@ -37,9 +37,9 @@ Clear the text input field to reset the filter and display all available words.
 
 ### Ignore Specific Words
 
-When browsing the display of words and their frequency counts, click the trash
-can icon to add that word to the blacklist or ignore list. This word will no
-longer display in the sidebar.
+When browsing the display of words and their frequency counts, click the hide
+(eye-off) icon to add that word to the blacklist or ignore list. This word will
+no longer display in the sidebar.
 
 The blacklist is adjustable through the Settings interface.
 
@@ -65,7 +65,7 @@ There are currently two settings for this plugin.
 The plugin has some words set as default blacklist words, like `the`, `and`, and
 `to`. Use the text area to add or remove words to the list.
 
-When clicking the trash can button in the sidebar, the plugin adds the word in
+When clicking the hide button in the sidebar, the plugin adds the word in
 that row to the end of this list. In case of a mistake, remove the word from the
 settings text area.
 

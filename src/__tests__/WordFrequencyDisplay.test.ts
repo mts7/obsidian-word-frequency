@@ -142,6 +142,17 @@ describe('WordFrequencyDisplay', () => {
             expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
         });
 
+        it('should label the button with the word it blacklists', () => {
+            display.addWordToSidebar(blacklist, 'banana', 13, contentContainer);
+
+            expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button', {
+                attr: {
+                    'aria-label': 'Blacklist banana',
+                    'data-word': 'banana',
+                },
+            });
+        });
+
         it('should not register a listener for each word', () => {
             display.addWordToSidebar(blacklist, 'apple', 13, contentContainer);
             display.addWordToSidebar(blacklist, 'banana', 13, contentContainer);
@@ -305,6 +316,7 @@ describe('WordFrequencyDisplay', () => {
         beforeEach(() => {
             wordList = document.createElement('div');
             row = document.createElement('div');
+            row.className = ELEMENT_CLASSES.containerRow;
             const countContainer = document.createElement('div');
             wordText = document.createElement('span');
             wordText.textContent = 'banana';
@@ -333,13 +345,29 @@ describe('WordFrequencyDisplay', () => {
             );
         });
 
+        it('should remove the row of the clicked button', () => {
+            icon.click();
+
+            expect(wordList.contains(row)).toBe(false);
+        });
+
         it('should blacklist the word of the clicked button', () => {
             icon.click();
 
             expect(mockPlugin.settings.blacklist).toBe(
                 `${originalBlacklist},banana`
             );
-            expect(mockView.updateContent).toHaveBeenCalled();
+            expect(mockPlugin.saveSettings).toHaveBeenCalledTimes(1);
+        });
+
+        it('should blacklist the word once when its button is clicked twice', () => {
+            icon.click();
+            icon.click();
+
+            expect(mockPlugin.settings.blacklist).toBe(
+                `${originalBlacklist},banana`
+            );
+            expect(mockPlugin.saveSettings).toHaveBeenCalledTimes(1);
         });
 
         it.each([
@@ -351,7 +379,7 @@ describe('WordFrequencyDisplay', () => {
             target().click();
 
             expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
-            expect(mockView.updateContent).not.toHaveBeenCalled();
+            expect(mockPlugin.saveSettings).not.toHaveBeenCalled();
         });
 
         it('should ignore a button without a word', () => {
@@ -361,7 +389,7 @@ describe('WordFrequencyDisplay', () => {
             otherButton.click();
 
             expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
-            expect(mockView.updateContent).not.toHaveBeenCalled();
+            expect(mockPlugin.saveSettings).not.toHaveBeenCalled();
         });
 
         it('should ignore a word button outside the list', () => {
@@ -372,24 +400,45 @@ describe('WordFrequencyDisplay', () => {
             wordText.click();
 
             expect(mockPlugin.settings.blacklist).toBe(originalBlacklist);
-            expect(mockView.updateContent).not.toHaveBeenCalled();
+            expect(mockPlugin.saveSettings).not.toHaveBeenCalled();
         });
     });
 
     describe('saveWordToBlacklist', () => {
-        it('should update blacklist and call saveData and updateContent', () => {
-            const word = 'banana';
+        it('should append the word and save the settings', async () => {
             const originalBlacklist = mockPlugin.settings.blacklist;
 
-            display.saveWordToBlacklist(word);
+            await display.saveWordToBlacklist('banana');
 
             expect(mockPlugin.settings.blacklist).toBe(
-                `${originalBlacklist},${word}`
+                `${originalBlacklist},banana`
             );
-            expect(mockPlugin.saveData).toHaveBeenCalledWith(
-                mockPlugin.settings
+            expect(mockPlugin.saveSettings).toHaveBeenCalledTimes(1);
+            expect(mockPlugin.saveData).not.toHaveBeenCalled();
+            expect(mockView.updateContent).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ['empty', ''],
+            ['blank', '  '],
+        ])(
+            'should save only the word when the blacklist is %s',
+            async (_, originalBlacklist) => {
+                mockPlugin.settings.blacklist = originalBlacklist;
+
+                await display.saveWordToBlacklist('banana');
+
+                expect(mockPlugin.settings.blacklist).toBe('banana');
+            }
+        );
+
+        it('should wait for the settings to save', async () => {
+            const error = new Error('save failed');
+            (mockPlugin.saveSettings as jest.Mock).mockRejectedValue(error);
+
+            await expect(display.saveWordToBlacklist('banana')).rejects.toBe(
+                error
             );
-            expect(mockView.updateContent).toHaveBeenCalled();
         });
     });
 });

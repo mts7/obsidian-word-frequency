@@ -52,7 +52,7 @@ export class WordFrequencyDisplay {
             cls: ELEMENT_CLASSES.containerButton,
         });
         const button = buttonContainer.createEl('button', {
-            attr: { 'data-word': word },
+            attr: { 'aria-label': `Blacklist ${word}`, 'data-word': word },
         });
         setIcon(button, 'eye-off');
     }
@@ -98,19 +98,26 @@ export class WordFrequencyDisplay {
     }
 
     listenForBlacklistClicks(wordList: HTMLElement) {
-        this.view.registerDomEvent(wordList, 'click', (event) => {
+        this.view.registerDomEvent(wordList, 'click', async (event) => {
             const button = (event.target as HTMLElement).closest('button');
-            const word = button?.dataset.word;
-            if (word !== undefined && wordList.contains(button)) {
-                this.saveWordToBlacklist(word);
+            if (
+                !button ||
+                !wordList.contains(button) ||
+                button.dataset.word === undefined
+            ) {
+                return;
             }
+
+            button.closest(`.${ELEMENT_CLASSES.containerRow}`)?.remove();
+            await this.saveWordToBlacklist(button.dataset.word);
         });
     }
 
-    saveWordToBlacklist(word: string) {
+    async saveWordToBlacklist(word: string) {
         const settings = this.plugin.settings;
-        settings.blacklist += `,${word}`;
-        this.plugin.saveData(settings);
-        this.view.updateContent();
+        settings.blacklist = settings.blacklist.trim()
+            ? `${settings.blacklist},${word}`
+            : word;
+        await this.plugin.saveSettings();
     }
 }
