@@ -1,3 +1,5 @@
+import { FakeResizeObserver } from '../src/__tests__/fakes/resizeObserver';
+
 type ElementOptions = {
     attr?: Record<string, string | number | boolean>;
     cls?: string | string[];
@@ -50,3 +52,5 @@ Object.assign(HTMLElement.prototype, {
         return this.closest('[hidden]') === null;
     },
 });
+
+Object.assign(window, { ResizeObserver: FakeResizeObserver });

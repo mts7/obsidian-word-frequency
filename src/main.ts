@@ -27,9 +27,9 @@ export default class WordFrequencyPlugin extends Plugin {
     frequencyCounter: WordFrequencyCounter;
     settings: WordFrequencySettings = { ...DEFAULT_SETTINGS };
     settingTab: WordFrequencySettingTab;
+    readonly updateScheduler: UpdateScheduler;
     viewManager: ViewManager;
     private readonly createView: (leaf: WorkspaceLeaf) => WordFrequencyView;
-    private readonly updateScheduler: UpdateScheduler;
 
     constructor(
         app: App,

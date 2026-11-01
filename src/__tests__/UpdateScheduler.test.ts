@@ -1,3 +1,4 @@
+import { WorkspaceLeaf } from 'obsidian';
 import { NoteTracker } from '../NoteTracker';
 import { UpdateScheduler } from '../UpdateScheduler';
 import { WordFrequencyCounter } from '../WordFrequencyCounter';
@@ -73,7 +74,7 @@ describe('UpdateScheduler', () => {
             jest.fn()
         ).registerEvents();
 
-        expect(registrar.registerEvent).toHaveBeenCalledTimes(4);
+        expect(registrar.registerEvent).toHaveBeenCalledTimes(3);
     });
 
     it('should count a note when it becomes active', () => {
@@ -140,24 +141,14 @@ describe('UpdateScheduler', () => {
         expect(updates.counts).toEqual([]);
     });
 
-    it('should not recount when the layout changes and the counts are current', () => {
-        switchToNote(fruit);
-        updates.counts.length = 0;
-
-        workspace.trigger('layout-change');
-        finishPendingUpdates();
-
-        expect(updates.counts).toEqual([]);
-    });
-
-    it('should not count when the layout changes before any update was needed', () => {
+    it('should count a note once when the file opens before the pane changes', () => {
         workspace.openNote(fruit);
-        workspace.activeNote = fruit;
 
-        workspace.trigger('layout-change');
+        workspace.trigger('file-open', {});
+        workspace.trigger('active-leaf-change', fruit.leaf);
         finishPendingUpdates();
 
-        expect(updates.counts).toEqual([]);
+        expect(updates.counts).toEqual([FRUIT_COUNTS]);
     });
 
     it('should not count a note switch after the pending update is cancelled', () => {
@@ -169,15 +160,87 @@ describe('UpdateScheduler', () => {
         expect(updates.counts).toEqual([]);
     });
 
-    it('should not count when the layout changes after the sidebar opens, since the sidebar counts as it opens', () => {
+    it('should not count when the sidebar changes size and the counts are current', () => {
+        switchToNote(fruit);
+        updates.counts.length = 0;
+
+        scheduler.updateIfSkipped();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    it('should not count when the sidebar changes size before any update was needed', () => {
+        workspace.openNote(fruit);
+        workspace.activeNote = fruit;
+
+        scheduler.updateIfSkipped();
+
+        expect(updates.counts).toEqual([]);
+    });
+
+    it('should not count when the sidebar changes size after opening, since the sidebar counts as it opens', () => {
         workspace.sidebarLeaves = [];
         switchToNote(fruit);
         workspace.openSidebar();
 
-        workspace.trigger('layout-change');
-        finishPendingUpdates();
+        scheduler.updateIfSkipped();
 
         expect(updates.counts).toEqual([]);
+    });
+
+    describe('when asked to update now', () => {
+        it('should count the current note right away', () => {
+            workspace.openNote(fruit);
+            workspace.activeNote = fruit;
+
+            scheduler.updateNow();
+
+            expect(updates.counts).toEqual([FRUIT_COUNTS]);
+        });
+
+        it('should drop a pending note switch', () => {
+            workspace.activateNote(fruit);
+
+            scheduler.updateNow();
+            finishPendingUpdates();
+
+            expect(updates.counts).toEqual([FRUIT_COUNTS]);
+        });
+
+        it('should drop a pending edit', () => {
+            switchToNote(fruit);
+            updates.counts.length = 0;
+            workspace.editNote();
+
+            scheduler.updateNow();
+            jest.advanceTimersByTime(EDIT_DELAY_MS);
+
+            expect(updates.counts).toEqual([FRUIT_COUNTS]);
+        });
+    });
+
+    describe('with two sidebars', () => {
+        let hiddenSidebar: WorkspaceLeaf;
+
+        beforeEach(() => {
+            hiddenSidebar = {} as WorkspaceLeaf;
+            workspace.openSidebar(hiddenSidebar);
+            workspace.coverSidebar([hiddenSidebar]);
+        });
+
+        it('should count while one of them can be seen', () => {
+            switchToNote(fruit);
+
+            expect(updates.counts).toEqual([FRUIT_COUNTS]);
+        });
+
+        it('should not count while neither can be seen', () => {
+            workspace.coverSidebar();
+
+            switchToNote(fruit);
+
+            expect(updates.counts).toEqual([]);
+        });
     });
 
     describe('while the sidebar is open but cannot be seen', () => {
@@ -200,34 +263,33 @@ describe('UpdateScheduler', () => {
             expect(updates.counts).toEqual([]);
         });
 
-        it('should count the current note once when the layout shows the sidebar again', () => {
+        it('should count the current note once when the sidebar can be seen again', () => {
             switchToNote(vegetables);
             workspace.editNote();
             jest.advanceTimersByTime(EDIT_DELAY_MS);
             workspace.uncoverSidebar();
 
-            workspace.trigger('layout-change');
-            workspace.trigger('layout-change');
-            finishPendingUpdates();
+            scheduler.updateIfSkipped();
+            scheduler.updateIfSkipped();
 
             expect(updates.counts).toEqual([VEGETABLE_COUNTS]);
         });
 
-        it('should count the current note when the sidebar becomes active', () => {
+        it('should not count when the sidebar changes size and still cannot be seen', () => {
+            switchToNote(vegetables);
+
+            scheduler.updateIfSkipped();
+
+            expect(updates.counts).toEqual([]);
+        });
+
+        it('should not count again when the sidebar is shown after it updated on opening', () => {
             switchToNote(vegetables);
             workspace.uncoverSidebar();
+            scheduler.updateNow();
+            updates.counts.length = 0;
 
-            workspace.activateSidebar();
-            finishPendingUpdates();
-
-            expect(updates.counts).toEqual([VEGETABLE_COUNTS]);
-        });
-
-        it('should not count when the layout changes and the sidebar still cannot be seen', () => {
-            switchToNote(vegetables);
-
-            workspace.trigger('layout-change');
-            finishPendingUpdates();
+            scheduler.updateIfSkipped();
 
             expect(updates.counts).toEqual([]);
         });

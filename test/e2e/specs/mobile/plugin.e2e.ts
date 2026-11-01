@@ -1,23 +1,35 @@
-import { $, expect } from '@wdio/globals';
-import { describe, it } from 'mocha';
+import { $, browser, expect } from '@wdio/globals';
+import { beforeEach, describe, it } from 'mocha';
 import { obsidianPage } from 'wdio-obsidian-service';
 import {
     appendToNote,
     closeRightSidebar,
     DEFAULT_SETTINGS,
+    EDIT_DEBOUNCE_MS,
+    openRightSidebar,
     expectSavedSettings,
     expectWordList,
     FILTER,
     FRUIT_NOTE,
+    getUpdateCount,
     openSettingsTab,
     openSidebarForFruit,
     SETTINGS_BLACKLIST,
     SETTINGS_THRESHOLD,
     showSidebar,
+    startRecordingUpdates,
     typeInFilter,
     useCleanState,
     WORD_BUTTON,
+    WordCount,
 } from '../../helpers';
+
+const ADDED_CHERRIES: WordCount[] = [
+    ['apple', 5],
+    ['cherry', 5],
+    ['banana', 4],
+];
+const CHERRIES = '\nCherry cherry cherry.\n';
 
 describe('Word Frequency plugin on mobile', () => {
     useCleanState();
@@ -33,13 +45,29 @@ describe('Word Frequency plugin on mobile', () => {
     it('should update the counts after the note is edited', async () => {
         await openSidebarForFruit();
 
-        await appendToNote(FRUIT_NOTE, '\nCherry cherry cherry.\n');
+        await appendToNote(FRUIT_NOTE, CHERRIES);
 
-        await expectWordList([
-            ['apple', 5],
-            ['cherry', 5],
-            ['banana', 4],
-        ]);
+        await expectWordList(ADDED_CHERRIES);
+    });
+
+    describe('with the drawer closed', () => {
+        beforeEach(async () => {
+            await openSidebarForFruit();
+            await closeRightSidebar();
+            await startRecordingUpdates();
+            await appendToNote(FRUIT_NOTE, CHERRIES);
+            await browser.pause(EDIT_DEBOUNCE_MS);
+        });
+
+        it('should not count notes while the drawer is closed', async () => {
+            expect(await getUpdateCount()).toBe(0);
+        });
+
+        it('should show current counts once the drawer is opened', async () => {
+            await openRightSidebar();
+
+            await expectWordList(ADDED_CHERRIES);
+        });
     });
 
     it('should show the sidebar again after the drawer was closed', async () => {

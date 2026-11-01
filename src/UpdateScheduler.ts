@@ -55,9 +55,6 @@ export class UpdateScheduler {
         this.registrar.registerEvent(
             this.workspace.on('editor-change', () => this.editUpdate())
         );
-        this.registrar.registerEvent(
-            this.workspace.on('layout-change', () => this.updateIfSkipped())
-        );
         this.workspace.onLayoutReady(() => this.updateIfSidebarVisible());
     }
 
@@ -66,21 +63,25 @@ export class UpdateScheduler {
         this.switchUpdate.cancel();
     }
 
+    updateNow(): void {
+        this.cancelPendingUpdate();
+        this.hasSkippedUpdate = false;
+        this.update();
+    }
+
+    updateIfSkipped(): void {
+        if (this.hasSkippedUpdate) {
+            this.updateIfSidebarVisible();
+        }
+    }
+
     private handleActiveLeafChange(leaf: WorkspaceLeaf | null): void {
         if (!(leaf?.view instanceof MarkdownView)) {
-            this.updateIfSkipped();
-
             return;
         }
 
         this.noteTracker.rememberNote(leaf.view);
         this.switchUpdate();
-    }
-
-    private updateIfSkipped(): void {
-        if (this.hasSkippedUpdate) {
-            this.switchUpdate();
-        }
     }
 
     private updateIfSidebarVisible(): void {

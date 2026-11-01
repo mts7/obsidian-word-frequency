@@ -9,6 +9,7 @@ import {
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
+import { FakeResizeObserver } from './fakes/resizeObserver';
 import { createNote, FakeWorkspace } from './fakes/workspace';
 
 describe('WordFrequencyView', () => {
@@ -35,8 +36,9 @@ describe('WordFrequencyView', () => {
             empty: jest.fn(),
         } as unknown as HTMLDivElement;
         mockPlugin = {
-            frequencyCounter: {
-                triggerUpdateContent: jest.fn(),
+            updateScheduler: {
+                updateIfSkipped: jest.fn(),
+                updateNow: jest.fn(),
             },
             settings: {
                 blacklist: 'the, and, to',
@@ -83,6 +85,7 @@ describe('WordFrequencyView', () => {
                     createDiv: jest.fn().mockReturnValue(mockDivElement),
                 } as unknown as HTMLElement,
                 display: displayMock,
+                listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
                 updateContent: jest.fn(),
@@ -143,6 +146,7 @@ describe('WordFrequencyView', () => {
                     createDiv: jest.fn().mockReturnValue(mockDivElement),
                 } as unknown as HTMLElement,
                 display: mockDisplay,
+                listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
                 updateContent: jest.fn(),
@@ -170,6 +174,22 @@ describe('WordFrequencyView', () => {
             expect(updateContentSpy).toHaveBeenCalled();
 
             updateContentSpy.mockRestore();
+        });
+
+        it('should count the current note through the scheduler', async () => {
+            await view.onOpen();
+
+            expect(mockPlugin.updateScheduler.updateNow).toHaveBeenCalled();
+        });
+
+        it('should ask the scheduler to catch up when it changes size', async () => {
+            await view.onOpen();
+
+            FakeResizeObserver.triggerResize(view.containerEl);
+
+            expect(
+                mockPlugin.updateScheduler.updateIfSkipped
+            ).toHaveBeenCalled();
         });
 
         it('should call createDiv with specific classes', async () => {
@@ -200,6 +220,18 @@ describe('WordFrequencyView', () => {
     });
 
     describe('onClose', () => {
+        it('should close cleanly when it was never opened', async () => {
+            await expect(view.onClose()).resolves.toBeUndefined();
+        });
+
+        it('should stop watching its size', async () => {
+            await view.onOpen();
+
+            await view.onClose();
+
+            expect(FakeResizeObserver.isObserved(view.containerEl)).toBe(false);
+        });
+
         it('should remove the event listener for EVENT_UPDATE', async () => {
             await view.onOpen();
             const removeEventListenerSpy = jest.spyOn(
@@ -265,6 +297,7 @@ describe('WordFrequencyView', () => {
                     createDiv: jest.fn().mockReturnValue(mockDivElement),
                 } as unknown as HTMLElement,
                 display: mockDisplay,
+                listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
                 updateContent: jest.fn(),

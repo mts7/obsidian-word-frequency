@@ -5,13 +5,15 @@ import {
     appendToNote,
     closeRightSidebar,
     EDIT_DEBOUNCE_MS,
+    openRightSidebar,
     expectWordList,
     FRUIT_COUNTS,
     FRUIT_NOTE,
-    getRecordedUpdates,
+    getUpdateCount,
     openNoteInNewTab,
     openNoteInSameTab,
     openSidebarForFruit,
+    RIGHT_SIDEBAR_TOGGLE,
     showSidebar,
     startRecordingUpdates,
     switchToMainWindow,
@@ -23,17 +25,10 @@ import {
     VIEW_TYPE,
 } from '../helpers';
 
-const SETTLE_MS = 1000;
 const ADDED_POTATOES: [string, number][] = [
     ['potato', 6],
     ['carrot', 5],
 ];
-
-async function getUpdateCount(): Promise<number> {
-    await browser.pause(SETTLE_MS);
-
-    return (await getRecordedUpdates()).length;
-}
 
 async function editVegetablesAndWait(): Promise<void> {
     await appendToNote(VEGETABLES_NOTE, '\nPotato potato.\n');
@@ -51,6 +46,23 @@ async function coverSidebar(): Promise<void> {
         await cover.setViewState({ type: 'outline', active: true });
         await app.workspace.revealLeaf(cover);
     }, VIEW_TYPE);
+}
+
+async function applySavedLayout(): Promise<void> {
+    await switchToMainWindow();
+    await browser.executeObsidian(async ({ app }) => {
+        await app.workspace.changeLayout(app.workspace.getLayout());
+    });
+}
+
+async function isSidebarLoaded(): Promise<boolean> {
+    await switchToMainWindow();
+
+    return browser.executeObsidian(
+        ({ app }, viewType) =>
+            !app.workspace.getLeavesOfType(viewType)[0].isDeferred,
+        VIEW_TYPE
+    );
 }
 
 async function uncoverSidebar(): Promise<void> {
@@ -122,6 +134,34 @@ describe('Word Frequency plugin updates', () => {
             await showSidebar();
 
             await expectWordList(ADDED_POTATOES);
+        });
+
+        it('should show current counts once the sidebar is expanded with its toggle button', async () => {
+            await editVegetablesAndWait();
+
+            await $(RIGHT_SIDEBAR_TOGGLE).click();
+
+            await expectWordList(ADDED_POTATOES);
+        });
+    });
+
+    describe('with a sidebar that has not loaded yet', () => {
+        beforeEach(async () => {
+            await openSidebarForFruit();
+            await openNoteInNewTab(VEGETABLES_NOTE);
+            await expectWordList(VEGETABLES_COUNTS);
+            await closeRightSidebar();
+            await applySavedLayout();
+            expect(await isSidebarLoaded()).toBe(false);
+            await startRecordingUpdates();
+        });
+
+        it('should count the current note once when the sidebar loads', async () => {
+            await openRightSidebar();
+
+            await expectWordList(VEGETABLES_COUNTS);
+            expect(await isSidebarLoaded()).toBe(true);
+            expect(await getUpdateCount()).toBe(1);
         });
     });
 

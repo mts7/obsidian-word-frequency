@@ -73,12 +73,12 @@ export class FakeWorkspace {
         this.sidebarLeaves.push(leaf);
     }
 
-    coverSidebar(): void {
-        this.setSidebarHidden(true);
+    coverSidebar(leaves = this.sidebarLeaves): void {
+        this.setSidebarHidden(leaves, true);
     }
 
-    uncoverSidebar(): void {
-        this.setSidebarHidden(false);
+    uncoverSidebar(leaves = this.sidebarLeaves): void {
+        this.setSidebarHidden(leaves, false);
     }
 
     activateNote(note: MarkdownView): void {
@@ -140,8 +140,8 @@ export class FakeWorkspace {
         this.revealedLeaves.push(leaf);
     }
 
-    private setSidebarHidden(hidden: boolean): void {
-        this.sidebarLeaves.forEach((leaf) => {
+    private setSidebarHidden(leaves: WorkspaceLeaf[], hidden: boolean): void {
+        leaves.forEach((leaf) => {
             leaf.view.containerEl.hidden = hidden;
         });
     }
