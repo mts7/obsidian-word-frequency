@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting } from 'obsidian';
+import { PluginSettingTab, Setting, SettingDefinitionItem } from 'obsidian';
 import {
     ELEMENT_CLASSES,
     SETTINGS_DESCRIPTIONS,
@@ -25,7 +25,27 @@ export class WordFrequencySettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        const blacklist = this.settingFactory(containerEl)
+        this.buildBlacklist(this.settingFactory(containerEl));
+        this.buildThreshold(this.settingFactory(containerEl));
+    }
+
+    getSettingDefinitions(): SettingDefinitionItem[] {
+        return [
+            {
+                name: SETTINGS_NAMES.blacklist,
+                desc: SETTINGS_DESCRIPTIONS.blacklist,
+                render: (setting) => this.buildBlacklist(setting),
+            },
+            {
+                name: SETTINGS_NAMES.threshold,
+                desc: SETTINGS_DESCRIPTIONS.threshold,
+                render: (setting) => this.buildThreshold(setting),
+            },
+        ];
+    }
+
+    buildBlacklist(setting: Setting): void {
+        setting
             .setName(SETTINGS_NAMES.blacklist)
             .setDesc(SETTINGS_DESCRIPTIONS.blacklist)
             .setClass(ELEMENT_CLASSES.settingItem)
@@ -36,9 +56,11 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                     })
                     .inputEl.classList.add(ELEMENT_CLASSES.settingBlacklist);
             });
-        blacklist.infoEl.addClass(ELEMENT_CLASSES.settingInfoItem);
+        setting.infoEl.addClass(ELEMENT_CLASSES.settingInfoItem);
+    }
 
-        this.settingFactory(containerEl)
+    buildThreshold(setting: Setting): void {
+        setting
             .setName(SETTINGS_NAMES.threshold)
             .setDesc(SETTINGS_DESCRIPTIONS.threshold)
             .addText((text) =>
