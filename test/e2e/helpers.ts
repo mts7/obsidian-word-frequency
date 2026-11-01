@@ -22,6 +22,7 @@ export const VEGETABLES_COUNTS: WordCount[] = [
 ];
 export const VIEW = `.workspace-leaf-content[data-type="${VIEW_TYPE}"]`;
 export const TAB_HEADER = `.workspace-tab-header[data-type="${VIEW_TYPE}"]`;
+export const RIGHT_SIDEBAR_TOGGLE = '.sidebar-toggle-button.mod-right';
 export const RIBBON_ICON =
     '.side-dock-ribbon-action[aria-label="Show word frequency sidebar"]';
 export const WORD_LIST = `${VIEW} .word-frequency-word-list`;
@@ -38,6 +39,8 @@ const FIXTURES = [FRUIT_NOTE, VEGETABLES_NOTE].map((note) => ({
 }));
 
 export const EDIT_DEBOUNCE_MS = 3000;
+const SIDEBAR_ANIMATION_MS = 600;
+const SETTLE_MS = 1000;
 export const UPDATE_EVENT = 'word-frequency-update';
 
 let hasPendingEdit = false;
@@ -268,10 +271,18 @@ export async function openSettingsTab(): Promise<void> {
 
 export async function closeRightSidebar(): Promise<void> {
     await switchToMainWindow();
-    await browser.executeObsidian(async ({ app }) => {
+    await browser.executeObsidian(async ({ app }, delay) => {
         app.workspace.rightSplit.collapse();
-        await new Promise((resolve) => setTimeout(resolve, 600));
-    });
+        await new Promise((resolve) => setTimeout(resolve, delay));
+    }, SIDEBAR_ANIMATION_MS);
+}
+
+export async function openRightSidebar(): Promise<void> {
+    await switchToMainWindow();
+    await browser.executeObsidian(async ({ app }, delay) => {
+        app.workspace.rightSplit.expand();
+        await new Promise((resolve) => setTimeout(resolve, delay));
+    }, SIDEBAR_ANIMATION_MS);
 }
 
 export async function closeSettings(): Promise<void> {
@@ -387,4 +398,10 @@ export async function getRecordedUpdates(): Promise<number[]> {
     await switchToMainWindow();
 
     return browser.execute(() => [...(window.wordFrequencyUpdates ?? [])]);
+}
+
+export async function getUpdateCount(): Promise<number> {
+    await browser.pause(SETTLE_MS);
+
+    return (await getRecordedUpdates()).length;
 }

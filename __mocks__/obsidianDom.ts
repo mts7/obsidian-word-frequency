@@ -1,3 +1,5 @@
+import { FakeResizeObserver } from '../src/__tests__/fakes/resizeObserver';
+
 type ElementOptions = {
     attr?: Record<string, string | number | boolean>;
     cls?: string | string[];
@@ -46,4 +48,9 @@ Object.assign(HTMLElement.prototype, {
     addClass(this: HTMLElement, ...classes: string[]) {
         this.classList.add(...classes);
     },
+    isShown(this: HTMLElement) {
+        return this.closest('[hidden]') === null;
+    },
 });
+
+Object.assign(window, { ResizeObserver: FakeResizeObserver });

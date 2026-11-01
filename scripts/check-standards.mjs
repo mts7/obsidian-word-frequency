@@ -18,6 +18,8 @@ const REQUIRED_API_NAMES = new Set([
     'display',
     'on',
     'onLayoutReady',
+    'observe',
+    'disconnect',
 ]);
 const BUILT_IN_CLASSES = new Set([
     'Map',
@@ -25,6 +27,7 @@ const BUILT_IN_CLASSES = new Set([
     'CustomEvent',
     'Error',
     'Promise',
+    'ResizeObserver',
 ]);
 const VERBS = new Set(
     `activate add append apply build calculate cancel capture check clear close collect count cover

@@ -13,6 +13,7 @@ export class WordFrequencyView extends ItemView {
     private display: WordFrequencyDisplay;
     private eventListener: (_: CustomEvent) => void = () => {};
     private readonly plugin: WordFrequencyPlugin;
+    private resizeObserver: ResizeObserver | undefined;
     private wordCountList: [string, number][] = [];
     private wordListContainer: HTMLDivElement;
 
@@ -70,7 +71,8 @@ export class WordFrequencyView extends ItemView {
         this.display.createThresholdDisplay(contentContainer);
 
         this.updateContent();
-        this.plugin.frequencyCounter.triggerUpdateContent();
+        this.listenForResize();
+        this.plugin.updateScheduler.updateNow();
     }
 
     async onClose() {
@@ -78,6 +80,7 @@ export class WordFrequencyView extends ItemView {
             EVENT_UPDATE,
             this.eventListener as EventListener
         );
+        this.resizeObserver?.disconnect();
     }
 
     updateContent() {
@@ -96,5 +99,12 @@ export class WordFrequencyView extends ItemView {
         });
 
         this.display.updateThresholdDisplay();
+    }
+
+    private listenForResize(): void {
+        this.resizeObserver = new ResizeObserver(() =>
+            this.plugin.updateScheduler.updateIfSkipped()
+        );
+        this.resizeObserver.observe(this.containerEl);
     }
 }
