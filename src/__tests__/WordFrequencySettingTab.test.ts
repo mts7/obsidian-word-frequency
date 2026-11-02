@@ -1,4 +1,3 @@
-import { Setting } from 'obsidian';
 import {
     ELEMENT_CLASSES,
     SETTINGS_DESCRIPTIONS,
@@ -7,21 +6,9 @@ import {
 import WordFrequencyPlugin from '../main';
 import { WordFrequencySettingTab } from '../WordFrequencySettingTab';
 
-const createMockContainerEl = () => {
-    const mockContainerEl = document.createElement('div');
-    mockContainerEl.empty = function () {
-        while (this.firstChild) {
-            this.removeChild(this.firstChild);
-        }
-    };
-
-    return mockContainerEl;
-};
-
 describe('WordFrequencySettingTab', () => {
     let plugin: WordFrequencyPlugin;
     let settingTab: WordFrequencySettingTab;
-    let containerEl: HTMLElement;
 
     beforeEach(() => {
         plugin = {
@@ -33,9 +20,7 @@ describe('WordFrequencySettingTab', () => {
             app: {},
         } as unknown as WordFrequencyPlugin;
 
-        containerEl = createMockContainerEl();
         settingTab = new WordFrequencySettingTab(plugin);
-        settingTab.containerEl = containerEl;
     });
 
     it('should initialize the constructor correctly', () => {
@@ -71,54 +56,6 @@ describe('WordFrequencySettingTab', () => {
         return { setting, text, textArea };
     };
 
-    it('should create new settings', async () => {
-        const { setting, text, textArea } = createMockSetting();
-        const mockSettingFactory = jest.fn().mockReturnValue(setting);
-        const settingTab = new WordFrequencySettingTab(
-            plugin,
-            mockSettingFactory
-        );
-        settingTab.containerEl = containerEl;
-        containerEl.appendChild(document.createElement('span'));
-        plugin.settings.blacklist = 'the,and';
-        plugin.settings.threshold = 4;
-        const saveBlacklistSpy = jest
-            .spyOn(settingTab, 'saveBlacklistValue')
-            .mockResolvedValue();
-        const updateThresholdSpy = jest
-            .spyOn(settingTab, 'updateThreshold')
-            .mockResolvedValue();
-
-        settingTab.display();
-        await textArea.onChange.mock.calls[0][0]('a,b');
-        await text.onChange.mock.calls[0][0]('7');
-
-        expect(containerEl.childElementCount).toBe(0);
-        expect(mockSettingFactory).toHaveBeenCalledTimes(2);
-        expect(setting.setName).toHaveBeenCalledWith(SETTINGS_NAMES.blacklist);
-        expect(setting.setName).toHaveBeenCalledWith(SETTINGS_NAMES.threshold);
-        expect(setting.infoEl.addClass).toHaveBeenCalledWith(
-            ELEMENT_CLASSES.settingInfoItem
-        );
-        expect(textArea.setValue).toHaveBeenCalledWith('the,and');
-        expect(textArea.inputEl.classList.add).toHaveBeenCalledWith(
-            ELEMENT_CLASSES.settingBlacklist
-        );
-        expect(text.setPlaceholder).toHaveBeenCalledWith('3');
-        expect(text.setValue).toHaveBeenCalledWith('4');
-        expect(saveBlacklistSpy).toHaveBeenCalledWith('a,b');
-        expect(updateThresholdSpy).toHaveBeenCalledWith('7');
-    });
-
-    it('should use the obsidian Setting by default', () => {
-        const { setting } = createMockSetting();
-        (Setting as unknown as jest.Mock).mockImplementation(() => setting);
-
-        settingTab.display();
-
-        expect(Setting).toHaveBeenCalledWith(containerEl);
-    });
-
     it('should define searchable settings with names and descriptions', () => {
         const definitions = settingTab.getSettingDefinitions();
 
@@ -134,7 +71,7 @@ describe('WordFrequencySettingTab', () => {
         ]);
     });
 
-    it('should render the defined settings like the legacy display', async () => {
+    it('should render the defined settings', async () => {
         const { setting, text, textArea } = createMockSetting();
         plugin.settings.blacklist = 'the,and';
         plugin.settings.threshold = 4;

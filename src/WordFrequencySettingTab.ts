@@ -5,28 +5,13 @@ import {
     SETTINGS_NAMES,
 } from './constants';
 import WordFrequencyPlugin from './main';
-import { SettingFactory } from './types';
 
 export class WordFrequencySettingTab extends PluginSettingTab {
     plugin: WordFrequencyPlugin;
-    private settingFactory: SettingFactory;
 
-    constructor(
-        plugin: WordFrequencyPlugin,
-        settingFactory: SettingFactory = (element) => new Setting(element)
-    ) {
+    constructor(plugin: WordFrequencyPlugin) {
         super(plugin.app, plugin);
         this.plugin = plugin;
-        this.settingFactory = settingFactory;
-    }
-
-    display(): void {
-        const { containerEl } = this;
-
-        containerEl.empty();
-
-        this.buildBlacklist(this.settingFactory(containerEl));
-        this.buildThreshold(this.settingFactory(containerEl));
     }
 
     getSettingDefinitions(): SettingDefinitionItem[] {
