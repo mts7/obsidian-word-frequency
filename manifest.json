@@ -2,7 +2,7 @@
   "id": "word-frequency",
   "name": "Word Frequency",
   "version": "1.4.0",
-  "minAppVersion": "1.13.0",
+  "minAppVersion": "1.13.4",
   "description": "Counts the most frequently used words in a note and displays them in the sidebar.",
   "author": "Mike Rodarte",
   "authorUrl": "https://github.com/mts7",

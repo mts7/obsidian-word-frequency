@@ -72,6 +72,9 @@
     },
     "mocha": {
       "serialize-javascript": "^7.1.4"
+    },
+    "wdio-obsidian-reporter": {
+      "@wdio/spec-reporter": "^9.18.0"
     }
   }
 }
