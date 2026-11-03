@@ -4,10 +4,11 @@ import { EVENT_UPDATE, VIEW_TYPE } from '../../constants';
 type Listener = (..._args: unknown[]) => void;
 type WordCounts = [string, number][];
 
-export function createNote(content: string): MarkdownView {
+export function createNote(content: string, path?: string): MarkdownView {
     const leaf = {} as WorkspaceLeaf;
     const note = Object.create(MarkdownView.prototype) as MarkdownView;
-    Object.assign(note, { editor: { getValue: () => content }, leaf });
+    const file = path === undefined ? null : { path };
+    Object.assign(note, { editor: { getValue: () => content }, file, leaf });
     Object.assign(leaf, { view: note });
 
     return note;

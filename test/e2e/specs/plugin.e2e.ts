@@ -4,6 +4,7 @@ import { obsidianPage } from 'wdio-obsidian-service';
 import {
     activateNote,
     appendToNote,
+    countWords,
     DEFAULT_SETTINGS,
     EDIT_DEBOUNCE_MS,
     expectSavedSettings,
@@ -16,12 +17,18 @@ import {
     openNoteInSameTab,
     openSettingsTab,
     openSidebarForFruit,
+    PAGE_SIZE,
     RIBBON_ICON,
     searchSettings,
+    setSliderValue,
     SETTINGS,
     SETTINGS_BLACKLIST,
+    SETTINGS_MINIMUM_SHARE,
+    SETTINGS_PAGE_SIZE,
     SETTINGS_THRESHOLD,
+    SHOW_MORE,
     SHOW_SIDEBAR_COMMAND,
+    showSidebar,
     switchToMainWindow,
     TAB_HEADER,
     THRESHOLD_DISPLAY,
@@ -33,7 +40,17 @@ import {
     WORD_LIST,
     VIEW,
     WORD_BUTTON,
+    WordCount,
+    WORDS,
+    WORDS_NOTE,
 } from '../helpers';
+
+const FRUIT_ABOVE_ONE: WordCount[] = [
+    ['apple', 5],
+    ['banana', 4],
+    ['cherry', 2],
+    ['date', 1],
+];
 
 describe('Word Frequency plugin in Obsidian', () => {
     useCleanState();
@@ -159,6 +176,41 @@ describe('Word Frequency plugin in Obsidian', () => {
             await expect($(FILTER)).toHaveValue('BAN');
         });
 
+        it('should list one page of words until show more is clicked', async () => {
+            await obsidianPage.openFile(WORDS_NOTE);
+            await showSidebar();
+            await expectWordList(countWords(WORDS.slice(0, PAGE_SIZE)));
+
+            await $(SHOW_MORE).click();
+
+            await expectWordList(countWords(WORDS));
+            await expect($(SHOW_MORE)).not.toExist();
+        });
+
+        it('should list the first page again after switching notes', async () => {
+            await obsidianPage.openFile(WORDS_NOTE);
+            await showSidebar();
+            await $(SHOW_MORE).click();
+            await expectWordList(countWords(WORDS));
+
+            await obsidianPage.openFile(FRUIT_NOTE);
+            await expectWordList(FRUIT_COUNTS);
+            await obsidianPage.openFile(WORDS_NOTE);
+
+            await expectWordList(countWords(WORDS.slice(0, PAGE_SIZE)));
+        });
+
+        it('should find a word below the minimum share with the filter', async () => {
+            await updateSettings({ minimumShare: 100, threshold: 1 });
+            await obsidianPage.openFile(FRUIT_NOTE);
+            await showSidebar();
+            await expectWordList([['apple', 5]]);
+
+            await typeInFilter('CHE');
+
+            await expectWordList([['cherry', 2]]);
+        });
+
         it('should blacklist a word with its button and save the setting', async () => {
             await openSidebarForFruit();
 
@@ -200,7 +252,7 @@ describe('Word Frequency plugin in Obsidian', () => {
     });
 
     describe('settings tab', () => {
-        it('should render the blacklist and threshold settings with current values', async () => {
+        it('should render the settings with current values', async () => {
             await openSettingsTab();
 
             await expect(
@@ -209,6 +261,14 @@ describe('Word Frequency plugin in Obsidian', () => {
             await expect(
                 $(SETTINGS).$('.setting-item-name=Word frequency threshold')
             ).toExist();
+            await expect(
+                $(SETTINGS).$('.setting-item-name=Minimum share of top word')
+            ).toExist();
+            await expect(
+                $(SETTINGS).$('.setting-item-name=Words at a time')
+            ).toExist();
+            await expect($(SETTINGS_MINIMUM_SHARE)).toHaveValue('0');
+            await expect($(SETTINGS_PAGE_SIZE)).toHaveValue('15');
             await expect($(SETTINGS_BLACKLIST)).toHaveValue(
                 DEFAULT_SETTINGS.blacklist
             );
@@ -264,6 +324,37 @@ describe('Word Frequency plugin in Obsidian', () => {
             );
         });
 
+        it('should save a changed minimum share and refresh an open sidebar', async () => {
+            await updateSettings({ threshold: 1 });
+            await obsidianPage.openFile(FRUIT_NOTE);
+            await showSidebar();
+            await expectWordList(FRUIT_ABOVE_ONE);
+            await openSettingsTab();
+
+            await setSliderValue(SETTINGS_MINIMUM_SHARE, 50);
+
+            await expectWordList([
+                ['apple', 5],
+                ['banana', 4],
+            ]);
+            expect((await getSettings()).minimumShare).toBe(50);
+            await expectSavedSettings({ minimumShare: 50 });
+        });
+
+        it('should save a changed words at a time and refresh an open sidebar', async () => {
+            await obsidianPage.openFile(WORDS_NOTE);
+            await showSidebar();
+            await expectWordList(countWords(WORDS.slice(0, PAGE_SIZE)));
+            await openSettingsTab();
+
+            await $(SETTINGS_PAGE_SIZE).selectByVisibleText('50');
+
+            await expectWordList(countWords(WORDS));
+            await expect($(SHOW_MORE)).not.toExist();
+            expect((await getSettings()).pageSize).toBe(50);
+            await expectSavedSettings({ pageSize: 50 });
+        });
+
         it('should ignore a threshold that is not a number', async () => {
             await openSettingsTab();
 
@@ -290,10 +381,16 @@ describe('Word Frequency plugin in Obsidian', () => {
             const control = await searchSettings('Spellcheck');
             const blacklist = await searchSettings('Blacklist');
             const threshold = await searchSettings('Word frequency threshold');
+            const minimumShare = await searchSettings(
+                'Minimum share of top word'
+            );
+            const pageSize = await searchSettings('Words at a time');
 
             expect(control).toContain('Spellcheck');
             expect(blacklist).toContain('Blacklist');
             expect(threshold).toContain('Word frequency threshold');
+            expect(minimumShare).toContain('Minimum share of top word');
+            expect(pageSize).toContain('Words at a time');
         });
     });
 });

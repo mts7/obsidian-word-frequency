@@ -232,5 +232,19 @@ describe('WordFrequencyPlugin', () => {
                 ...settings,
             });
         });
+
+        it('should reset invalid saved settings to valid values', async () => {
+            (plugin.loadData as jest.Mock).mockResolvedValue({
+                minimumShare: 250,
+                pageSize: 13,
+            });
+
+            await plugin.onload();
+
+            expect(plugin.settings).toEqual({
+                ...DEFAULT_SETTINGS,
+                minimumShare: 100,
+            });
+        });
     });
 });

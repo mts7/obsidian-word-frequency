@@ -1,6 +1,8 @@
 import { PluginSettingTab, Setting, SettingDefinitionItem } from 'obsidian';
 import {
     ELEMENT_CLASSES,
+    MINIMUM_SHARE_LIMITS,
+    PAGE_SIZE_OPTIONS,
     SETTINGS_DESCRIPTIONS,
     SETTINGS_NAMES,
 } from './constants';
@@ -25,6 +27,16 @@ export class WordFrequencySettingTab extends PluginSettingTab {
                 name: SETTINGS_NAMES.threshold,
                 desc: SETTINGS_DESCRIPTIONS.threshold,
                 render: (setting) => this.buildThreshold(setting),
+            },
+            {
+                name: SETTINGS_NAMES.minimumShare,
+                desc: SETTINGS_DESCRIPTIONS.minimumShare,
+                render: (setting) => this.buildMinimumShare(setting),
+            },
+            {
+                name: SETTINGS_NAMES.pageSize,
+                desc: SETTINGS_DESCRIPTIONS.pageSize,
+                render: (setting) => this.buildPageSize(setting),
             },
         ];
     }
@@ -58,8 +70,50 @@ export class WordFrequencySettingTab extends PluginSettingTab {
             );
     }
 
+    buildMinimumShare(setting: Setting): void {
+        const { max, min, step } = MINIMUM_SHARE_LIMITS;
+        setting
+            .setName(SETTINGS_NAMES.minimumShare)
+            .setDesc(SETTINGS_DESCRIPTIONS.minimumShare)
+            .addSlider((slider) =>
+                slider
+                    .setLimits(min, max, step)
+                    .setValue(this.plugin.settings.minimumShare)
+                    .onChange(async (value) => {
+                        await this.saveMinimumShare(value);
+                    })
+            );
+    }
+
+    buildPageSize(setting: Setting): void {
+        const options = Object.fromEntries(
+            PAGE_SIZE_OPTIONS.map((size) => [size.toString(), size.toString()])
+        );
+        setting
+            .setName(SETTINGS_NAMES.pageSize)
+            .setDesc(SETTINGS_DESCRIPTIONS.pageSize)
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOptions(options)
+                    .setValue(this.plugin.settings.pageSize.toString())
+                    .onChange(async (value) => {
+                        await this.savePageSize(value);
+                    })
+            );
+    }
+
     async saveBlacklistValue(value: string) {
         this.plugin.settings.blacklist = value;
+        await this.plugin.saveSettings();
+    }
+
+    async saveMinimumShare(value: number) {
+        this.plugin.settings.minimumShare = value;
+        await this.plugin.saveSettings();
+    }
+
+    async savePageSize(value: string) {
+        this.plugin.settings.pageSize = parseInt(value, 10);
         await this.plugin.saveSettings();
     }
 

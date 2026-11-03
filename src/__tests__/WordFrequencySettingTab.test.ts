@@ -1,5 +1,6 @@
 import {
     ELEMENT_CLASSES,
+    MINIMUM_SHARE_LIMITS,
     SETTINGS_DESCRIPTIONS,
     SETTINGS_NAMES,
 } from '../constants';
@@ -14,6 +15,8 @@ describe('WordFrequencySettingTab', () => {
         plugin = {
             settings: {
                 blacklist: '',
+                minimumShare: 0,
+                pageSize: 15,
                 threshold: 0,
             },
             saveSettings: jest.fn().mockResolvedValue(undefined),
@@ -38,6 +41,16 @@ describe('WordFrequencySettingTab', () => {
             setValue: jest.fn().mockReturnThis(),
             onChange: jest.fn().mockReturnThis(),
         };
+        const slider = {
+            setLimits: jest.fn().mockReturnThis(),
+            setValue: jest.fn().mockReturnThis(),
+            onChange: jest.fn().mockReturnThis(),
+        };
+        const dropdown = {
+            addOptions: jest.fn().mockReturnThis(),
+            setValue: jest.fn().mockReturnThis(),
+            onChange: jest.fn().mockReturnThis(),
+        };
         const setting = {
             setName: jest.fn().mockReturnThis(),
             setDesc: jest.fn().mockReturnThis(),
@@ -50,10 +63,18 @@ describe('WordFrequencySettingTab', () => {
                 callback(text);
                 return setting;
             }),
+            addSlider: jest.fn().mockImplementation((callback) => {
+                callback(slider);
+                return setting;
+            }),
+            addDropdown: jest.fn().mockImplementation((callback) => {
+                callback(dropdown);
+                return setting;
+            }),
             infoEl: { addClass: jest.fn() },
         };
 
-        return { setting, text, textArea };
+        return { dropdown, setting, slider, text, textArea };
     };
 
     it('should define searchable settings with names and descriptions', () => {
@@ -67,6 +88,14 @@ describe('WordFrequencySettingTab', () => {
             expect.objectContaining({
                 name: SETTINGS_NAMES.threshold,
                 desc: SETTINGS_DESCRIPTIONS.threshold,
+            }),
+            expect.objectContaining({
+                name: SETTINGS_NAMES.minimumShare,
+                desc: SETTINGS_DESCRIPTIONS.minimumShare,
+            }),
+            expect.objectContaining({
+                name: SETTINGS_NAMES.pageSize,
+                desc: SETTINGS_DESCRIPTIONS.pageSize,
             }),
         ]);
     });
@@ -105,6 +134,78 @@ describe('WordFrequencySettingTab', () => {
         expect(text.setValue).toHaveBeenCalledWith('4');
         expect(saveBlacklistSpy).toHaveBeenCalledWith('a,b');
         expect(updateThresholdSpy).toHaveBeenCalledWith('7');
+    });
+
+    it('should render the minimum share as a slider', async () => {
+        const { setting, slider } = createMockSetting();
+        plugin.settings.minimumShare = 30;
+        const saveMinimumShareSpy = jest
+            .spyOn(settingTab, 'saveMinimumShare')
+            .mockResolvedValue();
+        const minimumShare = (
+            settingTab.getSettingDefinitions() as unknown as {
+                render: (_setting: unknown) => void;
+            }[]
+        )[2];
+
+        minimumShare.render(setting);
+        await slider.onChange.mock.calls[0][0](60);
+
+        expect(setting.setName).toHaveBeenCalledWith(
+            SETTINGS_NAMES.minimumShare
+        );
+        expect(setting.setDesc).toHaveBeenCalledWith(
+            SETTINGS_DESCRIPTIONS.minimumShare
+        );
+        expect(slider.setLimits).toHaveBeenCalledWith(
+            MINIMUM_SHARE_LIMITS.min,
+            MINIMUM_SHARE_LIMITS.max,
+            MINIMUM_SHARE_LIMITS.step
+        );
+        expect(slider.setValue).toHaveBeenCalledWith(30);
+        expect(saveMinimumShareSpy).toHaveBeenCalledWith(60);
+    });
+
+    it('should save the minimum share', async () => {
+        await settingTab.saveMinimumShare(60);
+
+        expect(plugin.settings.minimumShare).toBe(60);
+        expect(plugin.saveSettings).toHaveBeenCalled();
+    });
+
+    it('should render the words at a time as a dropdown', async () => {
+        const { dropdown, setting } = createMockSetting();
+        plugin.settings.pageSize = 50;
+        const savePageSizeSpy = jest
+            .spyOn(settingTab, 'savePageSize')
+            .mockResolvedValue();
+        const pageSize = (
+            settingTab.getSettingDefinitions() as unknown as {
+                render: (_setting: unknown) => void;
+            }[]
+        )[3];
+
+        pageSize.render(setting);
+        await dropdown.onChange.mock.calls[0][0]('100');
+
+        expect(setting.setName).toHaveBeenCalledWith(SETTINGS_NAMES.pageSize);
+        expect(setting.setDesc).toHaveBeenCalledWith(
+            SETTINGS_DESCRIPTIONS.pageSize
+        );
+        expect(dropdown.addOptions).toHaveBeenCalledWith({
+            15: '15',
+            50: '50',
+            100: '100',
+        });
+        expect(dropdown.setValue).toHaveBeenCalledWith('50');
+        expect(savePageSizeSpy).toHaveBeenCalledWith('100');
+    });
+
+    it('should save the words at a time as a number', async () => {
+        await settingTab.savePageSize('100');
+
+        expect(plugin.settings.pageSize).toBe(100);
+        expect(plugin.saveSettings).toHaveBeenCalled();
     });
 
     it('should save blacklist', async () => {

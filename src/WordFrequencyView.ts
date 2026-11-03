@@ -8,13 +8,15 @@ import {
 } from './constants';
 import WordFrequencyPlugin from './main';
 import { WordFrequencyDisplay } from './WordFrequencyDisplay';
+import { WordCount } from './wordSelection';
 
 export class WordFrequencyView extends ItemView {
     private display: WordFrequencyDisplay;
     private eventListener: (_: CustomEvent) => void = () => {};
+    private notePath = '';
     private readonly plugin: WordFrequencyPlugin;
     private resizeObserver: ResizeObserver | undefined;
-    private wordCountList: [string, number][] = [];
+    private wordCountList: WordCount[] = [];
     private wordListContainer: HTMLDivElement;
 
     constructor(
@@ -26,7 +28,6 @@ export class WordFrequencyView extends ItemView {
         super(leaf);
         this.plugin = plugin;
         this.display = display ?? new WordFrequencyDisplay(plugin, this);
-        // TODO: find a better way to set a default value
         this.wordListContainer = divElement ?? this.containerEl.createDiv();
     }
 
@@ -49,6 +50,7 @@ export class WordFrequencyView extends ItemView {
     async onOpen() {
         this.eventListener = (event: CustomEvent) => {
             if (event.type === EVENT_UPDATE) {
+                this.showFirstPageForNewNote(event.detail.notePath);
                 this.wordCountList = event.detail.wordCounts;
                 this.updateContent();
             }
@@ -67,7 +69,7 @@ export class WordFrequencyView extends ItemView {
         this.wordListContainer = contentContainer.createDiv({
             cls: ELEMENT_CLASSES.containerWordList,
         });
-        this.display.listenForBlacklistClicks(this.wordListContainer);
+        this.display.listenForWordListClicks(this.wordListContainer);
         this.display.createThresholdDisplay(contentContainer);
 
         this.updateContent();
@@ -85,20 +87,18 @@ export class WordFrequencyView extends ItemView {
 
     updateContent() {
         this.wordListContainer.empty();
-        const blacklist = new Set(
-            this.plugin.settings.blacklist.split(',').map((word) => word.trim())
-        );
-
-        this.wordCountList.forEach(([word, count]) => {
-            this.display.addWordToSidebar(
-                blacklist,
-                word,
-                count,
-                this.wordListContainer
-            );
-        });
+        this.display.renderWords(this.wordCountList, this.wordListContainer);
 
         this.display.updateThresholdDisplay();
+    }
+
+    showFirstPageForNewNote(notePath: string): void {
+        if (notePath === this.notePath) {
+            return;
+        }
+
+        this.notePath = notePath;
+        this.display.showFirstPage();
     }
 
     private listenForResize(): void {
