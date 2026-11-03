@@ -1,8 +1,6 @@
-import { Setting } from 'obsidian';
-
 export interface WordFrequencySettings {
     blacklist: string;
+    minimumShare: number;
+    pageSize: number;
     threshold: number;
 }
-
-export type SettingFactory = (_: HTMLElement) => Setting;

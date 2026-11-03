@@ -42,7 +42,9 @@ export class WordFrequencyCounter {
                 note.editor.getValue()
             );
             this.eventTarget.dispatchEvent(
-                new CustomEvent(EVENT_UPDATE, { detail: { wordCounts } })
+                new CustomEvent(EVENT_UPDATE, {
+                    detail: { notePath: note.file?.path ?? '', wordCounts },
+                })
             );
         } catch (error) {
             console.error('error in triggerUpdateContent', error);

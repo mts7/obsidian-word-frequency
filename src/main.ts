@@ -7,6 +7,7 @@ import {
     COMMAND_ID_SHOW_SIDEBAR,
 } from './constants';
 import { NoteTracker } from './NoteTracker';
+import { resetInvalidSettings } from './settings';
 import { WordFrequencySettings } from './types';
 import { UpdateScheduler } from './UpdateScheduler';
 import { ViewManager } from './ViewManager';
@@ -101,6 +102,8 @@ export default class WordFrequencyPlugin extends Plugin {
 
     private async loadSettings(): Promise<void> {
         const settings = await this.loadData();
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, settings);
+        this.settings = resetInvalidSettings(
+            Object.assign({}, DEFAULT_SETTINGS, settings)
+        );
     }
 }

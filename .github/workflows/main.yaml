@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - "*"
-  pull_request_target:
+  pull_request:
     branches:
       - "*"
 
@@ -12,19 +12,20 @@ jobs:
   build_test:
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request_target' && github.base_ref == 'master') }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'master') }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-          node-version: "25"
+          node-version: "24"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Prettier
         run: npm run prettier
@@ -42,7 +43,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-reports
           path: coverage/
@@ -51,13 +52,13 @@ jobs:
         run: npm run mutate
 
       - name: Upload mutation reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-reports
           path: reports/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-artifacts
           path: dist/
@@ -69,18 +70,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-          node-version: "25"
+          node-version: "24"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: build-artifacts
           path: dist/
@@ -93,7 +95,7 @@ jobs:
           cp manifest.json assets/manifest.json
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-assets
           path: assets/

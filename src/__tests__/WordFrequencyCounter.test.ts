@@ -555,13 +555,31 @@ describe('WordFrequencyCounter', () => {
             target.addEventListener(EVENT_UPDATE, (event) =>
                 published.push((event as CustomEvent).detail)
             );
-            workspace.activateNote(createNote('apple banana apple'));
+            workspace.activateNote(
+                createNote('apple banana apple', 'Fruit.md')
+            );
             const tracker = new NoteTracker(workspace.getWorkspace());
 
             new WordFrequencyCounter(tracker, target).triggerUpdateContent();
 
-            expect(published).toEqual([{ wordCounts: FRUIT_COUNTS }]);
+            expect(published).toEqual([
+                { notePath: 'Fruit.md', wordCounts: FRUIT_COUNTS },
+            ]);
             expect(updates.counts).toEqual([]);
+        });
+
+        it('should publish an empty note path for a note without a file', () => {
+            const target = new EventTarget();
+            const published: { notePath: string }[] = [];
+            target.addEventListener(EVENT_UPDATE, (event) =>
+                published.push((event as CustomEvent).detail)
+            );
+            workspace.activateNote(createNote('apple'));
+            const tracker = new NoteTracker(workspace.getWorkspace());
+
+            new WordFrequencyCounter(tracker, target).triggerUpdateContent();
+
+            expect(published[0].notePath).toBe('');
         });
 
         it('should publish nothing when no note is open', () => {

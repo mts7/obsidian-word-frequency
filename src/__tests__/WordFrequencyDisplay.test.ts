@@ -1,11 +1,16 @@
 import { debounce, setIcon } from 'obsidian';
-import { ELEMENT_CLASSES, PLUGIN_NAME } from '../constants';
+import {
+    DEFAULT_SETTINGS,
+    ELEMENT_CLASSES,
+    PLUGIN_NAME,
+    SHOW_MORE_TEXT,
+} from '../constants';
 import WordFrequencyPlugin from '../main';
 import { WordFrequencyDisplay } from '../WordFrequencyDisplay';
 import { WordFrequencyView } from '../WordFrequencyView';
 
 describe('WordFrequencyDisplay', () => {
-    let blacklist: Set<string>;
+    const PAGE_SIZE = DEFAULT_SETTINGS.pageSize;
     let display: WordFrequencyDisplay;
     let contentEl: HTMLElement;
     let firstElement: HTMLElement;
@@ -23,6 +28,8 @@ describe('WordFrequencyDisplay', () => {
             saveSettings: jest.fn(),
             settings: {
                 blacklist: 'the, and, to',
+                minimumShare: 0,
+                pageSize: PAGE_SIZE,
                 threshold: 3,
                 saveData: jest.fn().mockResolvedValue(undefined),
             },
@@ -55,10 +62,6 @@ describe('WordFrequencyDisplay', () => {
         contentEl = {
             createEl: jest.fn().mockReturnValue(firstElement),
         } as unknown as HTMLElement;
-        blacklist = new Set(
-            mockPlugin.settings.blacklist.split(',').map((word) => word.trim())
-        );
-
         display = new WordFrequencyDisplay(mockPlugin, mockView);
     });
 
@@ -95,31 +98,11 @@ describe('WordFrequencyDisplay', () => {
             jest.clearAllMocks();
         });
 
-        it('should return early when the word is in the blacklist', () => {
-            const word = 'the';
-            const count = 17;
-
-            display.addWordToSidebar(blacklist, word, count, contentContainer);
-
-            expect(contentContainer.createEl).not.toHaveBeenCalled();
-        });
-
-        it('should return early when the word count is less than the threshold setting', () => {
-            const word = 'banana';
-            const count = 1;
-
-            display.addWordToSidebar(blacklist, word, count, contentContainer);
-
-            expect(contentContainer.createEl).not.toHaveBeenCalled();
-            expect(setIcon).not.toHaveBeenCalled();
-            expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
-        });
-
         it('should add the word with count and button to the row', () => {
             const word = 'banana';
             const count = 13;
 
-            display.addWordToSidebar(blacklist, word, count, contentContainer);
+            display.addWordToSidebar(word, count, contentContainer);
 
             expect(contentContainer.createEl).toHaveBeenCalledWith('div', {
                 cls: ELEMENT_CLASSES.containerRow,
@@ -143,7 +126,7 @@ describe('WordFrequencyDisplay', () => {
         });
 
         it('should label the button with the word it blacklists', () => {
-            display.addWordToSidebar(blacklist, 'banana', 13, contentContainer);
+            display.addWordToSidebar('banana', 13, contentContainer);
 
             expect(innerElement.createEl).toHaveBeenNthCalledWith(3, 'button', {
                 attr: {
@@ -154,48 +137,246 @@ describe('WordFrequencyDisplay', () => {
         });
 
         it('should not register a listener for each word', () => {
-            display.addWordToSidebar(blacklist, 'apple', 13, contentContainer);
-            display.addWordToSidebar(blacklist, 'banana', 13, contentContainer);
+            display.addWordToSidebar('apple', 13, contentContainer);
+            display.addWordToSidebar('banana', 13, contentContainer);
 
             expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
             expect(mockView.registerDomEvent).not.toHaveBeenCalled();
         });
+    });
 
-        it('should add word if it matches the filter and has the threshold count', () => {
+    describe('renderWords', () => {
+        let wordList: HTMLElement;
+
+        function getListedWords(): string[] {
+            return Array.from(
+                wordList.querySelectorAll(
+                    `.${ELEMENT_CLASSES.containerRow} span:first-child`
+                )
+            ).map((word) => word.textContent ?? '');
+        }
+
+        function getShowMoreButton(): HTMLButtonElement | null {
+            return wordList.querySelector(`.${ELEMENT_CLASSES.showMore}`);
+        }
+
+        function createWordCounts(total: number): [string, number][] {
+            return Array.from({ length: total }, (_, index) => [
+                `word${index}`,
+                5,
+            ]);
+        }
+
+        beforeEach(() => {
+            wordList = document.createElement('div');
+        });
+
+        it('should list the selected words in order', () => {
+            display.renderWords(
+                [
+                    ['apple', 9],
+                    ['the', 8],
+                    ['banana', 7],
+                    ['cherry', 2],
+                ],
+                wordList
+            );
+
+            expect(getListedWords()).toEqual(['apple', 'banana']);
+        });
+
+        it('should leave out words below the minimum share', () => {
+            mockPlugin.settings.minimumShare = 100;
+
+            display.renderWords(
+                [
+                    ['apple', 9],
+                    ['banana', 7],
+                ],
+                wordList
+            );
+
+            expect(getListedWords()).toEqual(['apple']);
+        });
+
+        it('should list filtered words below the minimum share', () => {
+            mockPlugin.settings.minimumShare = 100;
             display = new WordFrequencyDisplay(
                 mockPlugin,
                 mockView,
                 () => 'BAN'
             );
 
-            display.addWordToSidebar(
-                new Set(),
-                'banana',
-                mockPlugin.settings.threshold,
-                contentContainer
+            display.renderWords(
+                [
+                    ['apple', 9],
+                    ['banana', 7],
+                ],
+                wordList
             );
 
-            expect(contentContainer.createEl).toHaveBeenCalledWith('div', {
-                cls: ELEMENT_CLASSES.containerRow,
-            });
-            expect(setIcon).toHaveBeenCalledWith(buttonElement, 'eye-off');
+            expect(getListedWords()).toEqual(['banana']);
         });
 
-        it('should not add word if it does not match the filter', () => {
+        it('should list the words chosen by the injected selector', () => {
+            const chooseWords = jest
+                .fn()
+                .mockReturnValue([['chosen', 1]] as [string, number][]);
+            mockPlugin.settings.minimumShare = 40;
             display = new WordFrequencyDisplay(
                 mockPlugin,
                 mockView,
-                () => 'xyz'
+                () => 'cho',
+                undefined,
+                chooseWords
+            );
+            const wordCounts: [string, number][] = [['apple', 9]];
+
+            display.renderWords(wordCounts, wordList);
+
+            expect(getListedWords()).toEqual(['chosen']);
+            expect(chooseWords).toHaveBeenCalledWith(wordCounts, {
+                blacklist: new Set(['the', 'and', 'to']),
+                filter: 'cho',
+                minimumShare: 40,
+                threshold: 3,
+            });
+        });
+
+        it('should trim spaces from blacklisted words', () => {
+            display.renderWords(
+                [
+                    ['and', 9],
+                    ['to', 9],
+                    ['apple', 9],
+                ],
+                wordList
             );
 
-            display.addWordToSidebar(new Set(), 'banana', 10, contentContainer);
+            expect(getListedWords()).toEqual(['apple']);
+        });
 
-            expect(contentContainer.createEl).not.toHaveBeenCalled();
-            expect(setIcon).not.toHaveBeenCalled();
-            expect(mockPlugin.registerDomEvent).not.toHaveBeenCalled();
+        it('should list one page of words with a show more button', () => {
+            display.renderWords(createWordCounts(PAGE_SIZE + 1), wordList);
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE);
+            expect(getShowMoreButton()?.textContent).toBe(SHOW_MORE_TEXT);
+        });
+
+        it('should list the chosen number of words at a time', () => {
+            mockPlugin.settings.pageSize = 50;
+
+            display.renderWords(createWordCounts(51), wordList);
+
+            expect(getListedWords()).toHaveLength(50);
+            expect(getShowMoreButton()).not.toBeNull();
+        });
+
+        it('should not show the button when every word fits on the page', () => {
+            display.renderWords(createWordCounts(PAGE_SIZE), wordList);
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE);
+            expect(getShowMoreButton()).toBeNull();
+        });
+
+        it('should list another page after show more is clicked', () => {
+            const wordCounts = createWordCounts(PAGE_SIZE * 2 + 1);
+            mockView.updateContent = jest.fn(() => {
+                wordList.empty();
+                display.renderWords(wordCounts, wordList);
+            });
+            display.listenForWordListClicks(wordList);
+            display.renderWords(wordCounts, wordList);
+
+            getShowMoreButton()?.click();
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE * 2);
+            expect(getShowMoreButton()).not.toBeNull();
+            expect(mockPlugin.saveSettings).not.toHaveBeenCalled();
+        });
+
+        it('should list every word once all pages are shown', () => {
+            display.showMoreWords();
+
+            display.renderWords(createWordCounts(PAGE_SIZE + 2), wordList);
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE + 2);
+            expect(getShowMoreButton()).toBeNull();
+            expect(mockView.updateContent).toHaveBeenCalledTimes(1);
+        });
+
+        it('should return to the first page when words at a time changes', () => {
+            const wordCounts = createWordCounts(120);
+            display.renderWords(wordCounts, wordList);
+            display.showMoreWords();
+            wordList.empty();
+            mockPlugin.settings.pageSize = 50;
+
+            display.renderWords(wordCounts, wordList);
+
+            expect(getListedWords()).toHaveLength(50);
+        });
+
+        describe('focus after show more', () => {
+            function showMoreOf(total: number) {
+                const wordCounts = createWordCounts(total);
+                document.body.appendChild(wordList);
+                mockView.updateContent = jest.fn(() => {
+                    wordList.empty();
+                    display.renderWords(wordCounts, wordList);
+                });
+                display.listenForWordListClicks(wordList);
+                display.renderWords(wordCounts, wordList);
+
+                getShowMoreButton()?.click();
+            }
+
+            afterEach(() => {
+                wordList.remove();
+            });
+
+            it('should move focus to the new show more button', () => {
+                showMoreOf(PAGE_SIZE * 2 + 1);
+
+                expect(document.activeElement).toBe(getShowMoreButton());
+            });
+
+            it('should not fail when the list is empty after show more', () => {
+                expect(() =>
+                    display.setFocusAfterShowMore(wordList)
+                ).not.toThrow();
+            });
+
+            it('should move focus to the last word when every word is shown', () => {
+                showMoreOf(PAGE_SIZE + 1);
+                const buttons = wordList.querySelectorAll('button');
+
+                expect(getShowMoreButton()).toBeNull();
+                expect(document.activeElement).toBe(
+                    buttons.item(buttons.length - 1)
+                );
+                expect(
+                    (document.activeElement as HTMLButtonElement).dataset.word
+                ).toBe(`word${PAGE_SIZE}`);
+            });
+        });
+
+        it('should return to the first page when the filter changes', () => {
+            (debounce as jest.Mock).mockImplementationOnce((callback) =>
+                jest.fn(callback)
+            );
+            display = new WordFrequencyDisplay(mockPlugin, mockView);
+            display.createFilter(document.createElement('div'));
+            const inputHandler = (mockPlugin.registerDomEvent as jest.Mock).mock
+                .calls[0][2];
+            display.showMoreWords();
+
+            inputHandler({ target: { value: 'word' } });
+            display.renderWords(createWordCounts(PAGE_SIZE * 2), wordList);
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE);
         });
     });
-
     describe('createFilter', () => {
         it('should create an input element with a container', () => {
             display.createFilter(contentEl);
@@ -235,7 +416,7 @@ describe('WordFrequencyDisplay', () => {
             const inputHandler = (mockPlugin.registerDomEvent as jest.Mock).mock
                 .calls[0][2];
             inputHandler({ target: { value: 'BAN' } });
-            display.addWordToSidebar(new Set(), 'apple', 5, contentContainer);
+            display.renderWords([['apple', 5]], contentContainer);
 
             expect(debounce).toHaveBeenCalledWith(expect.any(Function), 500);
             expect(mockView.updateContent).toHaveBeenCalled();
@@ -283,6 +464,18 @@ describe('WordFrequencyDisplay', () => {
             );
         });
 
+        it('should show the minimum share when it is above 0', () => {
+            const sidebar = document.createElement('div');
+            display.createThresholdDisplay(sidebar);
+            mockPlugin.settings.minimumShare = 25;
+
+            display.updateThresholdDisplay();
+
+            expect(sidebar.textContent).toBe(
+                'Current frequency threshold is 3. Listing words used at least 25% as often as the top word.'
+            );
+        });
+
         it('should do nothing before the threshold display exists', () => {
             expect(() => display.updateThresholdDisplay()).not.toThrow();
         });
@@ -292,9 +485,9 @@ describe('WordFrequencyDisplay', () => {
         it('should blacklist the word whose button is clicked among many rows', () => {
             const wordList = document.createElement('div');
             const originalBlacklist = mockPlugin.settings.blacklist;
-            display.listenForBlacklistClicks(wordList);
+            display.listenForWordListClicks(wordList);
             ['apple', 'banana', 'cherry'].forEach((word) =>
-                display.addWordToSidebar(new Set(), word, 5, wordList)
+                display.addWordToSidebar(word, 5, wordList)
             );
 
             wordList.querySelectorAll('button')[1].click();
@@ -305,7 +498,7 @@ describe('WordFrequencyDisplay', () => {
         });
     });
 
-    describe('listenForBlacklistClicks', () => {
+    describe('listenForWordListClicks', () => {
         let wordList: HTMLDivElement;
         let row: HTMLDivElement;
         let wordText: HTMLSpanElement;
@@ -333,7 +526,7 @@ describe('WordFrequencyDisplay', () => {
             wordList.appendChild(row);
             originalBlacklist = mockPlugin.settings.blacklist;
 
-            display.listenForBlacklistClicks(wordList);
+            display.listenForWordListClicks(wordList);
         });
 
         it('should register one click listener with the view', () => {

@@ -1,5 +1,6 @@
 import { App, PluginManifest, WorkspaceLeaf } from 'obsidian';
 import {
+    DEFAULT_SETTINGS,
     ELEMENT_CLASSES,
     EVENT_UPDATE,
     FREQUENCY_ICON,
@@ -13,6 +14,7 @@ import { FakeResizeObserver } from './fakes/resizeObserver';
 import { createNote, FakeWorkspace } from './fakes/workspace';
 
 describe('WordFrequencyView', () => {
+    const PAGE_SIZE = DEFAULT_SETTINGS.pageSize;
     let mockDisplay: WordFrequencyDisplay;
     let mockDivElement: HTMLDivElement;
     let mockLeaf: WorkspaceLeaf;
@@ -22,11 +24,12 @@ describe('WordFrequencyView', () => {
     beforeEach(() => {
         mockLeaf = new WorkspaceLeaf();
         mockDisplay = {
-            addWordToSidebar: jest.fn(),
             createFilter: jest.fn(),
             createHeader: jest.fn(),
             createThresholdDisplay: jest.fn(),
-            listenForBlacklistClicks: jest.fn(),
+            listenForWordListClicks: jest.fn(),
+            renderWords: jest.fn(),
+            showFirstPage: jest.fn(),
             updateThresholdDisplay: jest.fn(),
         } as unknown as WordFrequencyDisplay;
         mockDivElement = {
@@ -66,11 +69,10 @@ describe('WordFrequencyView', () => {
 
         it('should use the provided WordFrequencyDisplay instance if passed', async () => {
             const displayMock = {
-                addWordToSidebar: jest.fn(),
                 createFilter: jest.fn(),
                 createHeader: jest.fn(),
                 createThresholdDisplay: jest.fn(),
-                listenForBlacklistClicks: jest.fn(),
+                listenForWordListClicks: jest.fn(),
             } as unknown as WordFrequencyDisplay;
             const view = new WordFrequencyView(
                 mockLeaf,
@@ -88,6 +90,7 @@ describe('WordFrequencyView', () => {
                 listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
+                showFirstPageForNewNote: jest.fn(),
                 updateContent: jest.fn(),
             };
 
@@ -149,6 +152,7 @@ describe('WordFrequencyView', () => {
                 listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
+                showFirstPageForNewNote: jest.fn(),
                 updateContent: jest.fn(),
             };
 
@@ -174,6 +178,33 @@ describe('WordFrequencyView', () => {
             expect(updateContentSpy).toHaveBeenCalled();
 
             updateContentSpy.mockRestore();
+        });
+
+        it('should show the first page when the counts are for another note', async () => {
+            await view.onOpen();
+
+            window.document.dispatchEvent(
+                new CustomEvent(EVENT_UPDATE, {
+                    detail: { notePath: 'Fruit.md', wordCounts: [] },
+                })
+            );
+
+            expect(mockDisplay.showFirstPage).toHaveBeenCalledTimes(1);
+            await view.onClose();
+        });
+
+        it('should keep the pages shown when the counts are for the same note', async () => {
+            await view.onOpen();
+            const createEvent = () =>
+                new CustomEvent(EVENT_UPDATE, {
+                    detail: { notePath: 'Fruit.md', wordCounts: [] },
+                });
+
+            window.document.dispatchEvent(createEvent());
+            window.document.dispatchEvent(createEvent());
+
+            expect(mockDisplay.showFirstPage).toHaveBeenCalledTimes(1);
+            await view.onClose();
         });
 
         it('should count the current note through the scheduler', async () => {
@@ -255,7 +286,7 @@ describe('WordFrequencyView', () => {
             expect(mockDivElement.empty).toHaveBeenCalled();
         });
 
-        it('should add words to sidebar for each word', async () => {
+        it('should render the word counts in the word list', async () => {
             await view.onOpen();
             const wordCounts = [
                 ['apple', 5],
@@ -264,30 +295,16 @@ describe('WordFrequencyView', () => {
             const event = new CustomEvent(EVENT_UPDATE, {
                 detail: { wordCounts },
             });
-            const addWordToSidebarSpy = jest.spyOn(
-                mockDisplay,
-                'addWordToSidebar'
-            );
-            const expectedBlacklist = new Set(
-                mockPlugin.settings.blacklist
-                    .split(',')
-                    .map((word) => word.trim())
-            );
 
             window.document.dispatchEvent(event);
 
-            const calls = addWordToSidebarSpy.mock.calls;
+            const wordList = (mockDivElement.createDiv as jest.Mock).mock
+                .results[0].value;
 
-            expect(addWordToSidebarSpy).toHaveBeenCalledTimes(2);
-            expect(calls).toHaveLength(2);
-            expect(calls[0][0]).toEqual(expectedBlacklist);
-            expect(calls[0][1]).toBe('apple');
-            expect(calls[0][2]).toBe(5);
-            expect(calls[0][0]).toEqual(calls[1][0]);
-            expect(calls[1][1]).toBe('banana');
-            expect(calls[1][2]).toBe(3);
-
-            addWordToSidebarSpy.mockRestore();
+            expect(mockDisplay.renderWords).toHaveBeenLastCalledWith(
+                wordCounts,
+                wordList
+            );
         });
 
         it('should not add word to sidebar for a invalid event type', async () => {
@@ -300,6 +317,7 @@ describe('WordFrequencyView', () => {
                 listenForResize: jest.fn(),
                 onOpen: view.onOpen,
                 plugin: mockPlugin,
+                showFirstPageForNewNote: jest.fn(),
                 updateContent: jest.fn(),
             };
 
@@ -311,13 +329,14 @@ describe('WordFrequencyView', () => {
 
             window.document.dispatchEvent(event);
 
-            expect(mockDisplay.addWordToSidebar).not.toHaveBeenCalled();
+            expect(mockDisplay.renderWords).not.toHaveBeenCalled();
         });
     });
 
     describe('with the real display', () => {
         let plugin: WordFrequencyPlugin;
         let sidebar: WordFrequencyView;
+        let workspace: FakeWorkspace;
 
         function getListedWords(): string[] {
             return Array.from(
@@ -332,7 +351,7 @@ describe('WordFrequencyView', () => {
         }
 
         beforeEach(async () => {
-            const workspace = new FakeWorkspace();
+            workspace = new FakeWorkspace();
             workspace.activateNote(
                 createNote('apple apple apple banana banana banana cherry')
             );
@@ -365,6 +384,53 @@ describe('WordFrequencyView', () => {
             expect(getListedWords()).toEqual(['banana']);
             expect(plugin.settings.blacklist.split(',')).toContain('apple');
             expect(plugin.saveData).toHaveBeenCalledWith(plugin.settings);
+        });
+
+        it('should list fewer words with a larger minimum share', () => {
+            plugin.settings.threshold = 1;
+            plugin.settings.minimumShare = 50;
+
+            sidebar.updateContent();
+
+            expect(getListedWords()).toEqual(['apple', 'banana']);
+        });
+
+        it('should list one page at a time until every word is shown', async () => {
+            const words = Array.from(
+                { length: PAGE_SIZE + 2 },
+                (_, index) => `word${String.fromCharCode(97 + index)} `
+            ).join('');
+            workspace.activateNote(createNote(words.repeat(3)));
+            plugin.updateScheduler.updateNow();
+            const showMore = () =>
+                sidebar.contentEl.querySelector<HTMLButtonElement>(
+                    '.word-frequency-show-more'
+                );
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE);
+
+            showMore()?.click();
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE + 2);
+            expect(showMore()).toBeNull();
+        });
+
+        it('should list the first page again after switching notes', () => {
+            const words = Array.from(
+                { length: PAGE_SIZE + 2 },
+                (_, index) => `word${String.fromCharCode(97 + index)} `
+            ).join('');
+            workspace.activateNote(createNote(words.repeat(3), 'Words.md'));
+            plugin.updateScheduler.updateNow();
+            sidebar.contentEl
+                .querySelector<HTMLButtonElement>('.word-frequency-show-more')
+                ?.click();
+            expect(getListedWords()).toHaveLength(PAGE_SIZE + 2);
+
+            workspace.activateNote(createNote(words.repeat(3), 'Other.md'));
+            plugin.updateScheduler.updateNow();
+
+            expect(getListedWords()).toHaveLength(PAGE_SIZE);
         });
 
         it('should show the current threshold after it changes', () => {

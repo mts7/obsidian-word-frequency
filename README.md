@@ -31,9 +31,15 @@ click inside a note so the plugin knows which note to use.
 
 Use the text input field at the top of the sidebar to filter the list of words.
 Only words containing the characters in the input field will display in the list
-with their counts.
+with their counts. The filter searches every word that meets the frequency
+threshold, including words below the minimum share of the top word.
 
 Clear the text input field to reset the filter and display all available words.
+
+### Showing More Words
+
+The sidebar lists 15 words at a time. Click `Show more` below the list to see
+the next 15. Change how many words display at a time in the Settings interface.
 
 ### Ignore Specific Words
 
@@ -55,10 +61,12 @@ The frequency threshold is adjustable through the Settings interface.
 
 ## Settings
 
-There are currently two settings for this plugin.
+There are currently four settings for this plugin.
 
 1. Blacklist Words
 2. Frequency Threshold
+3. Minimum Share of Top Word
+4. Words at a Time
 
 ### Blacklist Words
 
@@ -77,13 +85,28 @@ many times as the frequency threshold.
 The default frequency threshold is 3, and is easily changeable. For large notes,
 consider using a threshold of 10 or more.
 
+### Minimum Share of Top Word
+
+This lists only the words used at least this percentage as often as the most
+frequent word, so the sidebar focuses on the words used most. For example, when
+the most frequent word appears 400 times, a minimum share of 25 lists only words
+that appear at least 100 times. Move the slider from 0 to 100 in steps of 10.
+The default is 0, which lists every word.
+
+The frequency threshold still applies, so no word below the threshold displays.
+
+### Words at a Time
+
+Choose how many words the sidebar lists before the `Show more` button: 15, 50,
+or 100. The default is 15.
+
 ## Future Development
 
 The plugin is fully functional. To assist people more with its use, here are
 some ideas for the developers to implement.
 
 - [x] add word search filter
-- [ ] add maximum display count for sidebar
+- [x] add maximum display count for sidebar
 - [x] change ignore (add to blacklist) icon
 
 ## Contributing

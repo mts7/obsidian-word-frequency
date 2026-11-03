@@ -8,10 +8,36 @@ export const VIEW_TYPE = 'word-frequency-view';
 export const SHOW_SIDEBAR_COMMAND = `${PLUGIN_ID}:word-frequency-show-sidebar`;
 export const DEFAULT_SETTINGS = {
     blacklist: 'the,and,to,of,a,in,for,on,is,it,that,with,as,this,by,your,you',
+    minimumShare: 0,
+    pageSize: 15,
     threshold: 3,
 };
+export const PAGE_SIZE = DEFAULT_SETTINGS.pageSize;
 export const FRUIT_NOTE = 'Fruit.md';
 export const VEGETABLES_NOTE = 'Vegetables.md';
+export const WORDS_NOTE = 'Words.md';
+export const WORDS = [
+    'alpha',
+    'bravo',
+    'charlie',
+    'delta',
+    'echo',
+    'foxtrot',
+    'golf',
+    'hotel',
+    'india',
+    'juliet',
+    'kilo',
+    'lima',
+    'mike',
+    'november',
+    'oscar',
+    'papa',
+    'quebec',
+    'romeo',
+    'sierra',
+    'tango',
+];
 export const FRUIT_COUNTS: WordCount[] = [
     ['apple', 5],
     ['banana', 4],
@@ -29,11 +55,14 @@ export const WORD_LIST = `${VIEW} .word-frequency-word-list`;
 export const WORD_BUTTON = `${WORD_LIST} .word-frequency-row button`;
 export const FILTER = `${VIEW} input.word-frequency-filter`;
 export const THRESHOLD_DISPLAY = `${VIEW} .word-frequency-threshold-display`;
+export const SHOW_MORE = `${WORD_LIST} button.word-frequency-show-more`;
 export const SETTINGS = '.mod-settings';
 export const SETTINGS_BLACKLIST = `${SETTINGS} textarea.word-frequency-setting-blacklist`;
 export const SETTINGS_THRESHOLD = `${SETTINGS} .vertical-tab-content input[type="text"]`;
+export const SETTINGS_MINIMUM_SHARE = `${SETTINGS} .vertical-tab-content input[type="range"]`;
+export const SETTINGS_PAGE_SIZE = `${SETTINGS} .vertical-tab-content select`;
 
-const FIXTURES = [FRUIT_NOTE, VEGETABLES_NOTE].map((note) => ({
+const FIXTURES = [FRUIT_NOTE, VEGETABLES_NOTE, WORDS_NOTE].map((note) => ({
     note,
     content: readFileSync(`test/e2e/vaults/simple/${note}`, 'utf-8'),
 }));
@@ -55,6 +84,10 @@ type SettingModal = {
 
 export async function switchToMainWindow(): Promise<void> {
     await browser.switchToWindow(await obsidianPage.getMainWindowHandle());
+}
+
+export function countWords(words: string[]): WordCount[] {
+    return words.map((word) => [word, 3]);
 }
 
 export async function getWordList(): Promise<WordCount[]> {
@@ -167,6 +200,21 @@ export async function waitForNoteToLoad(note: string): Promise<void> {
                 );
             }, note),
         { timeoutMsg: `${note} did not finish loading` }
+    );
+}
+
+export async function setSliderValue(
+    selector: string,
+    value: number
+): Promise<void> {
+    await browser.execute(
+        (slider, newValue) => {
+            slider.value = String(newValue);
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+            slider.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+        (await $(selector)) as unknown as HTMLInputElement,
+        value
     );
 }
 
